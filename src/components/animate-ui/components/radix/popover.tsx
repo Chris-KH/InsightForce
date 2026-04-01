@@ -1,5 +1,3 @@
-import * as React from 'react';
-
 import {
   Popover as PopoverPrimitive,
   PopoverTrigger as PopoverTriggerPrimitive,
@@ -10,8 +8,8 @@ import {
   type PopoverTriggerProps as PopoverTriggerPrimitiveProps,
   type PopoverContentProps as PopoverContentPrimitiveProps,
   type PopoverCloseProps as PopoverClosePrimitiveProps,
-} from '@/components/animate-ui/primitives/radix/popover';
-import { cn } from '@/lib/utils';
+} from "@/components/animate-ui/primitives/radix/popover";
+import { cn } from "@/lib/utils";
 
 type PopoverProps = PopoverPrimitiveProps;
 
@@ -29,7 +27,7 @@ type PopoverContentProps = PopoverContentPrimitiveProps;
 
 function PopoverContent({
   className,
-  align = 'center',
+  align = "center",
   sideOffset = 4,
   ...props
 }: PopoverContentProps) {
@@ -39,7 +37,7 @@ function PopoverContent({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          'bg-popover text-popover-foreground z-50 w-72 origin-(--radix-popover-content-transform-origin) rounded-md border p-4 shadow-md outline-hidden',
+          "z-50 w-72 origin-(--radix-popover-content-transform-origin) rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden",
           className,
         )}
         {...props}

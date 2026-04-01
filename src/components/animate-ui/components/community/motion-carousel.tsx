@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { motion, type Transition } from 'motion/react';
-import { EmblaOptionsType, EmblaCarouselType } from 'embla-carousel';
-import useEmblaCarousel from 'embla-carousel-react';
-import { Button } from '@/components/animate-ui/components/buttons/button';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import * as React from "react";
+import { motion, type Transition } from "motion/react";
+import type { EmblaOptionsType, EmblaCarouselType } from "embla-carousel";
+import useEmblaCarousel from "embla-carousel-react";
+import { Button } from "@/components/animate-ui/components/buttons/button";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 
 type PropType = {
   slides: number[];
@@ -29,7 +29,7 @@ type DotButtonProps = {
 };
 
 const transition: Transition = {
-  type: 'spring',
+  type: "spring",
   stiffness: 240,
   damping: 24,
   mass: 1,
@@ -70,10 +70,10 @@ const useEmblaControls = (
     if (!emblaApi) return;
 
     onInit(emblaApi);
-    emblaApi.on('reInit', onInit).on('select', onSelect);
+    emblaApi.on("reInit", onInit).on("select", onSelect);
 
     return () => {
-      emblaApi.off('reInit', onInit).off('select', onSelect);
+      emblaApi.off("reInit", onInit).off("select", onSelect);
     };
   }, [emblaApi, onInit, onSelect]);
 
@@ -102,7 +102,7 @@ function MotionCarousel(props: PropType) {
   } = useEmblaControls(emblaApi);
 
   return (
-    <div className="w-full space-y-4 [--slide-height:9rem] sm:[--slide-height:13rem] md:[--slide-height:18rem] [--slide-spacing:1.5rem] [--slide-size:55%]">
+    <div className="w-full space-y-4 [--slide-height:9rem] [--slide-size:55%] [--slide-spacing:1.5rem] sm:[--slide-height:13rem] md:[--slide-height:18rem]">
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex touch-pan-y touch-pinch-zoom">
           {slides.map((index) => {
@@ -111,10 +111,10 @@ function MotionCarousel(props: PropType) {
             return (
               <motion.div
                 key={index}
-                className="h-[var(--slide-height)] mr-[var(--slide-spacing)] basis-[var(--slide-size)] flex-none flex min-w-0"
+                className="mr-[var(--slide-spacing)] flex h-[var(--slide-height)] min-w-0 flex-none basis-[var(--slide-size)]"
               >
                 <motion.div
-                  className="size-full flex items-center justify-center text-3xl md:text-5xl font-semibold select-none border-4 rounded-xl"
+                  className="flex size-full items-center justify-center rounded-xl border-4 text-3xl font-semibold select-none md:text-5xl"
                   initial={false}
                   animate={{
                     scale: isActive ? 1 : 0.9,
@@ -134,7 +134,7 @@ function MotionCarousel(props: PropType) {
           <ChevronLeft className="size-5" />
         </Button>
 
-        <div className="flex flex-wrap justify-end items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {scrollSnaps.map((_, index) => (
             <DotButton
               key={index}
@@ -160,7 +160,7 @@ function DotButton({ selected = false, label, onClick }: DotButtonProps) {
       onClick={onClick}
       layout
       initial={false}
-      className="flex cursor-pointer select-none items-center justify-center rounded-full border-none bg-primary text-primary-foreground text-sm"
+      className="flex cursor-pointer items-center justify-center rounded-full border-none bg-primary text-sm text-primary-foreground select-none"
       animate={{
         width: selected ? 68 : 12,
         height: selected ? 28 : 12,
@@ -170,11 +170,11 @@ function DotButton({ selected = false, label, onClick }: DotButtonProps) {
       <motion.span
         layout
         initial={false}
-        className="block whitespace-nowrap px-3 py-1"
+        className="block px-3 py-1 whitespace-nowrap"
         animate={{
           opacity: selected ? 1 : 0,
           scale: selected ? 1 : 0,
-          filter: selected ? 'blur(0)' : 'blur(4px)',
+          filter: selected ? "blur(0)" : "blur(4px)",
         }}
         transition={transition}
       >
