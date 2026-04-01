@@ -53,4 +53,5 @@ function Button({ className, variant, size, ...props }: ButtonProps) {
   );
 }
 
-export { Button, type ButtonProps };
+// eslint-disable-next-line
+export { Button, buttonVariants, type ButtonProps };
