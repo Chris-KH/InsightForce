@@ -33,7 +33,7 @@ const loginSchema = z.object({
 type LoginValues = z.infer<typeof loginSchema>;
 
 const FOREST_IMAGE_URL =
-  "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1400&q=80";
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuB7fU-ggtCfFmo4Kq7fqHSwMXR2ut1rsJ3UTGjiVUA2C86Cj_4FSgPH89nkylA6ZKshXmN3ZAcAXiPnzhg1OgOF64xjHWVjSVj6E9nlt53h3a2s4FwbchU9cjl4SUv8yt9W16H_Azi0OZpOFo9PqvHjbsomaMZfKA5XExY3tq6Y2KH8b3PdEvaF4pdMQ3E4N3dy8g6FxJCllwv5Nlm8URHAdQwNGJqrDvrwHKLZdBiOw3oKQgK75LjBeto2aM7ET-eMztPNiAY-mINz";
 
 export function LoginPage() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);

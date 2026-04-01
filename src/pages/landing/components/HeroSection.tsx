@@ -6,10 +6,10 @@ import { HERO_IMAGE, TRUSTED_AVATARS } from "../data";
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden px-4 pt-12 pb-18 sm:px-6 sm:pt-14 sm:pb-22 lg:px-8 lg:pt-18 lg:pb-28">
-      <div className="absolute top-0 right-0 -z-10 size-80 rounded-full bg-primary/20 blur-3xl" />
-      <div className="absolute -bottom-10 -left-10 -z-10 size-96 rounded-full bg-chart-1/20 blur-3xl" />
+      <div className="absolute -top-24 -right-24 size-96 rounded-full bg-primary/20 blur-[100px]" />
+      <div className="absolute bottom-0 -left-24 size-125 rounded-full bg-chart-1/20 blur-[120px]" />
 
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
+      <div className="z-20 mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
         <div className="flex flex-col gap-8">
           <div className="inline-flex w-fit items-center rounded-full border border-primary/25 bg-primary/10 px-4 py-1.5 text-[10px] leading-none font-semibold tracking-[0.15em] text-primary uppercase sm:text-xs">
             Transforming raw data into actionable wisdom
@@ -62,7 +62,7 @@ export function HeroSection() {
         </div>
 
         <div className="relative">
-          <div className="absolute inset-0 rotate-2 rounded-2xl bg-primary/15" />
+          <div className="absolute inset-0 rotate-4 rounded-2xl bg-primary/15" />
           <Card className="relative overflow-hidden rounded-2xl border border-border/70 p-0 shadow-2xl">
             <img
               src={HERO_IMAGE}
@@ -80,8 +80,8 @@ export function HeroSection() {
                 </div>
               </CardHeader>
               <CardContent className="px-4 pb-0">
-                <div className="flex h-12 items-end gap-1.5 sm:h-14">
-                  {[30, 45, 40, 65, 88, 78].map((height) => (
+                <div className="flex h-12 items-end gap-1.5 sm:h-16 lg:h-20">
+                  {[30, 45, 40, 65, 92, 78].map((height) => (
                     <div
                       key={height}
                       className="w-full rounded-sm bg-primary/70"

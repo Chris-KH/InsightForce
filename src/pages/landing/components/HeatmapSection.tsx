@@ -19,7 +19,7 @@ export function HeatmapSection() {
           <img
             src={HEATMAP_IMAGE}
             alt="World heatmap visualization"
-            className="h-[380px] w-full object-cover grayscale sm:h-[500px]"
+            className="h-95 w-full object-cover grayscale sm:h-125"
             loading="lazy"
           />
           <div className="absolute inset-0 bg-linear-to-br from-background/20 via-transparent to-background/35" />
