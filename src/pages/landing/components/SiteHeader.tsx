@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "../data";
+import { NavLink } from "react-router";
 
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-md">
-      <div className="mx-auto flex h-[68px] w-full max-w-7xl items-center justify-between px-4 sm:h-[74px] sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-17 w-full max-w-7xl items-center justify-between px-4 sm:h-18.5 sm:px-6 lg:px-8">
         <p className="font-heading text-[1.65rem] leading-none font-semibold tracking-tight text-primary sm:text-[1.8rem]">
           InsightForge AI
         </p>
@@ -26,10 +27,14 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Button variant="ghost" className="hidden sm:inline-flex">
-            Sign In
-          </Button>
-          <Button className="h-10 px-5 sm:h-11 sm:px-6">Get Started</Button>
+          <NavLink to={"/register"}>
+            <Button variant="ghost" className="hidden sm:inline-flex">
+              Sign In
+            </Button>
+          </NavLink>
+          <NavLink to={"/login"}>
+            <Button className="h-10 px-5 sm:h-11 sm:px-6">Get Started</Button>
+          </NavLink>
         </div>
       </div>
     </header>

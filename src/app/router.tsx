@@ -1,10 +1,11 @@
 import { createBrowserRouter } from "react-router";
 import { RootLayout } from "@/layouts/RootLayout";
 import { AuthLayout } from "@/layouts/AuthLayout";
-import { LoginPage } from "@/pages/login/LoginPage";
-import { RegisterPage } from "@/pages/register/RegisterPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+
+import { LoginPage } from "@/pages/login/LoginPage";
 import { LandingPage } from "@/pages/landing/LandingPage";
+import { RegisterPage } from "@/pages/register/RegisterPage";
 
 export const router = createBrowserRouter([
   {
