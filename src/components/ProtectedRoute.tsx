@@ -1,3 +1,5 @@
+import { Outlet } from "react-router";
+
 export function ProtectedRoute() {
-  return <div>ProtectedRoute</div>;
+  return <Outlet />;
 }

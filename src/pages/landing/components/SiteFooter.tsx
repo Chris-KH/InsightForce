@@ -12,8 +12,8 @@ export function SiteFooter() {
             InsightForge AI
           </p>
           <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-            Pioneering the future of organic data intelligence, built for teams
-            that value depth over volume.
+            Pioneering the future of agentic data intelligence. Rooted in
+            wisdom, driven by autonomous excellence.
           </p>
           <div className="mt-5 flex items-center gap-3">
             <Button variant="outline" size="icon-sm" aria-label="Share">
@@ -30,16 +30,16 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <p className="font-heading text-lg font-medium">Product</p>
+          <p className="font-heading text-lg font-medium">Agents</p>
           <ul className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
             <li>
-              <a href="#">Analytics</a>
+              <a href="#">Guardian</a>
             </li>
             <li>
-              <a href="#">Sentiment</a>
+              <a href="#">Architect</a>
             </li>
             <li>
-              <a href="#">Security</a>
+              <a href="#">Executor</a>
             </li>
           </ul>
         </div>
@@ -48,7 +48,7 @@ export function SiteFooter() {
           <p className="font-heading text-lg font-medium">Company</p>
           <ul className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
             <li>
-              <a href="#">About</a>
+              <a href="#">Ethics</a>
             </li>
             <li>
               <a href="#">Careers</a>

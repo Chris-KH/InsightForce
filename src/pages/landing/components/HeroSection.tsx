@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { HERO_IMAGE, TRUSTED_AVATARS } from "../data";
 
@@ -12,31 +13,32 @@ export function HeroSection() {
       <div className="z-20 mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
         <div className="flex flex-col gap-8">
           <div className="inline-flex w-fit items-center rounded-full border border-primary/25 bg-primary/10 px-4 py-1.5 text-[10px] leading-none font-semibold tracking-[0.15em] text-primary uppercase sm:text-xs">
-            Transforming raw data into actionable wisdom
+            Next-Gen Agentic Intelligence for High-Impact Creators
           </div>
 
           <div className="flex flex-col gap-5">
             <h1 className="font-heading text-[2.5rem] leading-[0.98] font-semibold tracking-tight text-foreground sm:text-[3.35rem] lg:text-[4.8rem]">
-              Forge Your Path with{" "}
-              <span className="text-primary italic">Organic AI</span>
+              The{" "}
+              <span className="text-primary italic">Agentic Revolution</span>{" "}
+              Rooted in Human Intuition
             </h1>
             <p className="max-w-[60ch] text-[15px] leading-7 text-muted-foreground sm:text-lg">
-              Deep analytics, sentiment tracking, and predictive modeling rooted
-              in human intelligence. Grow your business on the bedrock of real
-              insights.
+              Move beyond simple automation. Deploy autonomous AI agents that
+              protect your brand, architect your content, and execute your
+              strategy with surgical precision.
             </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button size="lg" className="h-12 px-8 text-[15px] font-semibold">
-              Start Your Free Trial
+              Summon Your Agents
             </Button>
             <Button
               size="lg"
               variant="outline"
               className="h-12 px-8 text-[15px] font-semibold"
             >
-              Watch Strategy Demo
+              View the Forge in Action
             </Button>
           </div>
 
@@ -56,7 +58,7 @@ export function HeroSection() {
               ))}
             </div>
             <p className="text-sm leading-6 text-muted-foreground">
-              Trusted by 2,000+ data-driven companies
+              Trusted by 2,000+ top-tier creative agencies
             </p>
           </div>
         </div>
@@ -70,17 +72,30 @@ export function HeroSection() {
               className="h-85 w-full object-cover sm:h-105"
               loading="lazy"
             />
-            <Card className="absolute right-4 bottom-4 left-4 gap-3 rounded-xl border border-border/60 bg-background/80 py-4 backdrop-blur-md sm:right-5 sm:bottom-5 sm:left-5">
-              <CardHeader className="px-4 pb-0">
+            <Card className="absolute right-4 bottom-4 left-4 gap-3 rounded-xl border border-border/60 bg-background/80 py-5 backdrop-blur-md sm:right-5 sm:bottom-5 sm:left-5">
+              <CardContent className="flex flex-col gap-3 px-4">
+                <div className="flex items-center gap-2 text-xs font-semibold tracking-wide">
+                  <span className="inline-block size-2 animate-pulse rounded-full bg-primary" />
+                  <span>Guardian Active</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-chart-1">
+                  <span className="inline-block size-2 animate-pulse rounded-full bg-chart-1" />
+                  <span>Architect Planning</span>
+                </div>
+              </CardContent>
+              <Separator className="my-0" />
+              <CardHeader className="px-4 py-3 pb-0">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base sm:text-lg">
-                    Live Growth Index
+                    Agent Influence Score
                   </CardTitle>
-                  <p className="text-sm font-semibold text-primary">+12.4%</p>
+                  <p className="text-sm font-semibold text-primary">
+                    +24.8% Reach
+                  </p>
                 </div>
               </CardHeader>
-              <CardContent className="px-4 pb-0">
-                <div className="flex h-12 items-end gap-1.5 sm:h-16 lg:h-20">
+              <CardContent className="px-4 pb-4">
+                <div className="flex h-12 items-end gap-1.5 sm:h-14 lg:h-16">
                   {[30, 45, 40, 65, 92, 78].map((height) => (
                     <div
                       key={height}

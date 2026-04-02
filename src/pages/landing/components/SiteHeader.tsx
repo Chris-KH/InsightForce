@@ -16,14 +16,14 @@ export function SiteHeader() {
         <nav className="hidden items-center gap-8 md:flex">
           {NAV_ITEMS.map((item, index) => (
             <a
-              key={item}
-              href="#"
+              key={item.label}
+              href={item.s}
               className={cn(
                 "pb-1 text-sm font-medium tracking-wide text-muted-foreground transition-colors hover:text-foreground",
                 index === 0 && "border-b-2 border-primary text-primary",
               )}
             >
-              {item}
+              {item.label}
             </a>
           ))}
         </nav>
@@ -35,7 +35,9 @@ export function SiteHeader() {
             </Button>
           </NavLink>
           <NavLink to={"/login"}>
-            <Button className="h-10 px-5 sm:h-11 sm:px-6">Get Started</Button>
+            <Button className="h-10 bg-primary px-5 hover:bg-primary/90 sm:h-11 sm:px-6">
+              Deploy Your AI
+            </Button>
           </NavLink>
         </div>
       </div>

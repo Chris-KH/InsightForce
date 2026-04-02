@@ -1,9 +1,9 @@
 import {
-  ContentForgeSection,
-  HeatmapSection,
+  AgentSquadSection,
+  GuardianWatchSection,
   HeroSection,
   PricingSection,
-  RevenueSection,
+  ExecutiveProjectionsSection,
   SiteFooter,
   SiteHeader,
 } from "./components";
@@ -14,9 +14,9 @@ export function LandingPage() {
       <SiteHeader />
       <main>
         <HeroSection />
-        <HeatmapSection />
-        <ContentForgeSection />
-        <RevenueSection />
+        <AgentSquadSection />
+        <GuardianWatchSection />
+        <ExecutiveProjectionsSection />
         <PricingSection />
       </main>
       <SiteFooter />

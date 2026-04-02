@@ -8,23 +8,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export function RevenueSection() {
+export function ExecutiveProjectionsSection() {
   return (
     <section className="bg-linear-to-b from-foreground to-foreground/95 px-4 py-16 text-background sm:px-6 sm:py-20 lg:px-8 lg:py-24">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 sm:gap-12">
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="flex max-w-3xl flex-col gap-4">
             <h2 className="font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.8rem]">
-              Predictive Revenue Modeling
+              Executive Intelligence Projections
             </h2>
             <p className="text-[15px] leading-7 text-background/75 sm:text-base">
-              Simulate the future with high confidence. Growth Glass models
-              seasonal patterns and market volatility to project your revenue
-              trajectory.
+              The Scout & Executor agent doesn&apos;t just run campaigns; it
+              calculates future outcomes. See your revenue trajectory before you
+              spend a single dollar on production.
             </p>
           </div>
           <Button className="h-12 w-fit bg-primary px-7 text-primary-foreground hover:bg-primary/80">
-            Unlock Projections
+            Unlock Premium Projections
           </Button>
         </div>
 
@@ -35,7 +35,7 @@ export function RevenueSection() {
                 $4.2M
               </CardTitle>
               <CardDescription className="tracking-[0.12em] text-background/70 uppercase">
-                Projected Q4 ARR
+                Projected Creator ARR
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -50,14 +50,14 @@ export function RevenueSection() {
               </div>
             </CardContent>
             <CardFooter>
-              <p className="text-xs text-chart-1/90">High confidence (94%)</p>
+              <p className="text-xs text-chart-1/90">Scout Confidence: 94.2%</p>
             </CardFooter>
           </Card>
 
           <Card className="border border-white/10 bg-white/5 text-background backdrop-blur-sm">
             <CardHeader>
               <div className="flex items-center justify-between gap-4">
-                <CardTitle>Churn Probability Analysis</CardTitle>
+                <CardTitle>Audience Retention Forecast</CardTitle>
                 <div className="flex items-center gap-4 text-xs">
                   <div className="flex items-center gap-1.5">
                     <div className="size-2.5 rounded-full bg-primary" />
@@ -97,10 +97,10 @@ export function RevenueSection() {
                 </svg>
               </div>
               <div className="mt-4 grid grid-cols-4 text-center text-[11px] tracking-[0.12em] text-background/70 uppercase">
-                <span>Month 1</span>
-                <span>Month 3</span>
-                <span>Month 6</span>
-                <span>Year 1</span>
+                <span>Phase 1: Deployment</span>
+                <span>Phase 2: Scaling</span>
+                <span>Phase 3: Optimization</span>
+                <span>Phase 4: Domination</span>
               </div>
             </CardContent>
           </Card>

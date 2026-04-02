@@ -1,7 +1,7 @@
-export { ContentForgeSection } from "./ContentForgeSection";
-export { HeatmapSection } from "./HeatmapSection";
+export { AgentSquadSection } from "./AgentSquadSection";
+export { GuardianWatchSection } from "./HeatmapSection";
 export { HeroSection } from "./HeroSection";
 export { PricingSection } from "./PricingSection";
-export { RevenueSection } from "./RevenueSection";
+export { ExecutiveProjectionsSection } from "./RevenueSection";
 export { SiteFooter } from "./SiteFooter";
 export { SiteHeader } from "./SiteHeader";

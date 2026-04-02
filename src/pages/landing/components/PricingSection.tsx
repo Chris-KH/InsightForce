@@ -13,7 +13,10 @@ import { PRICING_PLANS } from "../data";
 
 export function PricingSection() {
   return (
-    <section className="px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+    <section
+      id="pricing"
+      className="bg-muted px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+    >
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 sm:gap-12">
         <div className="flex flex-col gap-3 text-center">
           <h2 className="font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.8rem]">
