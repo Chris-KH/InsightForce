@@ -35,14 +35,14 @@ export const FORGE_FEATURES: {
     icon: BrainCircuit,
     title: "Intent Mapping",
     description: "Cluster audience language into clear buying-intent profiles.",
-    iconClass: "bg-secondary text-secondary-foreground",
+    iconClass: "bg-secondary/70 text-secondary-foreground",
   },
   {
     icon: PenSquare,
     title: "Creative Briefing",
     description:
       "Generate strategy-ready briefs for content and product teams.",
-    iconClass: "bg-chart-1/30 text-foreground",
+    iconClass: "bg-accent/70 text-accent-foreground",
   },
 ];
 

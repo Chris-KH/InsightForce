@@ -27,7 +27,7 @@ export function AppHeader() {
             to="/app/dashboard"
             className="font-heading text-xl font-bold text-primary"
           >
-            InsightForge
+            Insight<span className="text-chart-1">Forge</span>
           </Link>
         </div>
 

@@ -1,5 +1,6 @@
 import { Shield, Lightbulb, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { motion } from "motion/react";
 
 const AGENTS = [
   {
@@ -38,66 +39,137 @@ const AGENTS = [
 ];
 
 export function AgentSquadSection() {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.7 },
+    },
+  };
+
   return (
     <section
       id="solutions"
       className="bg-muted px-4 py-14 sm:px-6 sm:py-18 lg:px-8 lg:py-24"
     >
       <div className="mx-auto w-full max-w-7xl">
-        <div className="mb-12 text-center sm:mb-14 lg:mb-16">
-          <h2 className="font-heading text-4xl font-bold text-foreground sm:text-5xl lg:text-5xl">
+        <motion.div
+          className="mb-12 text-center sm:mb-14 lg:mb-16"
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.7 }}
+        >
+          <motion.h2
+            className="font-heading text-4xl font-bold text-foreground sm:text-5xl lg:text-5xl"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
             Meet Your Autonomous Squad
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:mt-4 sm:text-base">
+          </motion.h2>
+          <motion.p
+            className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:mt-4 sm:text-base"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             InsightForge AI deploys specialized agents that work together to
             amplify your creative output while you stay in control of the
             vision.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <motion.div
+          className="grid gap-6 md:grid-cols-3"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+        >
           {AGENTS.map((agent) => {
             const Icon = agent.icon;
             return (
-              <Card
+              <motion.div
                 key={agent.title}
-                className="rounded-2xl border border-border/50 p-0 shadow-sm transition-all hover:-translate-y-2 hover:shadow-md"
+                variants={itemVariants}
+                whileHover={{
+                  y: -10,
+                  scale: 1.01,
+                  transition: { duration: 0.3 },
+                }}
               >
-                <CardContent className="flex flex-col items-start gap-5 px-6 pt-8 pb-7 sm:gap-6 sm:px-8 sm:pt-10 sm:pb-8">
-                  <div className={`rounded-xl p-3 ${agent.color}`}>
-                    <Icon className="size-6" />
-                  </div>
+                <Card className="rounded-2xl border border-border/50 p-0 shadow-sm transition-all">
+                  <CardContent className="flex flex-col items-start gap-5 px-6 pt-8 pb-7 sm:gap-6 sm:px-8 sm:pt-10 sm:pb-8">
+                    <motion.div
+                      className={`rounded-xl p-3 ${agent.color}`}
+                      animate={{ y: [0, -2, 0] }}
+                      transition={{ duration: 2.8, repeat: Infinity }}
+                      whileHover={{ rotate: 10, scale: 1.1 }}
+                    >
+                      <Icon className="size-6" />
+                    </motion.div>
 
-                  <div className="flex flex-col gap-3">
-                    <h3 className="font-heading text-xl font-semibold text-foreground sm:text-2xl">
-                      {agent.title}
-                    </h3>
-                    <p className="text-sm leading-6 text-muted-foreground">
-                      {agent.description}
-                    </p>
-                  </div>
+                    <div className="flex flex-col gap-3">
+                      <h3 className="font-heading text-xl font-semibold text-foreground sm:text-2xl">
+                        {agent.title}
+                      </h3>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        {agent.description}
+                      </p>
+                    </div>
 
-                  <div className="w-full space-y-2">
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={`h-full rounded-full ${agent.barColor}`}
-                        style={{ width: `${agent.percentage}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-                      <span>{agent.metric}</span>
-                      <span className={agent.color.split(" ")[1]}>
-                        {agent.percentage === 95
-                          ? "Instant"
-                          : `${agent.percentage}%`}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <motion.div
+                      className="w-full space-y-2"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                        <motion.div
+                          className={`h-full rounded-full ${agent.barColor}`}
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${agent.percentage}%` }}
+                          viewport={{ once: true }}
+                          transition={{
+                            delay: 0.4,
+                            duration: 1,
+                          }}
+                          whileHover={{
+                            boxShadow: "0 0 8px rgba(255,255,255,0.35)",
+                          }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                        <span>{agent.metric}</span>
+                        <span className={agent.color.split(" ")[1]}>
+                          {agent.percentage === 95
+                            ? "Instant"
+                            : `${agent.percentage}%`}
+                        </span>
+                      </div>
+                    </motion.div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

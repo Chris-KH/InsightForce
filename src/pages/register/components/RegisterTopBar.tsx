@@ -1,4 +1,5 @@
 import { NavLink } from "react-router";
+import { motion } from "motion/react";
 
 type RegisterProcessStep = "account" | "verification" | "profile";
 
@@ -18,13 +19,25 @@ export function RegisterTopBar({
   );
 
   return (
-    <header className="fixed top-0 right-0 left-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur">
+    <motion.header
+      className="fixed top-0 right-0 left-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
-        <NavLink to={"/"}>
-          <p className="font-heading text-3xl leading-none font-semibold tracking-tight text-primary">
-            Insight<span className="text-chart-1">Force AI</span>
-          </p>
-        </NavLink>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+          whileHover={{ y: -1 }}
+        >
+          <NavLink to={"/"}>
+            <p className="font-heading text-3xl leading-none font-semibold tracking-tight text-primary">
+              Insight<span className="text-chart-1">Force AI</span>
+            </p>
+          </NavLink>
+        </motion.div>
 
         <nav className="hidden items-center gap-3 md:flex">
           {STEP_ITEMS.map((step, index) => {
@@ -32,14 +45,29 @@ export function RegisterTopBar({
             const isActive = index === activeStepIndex;
 
             return (
-              <div key={step.key} className="flex items-center gap-3">
+              <motion.div
+                key={step.key}
+                className="flex items-center gap-3"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 + index * 0.1, duration: 0.5 }}
+              >
                 <div className="flex items-center gap-2">
-                  <span
+                  <motion.span
                     className={
                       isActive || isCompleted
                         ? "size-2.5 rounded-full bg-primary"
                         : "size-2.5 rounded-full bg-muted"
                     }
+                    animate={
+                      isActive
+                        ? {
+                            scale: [1, 1.25, 1],
+                            opacity: [0.7, 1, 0.7],
+                          }
+                        : {}
+                    }
+                    transition={{ duration: 1.8, repeat: Infinity }}
                   />
                   <span
                     className={
@@ -53,13 +81,18 @@ export function RegisterTopBar({
                 </div>
 
                 {index < STEP_ITEMS.length - 1 ? (
-                  <span className="h-px w-12 bg-border" />
+                  <motion.span
+                    className="h-px w-12 bg-border"
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 48 }}
+                    transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
+                  />
                 ) : null}
-              </div>
+              </motion.div>
             );
           })}
         </nav>
       </div>
-    </header>
+    </motion.header>
   );
 }

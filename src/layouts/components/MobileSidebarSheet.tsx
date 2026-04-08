@@ -33,7 +33,7 @@ export function MobileSidebarSheet() {
       >
         <SheetHeader className="px-0 pt-2">
           <SheetTitle className="font-heading text-2xl text-primary">
-            InsightForge
+            Insight<span className="text-chart-1">Forge</span>
           </SheetTitle>
           <SheetDescription>
             Navigate your operating dashboard and live agent systems.
@@ -81,7 +81,9 @@ export function MobileSidebarSheet() {
         </div>
 
         <div className="mt-6 rounded-xl bg-muted/40 p-4 text-xs text-muted-foreground">
-          <p className="font-semibold text-foreground">InsightForge Control</p>
+          <p className="font-semibold text-foreground">
+            InsightForge <span className="text-chart-1">Control</span>
+          </p>
           <p className="mt-1">
             Realtime orchestration across all active agent lanes.
           </p>

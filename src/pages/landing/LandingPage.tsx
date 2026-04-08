@@ -7,10 +7,16 @@ import {
   SiteFooter,
   SiteHeader,
 } from "./components";
+import { motion } from "motion/react";
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <motion.div
+      className="min-h-screen bg-background text-foreground"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <SiteHeader />
       <main>
         <HeroSection />
@@ -20,6 +26,6 @@ export function LandingPage() {
         <PricingSection />
       </main>
       <SiteFooter />
-    </div>
+    </motion.div>
   );
 }

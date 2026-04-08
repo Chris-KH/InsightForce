@@ -107,7 +107,7 @@ export function TransactionHistoryCard() {
                   <td className="px-4 py-4 font-medium text-foreground">
                     {row.amount}
                   </td>
-                  <td className="px-4 py-4 font-medium text-chart-1">
+                  <td className="px-4 py-4 font-medium text-chart-4">
                     {row.commission}
                   </td>
                   <td className="px-4 py-4">
