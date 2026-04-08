@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { MobileSidebarSheet } from "@/layouts/components/MobileSidebarSheet";
 import { APP_HEADER_TABS } from "@/layouts/components/app-layout-data";
 import { cn } from "@/lib/utils";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export function AppHeader() {
   const location = useLocation();
@@ -74,6 +75,7 @@ export function AppHeader() {
             <UserCircle2 />
             <span className="sr-only">Account</span>
           </Button>
+          <ModeToggle />
         </div>
       </div>
     </header>
