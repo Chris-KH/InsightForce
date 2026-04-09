@@ -196,15 +196,12 @@ export const INTEGRATIONS: {
   { name: "YouTube", category: "Creator Channel" },
   { name: "TikTok", category: "Creator Channel" },
   { name: "Instagram", category: "Creator Channel" },
-  { name: "Shopify", category: "Commerce" },
-  { name: "Stripe", category: "Payments" },
-  { name: "HubSpot", category: "CRM" },
+  { name: "Facebook", category: "Social" },
+
   { name: "Notion", category: "Workspace" },
   { name: "Figma", category: "Design" },
   { name: "Slack", category: "Communication" },
   { name: "OpenAI", category: "AI/ML" },
-  { name: "PostgreSQL", category: "Database" },
-  { name: "Vercel", category: "Hosting" },
 ];
 
 export const SECURITY_BADGES = [

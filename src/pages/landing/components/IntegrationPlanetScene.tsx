@@ -1,7 +1,14 @@
 import { Icon } from "@iconify-icon/react";
 import { Float, Html, Sparkles, Stars, useTexture } from "@react-three/drei";
 import { Canvas, type RootState, useFrame } from "@react-three/fiber";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import {
   LinearFilter,
   MathUtils,
@@ -49,8 +56,15 @@ type OrbitConfig = {
   tilt: number;
 };
 
+type SceneInteractionState = {
+  yaw: number;
+  pitch: number;
+  distance: number;
+};
+
 type PlanetSceneContentProps = IntegrationPlanetSceneProps & {
   isMobile: boolean;
+  interactionRef: RefObject<SceneInteractionState>;
 };
 
 const ORBIT_RADII = [4.6, 5.45, 6.35, 7.25, 8.05];
@@ -253,6 +267,7 @@ function PlanetSceneContent({
   coreTagline,
   coreName,
   isMobile,
+  interactionRef,
 }: PlanetSceneContentProps) {
   const orbitGroupRef = useRef<Group>(null);
   const orbitSegments = isMobile ? 176 : 280;
@@ -282,6 +297,42 @@ function PlanetSceneContent({
   useFrame((_, delta) => {
     if (!orbitGroupRef.current) return;
     orbitGroupRef.current.rotation.y += delta * 0.02;
+  });
+
+  useFrame((state, delta) => {
+    const hoverYaw = isMobile ? 0 : state.pointer.x * 0.1;
+    const hoverPitch = isMobile ? 0 : -state.pointer.y * 0.06;
+    const targetYaw = interactionRef.current.yaw + hoverYaw;
+    const targetPitch = MathUtils.clamp(
+      interactionRef.current.pitch + hoverPitch,
+      -0.45,
+      0.45,
+    );
+    const targetDistance = interactionRef.current.distance;
+    const cosPitch = Math.cos(targetPitch);
+    const targetX = Math.sin(targetYaw) * targetDistance * cosPitch;
+    const targetZ = Math.cos(targetYaw) * targetDistance * cosPitch;
+    const targetY = 2.8 + Math.sin(targetPitch) * targetDistance * 0.42;
+
+    state.camera.position.x = MathUtils.damp(
+      state.camera.position.x,
+      targetX,
+      3,
+      delta,
+    );
+    state.camera.position.y = MathUtils.damp(
+      state.camera.position.y,
+      targetY,
+      3,
+      delta,
+    );
+    state.camera.position.z = MathUtils.damp(
+      state.camera.position.z,
+      targetZ,
+      3,
+      delta,
+    );
+    state.camera.lookAt(0, 0, 0);
   });
 
   return (
@@ -382,9 +433,20 @@ function PlanetSceneContent({
 
 export function IntegrationPlanetScene(props: IntegrationPlanetSceneProps) {
   const isMobile = useIsMobile();
+  const isMobileRef = useRef(isMobile);
   const [contextLost, setContextLost] = useState(false);
   const [sceneVersion, setSceneVersion] = useState(0);
   const canvasCleanupRef = useRef<(() => void) | null>(null);
+  const dragStateRef = useRef({ active: false, lastX: 0, lastY: 0 });
+  const interactionRef = useRef<SceneInteractionState>({
+    yaw: 0,
+    pitch: 0,
+    distance: 13.2,
+  });
+
+  useEffect(() => {
+    isMobileRef.current = isMobile;
+  }, [isMobile]);
 
   useEffect(
     () => () => {
@@ -396,6 +458,7 @@ export function IntegrationPlanetScene(props: IntegrationPlanetSceneProps) {
   const handleCreated = useCallback((state: RootState) => {
     const renderer = state.gl as WebGLRenderer;
     const canvas = renderer.domElement;
+    canvas.style.cursor = isMobileRef.current ? "default" : "grab";
 
     const onContextLost = (event: Event) => {
       event.preventDefault();
@@ -406,8 +469,58 @@ export function IntegrationPlanetScene(props: IntegrationPlanetSceneProps) {
       setContextLost(false);
     };
 
+    const onPointerDown = (event: PointerEvent) => {
+      if (isMobileRef.current || event.button !== 0) return;
+
+      dragStateRef.current.active = true;
+      dragStateRef.current.lastX = event.clientX;
+      dragStateRef.current.lastY = event.clientY;
+      canvas.style.cursor = "grabbing";
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (isMobileRef.current || !dragStateRef.current.active) return;
+
+      const dx = event.clientX - dragStateRef.current.lastX;
+      const dy = event.clientY - dragStateRef.current.lastY;
+
+      dragStateRef.current.lastX = event.clientX;
+      dragStateRef.current.lastY = event.clientY;
+
+      interactionRef.current.yaw += dx * 0.0065;
+      interactionRef.current.pitch = MathUtils.clamp(
+        interactionRef.current.pitch + dy * 0.0045,
+        -0.42,
+        0.42,
+      );
+    };
+
+    const stopDragging = () => {
+      if (!dragStateRef.current.active) return;
+
+      dragStateRef.current.active = false;
+      canvas.style.cursor = isMobileRef.current ? "default" : "grab";
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      if (isMobileRef.current) return;
+
+      event.preventDefault();
+      interactionRef.current.distance = MathUtils.clamp(
+        interactionRef.current.distance + event.deltaY * 0.012,
+        10.8,
+        16.4,
+      );
+    };
+
     canvas.addEventListener("webglcontextlost", onContextLost, false);
     canvas.addEventListener("webglcontextrestored", onContextRestored, false);
+    canvas.addEventListener("pointerdown", onPointerDown, false);
+    window.addEventListener("pointermove", onPointerMove, false);
+    window.addEventListener("pointerup", stopDragging, false);
+    window.addEventListener("pointercancel", stopDragging, false);
+    window.addEventListener("blur", stopDragging, false);
+    canvas.addEventListener("wheel", onWheel, { passive: false });
 
     canvasCleanupRef.current = () => {
       canvas.removeEventListener("webglcontextlost", onContextLost, false);
@@ -416,10 +529,18 @@ export function IntegrationPlanetScene(props: IntegrationPlanetSceneProps) {
         onContextRestored,
         false,
       );
+      canvas.removeEventListener("pointerdown", onPointerDown, false);
+      window.removeEventListener("pointermove", onPointerMove, false);
+      window.removeEventListener("pointerup", stopDragging, false);
+      window.removeEventListener("pointercancel", stopDragging, false);
+      window.removeEventListener("blur", stopDragging, false);
+      canvas.removeEventListener("wheel", onWheel);
     };
   }, []);
 
   const resetScene = useCallback(() => {
+    dragStateRef.current.active = false;
+    interactionRef.current = { yaw: 0, pitch: 0, distance: 13.2 };
     setContextLost(false);
     setSceneVersion((value) => value + 1);
   }, []);
@@ -439,7 +560,11 @@ export function IntegrationPlanetScene(props: IntegrationPlanetSceneProps) {
         camera={{ position: [0, 3.5, 13.2], fov: 35 }}
         onCreated={handleCreated}
       >
-        <PlanetSceneContent {...props} isMobile={isMobile} />
+        <PlanetSceneContent
+          {...props}
+          isMobile={isMobile}
+          interactionRef={interactionRef}
+        />
       </Canvas>
 
       {contextLost ? (

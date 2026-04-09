@@ -50,20 +50,10 @@ const INTEGRATION_VISUALS: Record<string, IntegrationVisual> = {
     color: "#E4405F",
     fallback: "IG",
   },
-  Shopify: {
-    icon: "simple-icons:shopify",
-    color: "#95BF47",
-    fallback: "SH",
-  },
-  Stripe: {
-    icon: "simple-icons:stripe",
-    color: "#635BFF",
-    fallback: "ST",
-  },
-  HubSpot: {
-    icon: "simple-icons:hubspot",
-    color: "#FF7A59",
-    fallback: "HB",
+  Facebook: {
+    icon: "simple-icons:facebook",
+    color: "#1877F2",
+    fallback: "FB",
   },
   Notion: {
     icon: "simple-icons:notion",
@@ -75,16 +65,7 @@ const INTEGRATION_VISUALS: Record<string, IntegrationVisual> = {
     color: "#F24E1E",
     fallback: "FG",
   },
-  PostgreSQL: {
-    icon: "simple-icons:postgresql",
-    color: "#4169E1",
-    fallback: "PG",
-  },
-  Vercel: {
-    icon: "simple-icons:vercel",
-    color: "#111111",
-    fallback: "VE",
-  },
+
   Slack: {
     icon: "simple-icons:slack",
     color: "#4A154B",
@@ -155,7 +136,7 @@ function PlanetSceneFallback({
   onRetry,
 }: PlanetSceneFallbackProps) {
   return (
-    <div className="relative mx-auto h-[32rem] w-full max-w-[50rem] overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_50%_36%,#1f3a8a_0%,#0b1c44_42%,#030712_100%)] shadow-[0_44px_150px_-62px_hsl(var(--primary)/0.95)]">
+    <div className="relative mx-auto h-128 w-full max-w-200 overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_50%_36%,#1f3a8a_0%,#0b1c44_42%,#030712_100%)] shadow-[0_44px_150px_-62px_hsl(var(--primary)/0.95)]">
       <motion.div
         className="absolute inset-[16%] rounded-full border border-primary/35"
         animate={{ scale: [1, 1.06, 1], opacity: [0.45, 0.85, 0.45] }}
