@@ -13,10 +13,8 @@ export function AutomationPage() {
   return (
     <div className="grid gap-8">
       <SectionHeader
-        title={copy(
-          "Agent Orchestration Hub",
-          "Trung tâm điều phối bot",
-        )}
+        eyebrow={copy("Autonomous Agents", "Hệ bot tự trị")}
+        title={copy("Agent Orchestration Hub", "Trung tâm điều phối bot")}
         description={copy(
           "War Room: 3 Agents Active • 14 Operations Today",
           "Phòng điều hành: 3 bot đang hoạt động • 14 tác vụ hôm nay",

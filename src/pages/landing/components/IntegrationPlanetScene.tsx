@@ -154,25 +154,19 @@ function PlanetCore({
   const ringRef = useRef<Mesh>(null);
   const cloudsRef = useRef<Mesh>(null);
 
-  const [diffuseMap, normalMap, cloudsMap] = useTexture([
-    earthDiffuseUrl,
-    earthNormalUrl,
-    earthCloudsUrl,
-  ]);
+  const [diffuseMap, normalMap, cloudsMap] = useTexture(
+    [earthDiffuseUrl, earthNormalUrl, earthCloudsUrl],
+    ([diffuse, normal, clouds]) => {
+      [diffuse, normal, clouds].forEach((t) => {
+        t.minFilter = LinearFilter;
+        t.magFilter = LinearFilter;
+        t.generateMipmaps = false;
+      });
 
-  useEffect(() => {
-    const textureList = [diffuseMap, normalMap, cloudsMap];
-
-    for (const texture of textureList) {
-      texture.minFilter = LinearFilter;
-      texture.magFilter = LinearFilter;
-      texture.generateMipmaps = false;
-      texture.needsUpdate = true;
-    }
-
-    diffuseMap.colorSpace = SRGBColorSpace;
-    cloudsMap.colorSpace = SRGBColorSpace;
-  }, [diffuseMap, normalMap, cloudsMap]);
+      diffuse.colorSpace = SRGBColorSpace;
+      clouds.colorSpace = SRGBColorSpace;
+    },
+  );
 
   useFrame((state, delta) => {
     if (planetRef.current) {
@@ -546,7 +540,7 @@ export function IntegrationPlanetScene(props: IntegrationPlanetSceneProps) {
   }, []);
 
   return (
-    <div className="relative mx-auto h-[32rem] w-full max-w-[50rem] overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_50%_36%,#1f3a8a_0%,#0b1c44_42%,#030712_100%)] shadow-[0_44px_150px_-62px_hsl(var(--primary)/0.95)]">
+    <div className="relative mx-auto h-128 w-full max-w-200 overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_50%_36%,#1f3a8a_0%,#0b1c44_42%,#030712_100%)] shadow-[0_44px_150px_-62px_hsl(var(--primary)/0.95)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_16%,rgba(125,211,252,0.26),transparent_40%),radial-gradient(circle_at_84%_18%,rgba(129,140,248,0.25),transparent_36%),radial-gradient(circle_at_50%_80%,rgba(96,165,250,0.16),transparent_35%)]" />
 
       <Canvas

@@ -17,20 +17,29 @@ export function AppNavLink({
   mobile = false,
 }: AppNavLinkProps) {
   return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        cn(
-          "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
-          isActive
-            ? "bg-primary/10 text-primary"
-            : "text-foreground/70 hover:bg-muted/80 hover:text-foreground",
-          mobile && "rounded-lg px-3 py-2.5",
-        )
-      }
-    >
-      <Icon className="size-4 shrink-0" />
-      <span>{label}</span>
+    <NavLink to={to} className="block">
+      {({ isActive }) => (
+        <span
+          className={cn(
+            "group/nav relative flex items-center gap-3 rounded-xl border px-3.5 py-2.5 text-sm font-medium transition-all",
+            isActive
+              ? "border-primary/30 bg-primary/12 text-foreground shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+              : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-muted/55 hover:text-foreground",
+            mobile && "rounded-lg px-3 py-2.5",
+          )}
+        >
+          <span
+            className={cn(
+              "size-1.5 rounded-full transition-colors",
+              isActive
+                ? "bg-primary"
+                : "bg-transparent group-hover/nav:bg-muted-foreground/60",
+            )}
+          />
+          <Icon className="size-4 shrink-0" />
+          <span className="truncate">{label}</span>
+        </span>
+      )}
     </NavLink>
   );
 }

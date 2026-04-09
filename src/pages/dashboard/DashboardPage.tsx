@@ -9,9 +9,10 @@ export function DashboardPage() {
   const copy = useBilingual();
 
   return (
-    <div className="grid gap-8 xl:grid-cols-[minmax(0,1.9fr)_minmax(340px,0.86fr)]">
+    <div className="grid gap-8 xl:grid-cols-[minmax(0,1.9fr)_minmax(360px,0.86fr)]">
       <div className="flex flex-col gap-8">
         <SectionHeader
+          eyebrow={copy("Control Center", "Trung tâm điều phối")}
           title={copy("Channel Overview", "Tổng quan kênh")}
           description={copy(
             "Deep insights into your content ecosystem.",

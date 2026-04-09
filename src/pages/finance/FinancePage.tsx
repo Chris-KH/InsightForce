@@ -14,6 +14,7 @@ export function FinancePage() {
   return (
     <div className="grid gap-8">
       <SectionHeader
+        eyebrow={copy("Monetization Ops", "Vận hành kiếm tiền")}
         title={copy(
           "Finance Execution Center",
           "Trung tâm điều phối tài chính",

@@ -14,6 +14,7 @@ export function AudiencePage() {
   return (
     <div className="grid gap-8">
       <SectionHeader
+        eyebrow={copy("Audience Intelligence", "Trí tuệ khách hàng")}
         title={copy("Content Architect", "Thiết kế phân luồng nội dung")}
         description={copy(
           "Decoding audience psychology through unstructured data.",
