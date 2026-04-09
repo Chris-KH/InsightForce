@@ -1,204 +1,176 @@
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  INTEGRATIONS,
+  PERFORMANCE_METRICS,
+  SECURITY_BADGES,
+  SECURITY_FEATURES,
+} from "../data";
+import { PlugZap, Shield } from "lucide-react";
 import { motion } from "motion/react";
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6 },
-  },
-};
+function formatMetric(value: number, prefix?: string, suffix?: string) {
+  return `${prefix ?? ""}${value}${suffix ?? ""}`;
+}
 
 export function ExecutiveProjectionsSection() {
   return (
-    <section className="relative overflow-hidden bg-linear-to-b from-foreground to-foreground/95 px-4 py-16 text-background sm:px-6 sm:py-20 lg:px-8 lg:py-24 dark:from-background dark:to-background dark:text-foreground">
-      <motion.div
-        className="pointer-events-none absolute -top-16 -right-24 size-96 rounded-full bg-primary/15 blur-[120px]"
-        animate={{ opacity: [0.2, 0.45, 0.2], scale: [1, 1.08, 1] }}
-        transition={{ duration: 10, repeat: Infinity }}
-      />
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 sm:gap-12">
+    <section className="relative isolate overflow-hidden bg-muted/35 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+      <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
         <motion.div
-          className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
+          className="absolute -top-20 right-0 h-72 w-72 rounded-full bg-primary/10 blur-[120px]"
+          animate={{ opacity: [0.18, 0.34, 0.18], scale: [1, 1.1, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
+      <div className="mx-auto w-full max-w-7xl">
+        <motion.div
+          className="mx-auto max-w-3xl text-center"
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6 }}
         >
-          <motion.div
-            className="flex max-w-3xl flex-col gap-4"
-            variants={containerVariants}
-          >
-            <motion.h2
-              className="font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.8rem]"
-              variants={itemVariants}
-            >
-              Executive Intelligence Projections
-            </motion.h2>
-            <motion.p
-              className="text-[15px] leading-7 text-background/75 sm:text-base dark:text-muted-foreground"
-              variants={itemVariants}
-            >
-              The Scout & Executor agent doesn&apos;t just run campaigns; it
-              calculates future outcomes. See your revenue trajectory before you
-              spend a single dollar on production.
-            </motion.p>
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <motion.div
-              whileHover={{ y: -2, scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Button className="h-12 w-fit bg-primary px-7 text-primary-foreground hover:bg-primary/80">
-                Unlock Premium Projections
-              </Button>
-            </motion.div>
-          </motion.div>
+          <Badge className="border border-primary/30 bg-primary/10 px-3.5 py-1 text-[11px] tracking-[0.13em] uppercase">
+            Scale Visibility
+          </Badge>
+          <h2 className="mt-4 font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.8rem]">
+            Performance, integrations, and compliance from one control plane
+          </h2>
+          <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
+            Track real-time throughput, activate your existing toolchain, and
+            protect every workflow with enterprise security defaults.
+          </p>
         </motion.div>
 
-        <motion.div
-          className="grid gap-6 md:grid-cols-[0.9fr_2.1fr]"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          <motion.div variants={itemVariants}>
-            <Card className="border border-white/10 bg-white/5 text-background backdrop-blur-sm dark:border-border dark:bg-card/50 dark:text-foreground">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+          {PERFORMANCE_METRICS.map((metric, index) => (
+            <motion.div
+              key={metric.label}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5, delay: index * 0.08 }}
+            >
+              <Card className="h-full border-border/65 bg-card/72">
+                <CardContent className="px-4 py-5">
+                  <p className="font-heading text-[1.8rem] leading-none font-semibold tracking-tight text-foreground sm:text-[2.1rem]">
+                    {formatMetric(metric.value, metric.prefix, metric.suffix)}
+                  </p>
+                  <p className="mt-2 text-[11px] tracking-widest text-muted-foreground uppercase">
+                    {metric.label}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-2">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.55 }}
+          >
+            <Card className="h-full border-border/65 bg-card/72">
               <CardHeader>
-                <CardTitle className="font-heading text-[2.4rem] leading-none text-chart-1">
-                  $4.2M
+                <div className="flex items-center gap-2 text-primary">
+                  <PlugZap className="size-4" />
+                  <p className="text-xs font-semibold tracking-[0.12em] uppercase">
+                    Integrations
+                  </p>
+                </div>
+                <CardTitle className="font-heading text-2xl">
+                  Connect your stack in minutes
                 </CardTitle>
-                <CardDescription className="tracking-[0.12em] text-background/70 uppercase dark:text-muted-foreground">
-                  Projected Creator ARR
+                <CardDescription>
+                  Activate cross-platform workflows with prebuilt connectors for
+                  channels, CRM, payments, and collaboration.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex h-20 items-end gap-1.5">
-                  {[40, 62, 48, 90, 76, 96].map((height, index) => (
-                    <motion.div
-                      key={height}
-                      className="w-2 rounded-full bg-chart-1/80 dark:bg-chart-1"
-                      initial={{ height: 0 }}
-                      whileInView={{ height: `${height}%` }}
-                      viewport={{ once: true }}
-                      transition={{
-                        delay: 0.5 + index * 0.1,
-                        duration: 0.8,
-                      }}
-                    />
+                <div className="flex flex-wrap gap-2">
+                  {INTEGRATIONS.map((integration) => (
+                    <span
+                      key={integration.name}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/75 px-3 py-1.5 text-xs"
+                    >
+                      <span className="font-medium text-foreground">
+                        {integration.name}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {integration.category}
+                      </span>
+                    </span>
                   ))}
                 </div>
               </CardContent>
-              <CardFooter>
-                <p className="text-xs text-chart-1/90 dark:text-muted-foreground">
-                  Scout Confidence: 94.2%
-                </p>
-              </CardFooter>
             </Card>
           </motion.div>
 
-          <motion.div variants={itemVariants}>
-            <Card className="border border-white/10 bg-white/5 text-background backdrop-blur-sm dark:border-border dark:bg-card/50 dark:text-foreground">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.55, delay: 0.08 }}
+          >
+            <Card className="h-full border-border/65 bg-card/72">
               <CardHeader>
-                <div className="flex items-center justify-between gap-4">
-                  <CardTitle>Audience Retention Forecast</CardTitle>
-                  <div className="flex items-center gap-4 text-xs dark:text-foreground/80">
-                    <div className="flex items-center gap-1.5">
-                      <div className="size-2.5 rounded-full bg-primary" />
-                      Retention
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="size-2.5 rounded-full bg-destructive" />
-                      Risk
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2 text-primary">
+                  <Shield className="size-4" />
+                  <p className="text-xs font-semibold tracking-[0.12em] uppercase">
+                    Security
+                  </p>
+                </div>
+                <CardTitle className="font-heading text-2xl">
+                  Enterprise-ready by default
+                </CardTitle>
+                <CardDescription>
+                  Built-in governance controls for creator, partner, and
+                  campaign data across global teams.
+                </CardDescription>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {SECURITY_BADGES.map((badge) => (
+                    <Badge
+                      key={badge}
+                      variant="outline"
+                      className="border-border/70 bg-background/75 text-xs"
+                    >
+                      {badge}
+                    </Badge>
+                  ))}
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="relative h-56 border-b border-white/10 pb-3 dark:border-border/40">
-                  <motion.svg
-                    viewBox="0 0 420 120"
-                    className="size-full"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.5, duration: 0.8 }}
-                  >
-                    <motion.path
-                      d="M0 95 Q52 12 104 86 T210 62 T318 35 T420 70"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      className="text-primary"
-                      initial={{ pathLength: 0 }}
-                      whileInView={{ pathLength: 1 }}
-                      viewport={{ once: true }}
-                      transition={{
-                        delay: 0.6,
-                        duration: 1.5,
-                      }}
-                    />
-                    <motion.circle
-                      cx="104"
-                      cy="86"
-                      r="5"
-                      className="fill-background stroke-primary dark:fill-card"
-                      strokeWidth="2"
-                      initial={{ opacity: 0, scale: 0 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 1, duration: 0.5 }}
-                    />
-                    <motion.circle
-                      cx="318"
-                      cy="35"
-                      r="5"
-                      className="fill-background stroke-primary dark:fill-card"
-                      strokeWidth="2"
-                      initial={{ opacity: 0, scale: 0 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 1.2, duration: 0.5 }}
-                    />
-                  </motion.svg>
-                </div>
-                <motion.div
-                  className="mt-4 grid grid-cols-4 text-center text-[11px] tracking-[0.12em] text-background/70 uppercase dark:text-muted-foreground"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 1, duration: 0.6 }}
-                >
-                  <span>Phase 1: Deployment</span>
-                  <span>Phase 2: Scaling</span>
-                  <span>Phase 3: Optimization</span>
-                  <span>Phase 4: Domination</span>
-                </motion.div>
+              <CardContent className="space-y-3">
+                {SECURITY_FEATURES.map((feature) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div
+                      key={feature.title}
+                      className="rounded-lg border border-border/65 bg-background/72 px-3 py-3"
+                    >
+                      <div className="flex items-center gap-2 text-foreground">
+                        <Icon className="size-4 text-primary" />
+                        <p className="text-sm font-semibold">{feature.title}</p>
+                      </div>
+                      <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                        {feature.description}
+                      </p>
+                    </div>
+                  );
+                })}
               </CardContent>
             </Card>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

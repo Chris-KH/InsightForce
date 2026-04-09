@@ -1,175 +1,111 @@
-import { Shield, Lightbulb, Zap } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+} from "@/components/ui/card";
+import { AGENT_MODULES, WORKFLOW_STEPS } from "../data";
 import { motion } from "motion/react";
 
-const AGENTS = [
-  {
-    icon: Shield,
-    title: "Psychological Guardian",
-    description:
-      "Analyzes audience sentiment and safeguards your brand's emotional resonance. Prevents tone-deaf pivots by monitoring cultural shifts in real-time.",
-    metric: "Brand Alignment",
-    percentage: 92,
-    color:
-      "bg-green-600/20 text-green-600 dark:bg-green-400/20 dark:text-green-400",
-    barColor: "bg-green-600 dark:bg-green-400",
-  },
-  {
-    icon: Lightbulb,
-    title: "Content Architect",
-    description:
-      "Transmutes raw data into viral content structures. Designs multi-channel strategies that hook interest and sustain deep engagement across platforms.",
-    metric: "Viral Potential",
-    percentage: 88,
-    color:
-      "bg-blue-600/20 text-blue-600 dark:bg-blue-400/20 dark:text-blue-400",
-    barColor: "bg-blue-600 dark:bg-blue-400",
-  },
-  {
-    icon: Zap,
-    title: "Scout & Executor",
-    description:
-      "Scours the digital landscape for emerging trends and executes placement strategies instantly. Your frontline operative in the battle for attention.",
-    metric: "Execution Speed",
-    percentage: 95,
-    color:
-      "bg-yellow-600/20 text-yellow-600 dark:bg-yellow-400/20 dark:text-yellow-400",
-    barColor: "bg-yellow-600 dark:bg-yellow-400",
-  },
-];
-
 export function AgentSquadSection() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.7 },
-    },
-  };
-
   return (
     <section
-      id="solutions"
-      className="bg-muted px-4 py-14 sm:px-6 sm:py-18 lg:px-8 lg:py-24"
+      id="workflow"
+      className="bg-muted/35 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
       <div className="mx-auto w-full max-w-7xl">
         <motion.div
-          className="mb-12 text-center sm:mb-14 lg:mb-16"
-          initial={{ opacity: 0, y: -20 }}
+          className="mx-auto max-w-3xl text-center"
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.6 }}
         >
-          <motion.h2
-            className="font-heading text-4xl font-bold text-foreground sm:text-5xl lg:text-5xl"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            Meet Your Autonomous Squad
-          </motion.h2>
-          <motion.p
-            className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:mt-4 sm:text-base"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            InsightForge AI deploys specialized agents that work together to
-            amplify your creative output while you stay in control of the
-            vision.
-          </motion.p>
+          <Badge className="border border-primary/30 bg-primary/10 px-3.5 py-1 text-[11px] tracking-[0.13em] uppercase">
+            Workflow Engine
+          </Badge>
+          <h2 className="mt-4 font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.85rem]">
+            Build, validate, and ship campaigns with specialized AI agents
+          </h2>
+          <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
+            Connect your data, assign agent responsibilities, and launch
+            globally from a single playbook that keeps strategy, execution, and
+            quality in sync.
+          </p>
         </motion.div>
 
-        <motion.div
-          className="grid gap-6 md:grid-cols-3"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          {AGENTS.map((agent) => {
-            const Icon = agent.icon;
-            return (
+        <div className="mt-10 grid gap-6 lg:mt-12 lg:grid-cols-[1.45fr_0.55fr]">
+          <div className="space-y-4">
+            {WORKFLOW_STEPS.map((step, index) => (
               <motion.div
-                key={agent.title}
-                variants={itemVariants}
-                whileHover={{
-                  y: -10,
-                  scale: 1.01,
-                  transition: { duration: 0.3 },
-                }}
+                key={step.title}
+                initial={{ opacity: 0, y: 22 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.55, delay: index * 0.08 }}
               >
-                <Card className="rounded-2xl border border-border/50 p-0 shadow-sm transition-all">
-                  <CardContent className="flex flex-col items-start gap-5 px-6 pt-8 pb-7 sm:gap-6 sm:px-8 sm:pt-10 sm:pb-8">
-                    <motion.div
-                      className={`rounded-xl p-3 ${agent.color}`}
-                      animate={{ y: [0, -2, 0] }}
-                      transition={{ duration: 2.8, repeat: Infinity }}
-                      whileHover={{ rotate: 10, scale: 1.1 }}
-                    >
-                      <Icon className="size-6" />
-                    </motion.div>
-
-                    <div className="flex flex-col gap-3">
-                      <h3 className="font-heading text-xl font-semibold text-foreground sm:text-2xl">
-                        {agent.title}
+                <Card className="border-border/65 bg-card/70 shadow-sm">
+                  <CardHeader className="gap-3 pb-2">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex size-8 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-xs font-semibold text-primary">
+                        {step.number}
+                      </span>
+                      <h3 className="font-heading text-2xl leading-tight font-semibold tracking-tight">
+                        {step.title}
                       </h3>
-                      <p className="text-sm leading-6 text-muted-foreground">
-                        {agent.description}
-                      </p>
                     </div>
-
-                    <motion.div
-                      className="w-full space-y-2"
-                      initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.3 }}
-                    >
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                        <motion.div
-                          className={`h-full rounded-full ${agent.barColor}`}
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${agent.percentage}%` }}
-                          viewport={{ once: true }}
-                          transition={{
-                            delay: 0.4,
-                            duration: 1,
-                          }}
-                          whileHover={{
-                            boxShadow: "0 0 8px rgba(255,255,255,0.35)",
-                          }}
-                        />
-                      </div>
-                      <div className="flex justify-between text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-                        <span>{agent.metric}</span>
-                        <span className={agent.color.split(" ")[1]}>
-                          {agent.percentage === 95
-                            ? "Instant"
-                            : `${agent.percentage}%`}
-                        </span>
-                      </div>
-                    </motion.div>
+                    <CardDescription className="text-sm leading-6">
+                      {step.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="overflow-x-auto rounded-xl border border-border/70 bg-background/78 p-4 text-[12px] leading-6 text-muted-foreground">
+                      <code>{step.code}</code>
+                    </pre>
                   </CardContent>
                 </Card>
               </motion.div>
-            );
-          })}
-        </motion.div>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            {AGENT_MODULES.map((module, index) => {
+              const Icon = module.icon;
+              return (
+                <motion.div
+                  key={module.title}
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.35 }}
+                  transition={{ duration: 0.5, delay: 0.16 + index * 0.08 }}
+                  whileHover={{ y: -3 }}
+                >
+                  <Card className="border-border/65 bg-card/72 shadow-sm">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg border border-border/70 bg-background/80 p-2 text-primary">
+                          <Icon className="size-4" />
+                        </div>
+                        <h3 className="font-heading text-lg font-semibold tracking-tight">
+                          {module.title}
+                        </h3>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        {module.detail}
+                      </p>
+                      <p className="mt-3 text-xs font-semibold tracking-[0.12em] text-primary uppercase">
+                        {module.metric}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </section>
   );
