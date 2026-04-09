@@ -47,7 +47,7 @@ export function PricingSection() {
     ) {
       return copy(
         "For solo creators and small studios validating audience fit.",
-        "Dành cho creator cá nhân và studio nhỏ đang kiểm chứng độ phù hợp với khách hàng.",
+        "Dành cho creator cá nhân và studio nhỏ đang kiểm chứng mức độ phù hợp với tệp khách hàng.",
       );
     }
 
@@ -76,27 +76,30 @@ export function PricingSection() {
 
   const translateTierFeature = (feature: string) => {
     if (feature === "1 agent workflow") {
-      return copy("1 agent workflow", "1 quy trình bot");
+      return copy("1 agent workflow", "1 quy trình agent");
     }
 
     if (feature === "Daily signal digest") {
-      return copy("Daily signal digest", "Tổng hợp tín hiệu hằng ngày");
+      return copy("Daily signal digest", "Bản tổng hợp tín hiệu hằng ngày");
     }
 
     if (feature === "Core channel integrations") {
-      return copy("Core channel integrations", "Tích hợp kênh cốt lõi");
+      return copy("Core channel integrations", "Tích hợp các kênh cốt lõi");
     }
 
     if (feature === "Baseline safety checks") {
-      return copy("Baseline safety checks", "Kiểm tra an toàn nền tảng");
+      return copy("Baseline safety checks", "Kiểm tra an toàn cơ bản");
     }
 
     if (feature === "Full agent triad") {
-      return copy("Full agent triad", "Bộ ba bot đầy đủ");
+      return copy("Full agent triad", "Bộ ba agent đầy đủ");
     }
 
     if (feature === "Live campaign intelligence") {
-      return copy("Live campaign intelligence", "Trí tuệ chiến dịch trực tiếp");
+      return copy(
+        "Live campaign intelligence",
+        "Trí tuệ chiến dịch theo thời gian thực",
+      );
     }
 
     if (feature === "Advanced KOL match scoring") {
@@ -108,19 +111,19 @@ export function PricingSection() {
     }
 
     if (feature === "Team collaboration") {
-      return copy("Team collaboration", "Cộng tác đội ngũ");
+      return copy("Team collaboration", "Cộng tác nhóm");
     }
 
     if (feature === "Everything in Agency") {
-      return copy("Everything in Agency", "Toàn bộ tính năng gói Agency");
+      return copy("Everything in Agency", "Toàn bộ tính năng của gói Agency");
     }
 
     if (feature === "Private infrastructure") {
-      return copy("Private infrastructure", "Hạ tầng riêng tư");
+      return copy("Private infrastructure", "Hạ tầng riêng");
     }
 
     if (feature === "Custom compliance controls") {
-      return copy("Custom compliance controls", "Kiểm soát tuân thủ tùy chỉnh");
+      return copy("Custom compliance controls", "Tùy chỉnh kiểm soát tuân thủ");
     }
 
     if (feature === "24/7 strategic support") {
@@ -128,7 +131,7 @@ export function PricingSection() {
     }
 
     if (feature === "SLA-backed deployment") {
-      return copy("SLA-backed deployment", "Triển khai cam kết SLA");
+      return copy("SLA-backed deployment", "Triển khai có cam kết SLA");
     }
 
     return feature;
@@ -140,11 +143,11 @@ export function PricingSection() {
     }
 
     if (cta === "Go agency mode") {
-      return copy("Go agency mode", "Kích hoạt chế độ agency");
+      return copy("Go agency mode", "Chuyển sang chế độ Agency");
     }
 
     if (cta === "Talk to sales") {
-      return copy("Talk to sales", "Liên hệ đội kinh doanh");
+      return copy("Talk to sales", "Trao đổi với bộ phận kinh doanh");
     }
 
     return cta;
@@ -177,7 +180,7 @@ export function PricingSection() {
     ) {
       return copy(
         "InsightForce changed our launch process from guesswork to an operating system. Every creator drop now starts with clear confidence.",
-        "InsightForce đã biến quy trình ra mắt của chúng tôi từ phỏng đoán thành một hệ điều hành. Mỗi đợt creator drop giờ đều bắt đầu với sự tự tin rõ ràng.",
+        "InsightForce đã biến quy trình ra mắt của chúng tôi từ cảm tính thành một hệ điều hành. Mỗi lần ra mắt nội dung giờ đều bắt đầu với sự tự tin rõ ràng.",
       );
     }
 
@@ -187,7 +190,7 @@ export function PricingSection() {
     ) {
       return copy(
         "The Guardian alerts and Architect briefs helped us scale creator output without losing brand coherence.",
-        "Cảnh báo từ Guardian và brief từ Architect giúp chúng tôi mở rộng sản lượng creator mà không làm mất tính nhất quán thương hiệu.",
+        "Cảnh báo từ Guardian và bản brief từ Architect giúp chúng tôi mở rộng đầu ra nội dung mà không làm mất tính nhất quán thương hiệu.",
       );
     }
 
@@ -220,7 +223,7 @@ export function PricingSection() {
     }
 
     if (keyResult === "41% retention lift") {
-      return copy("41% retention lift", "Tăng 41% giữ chân");
+      return copy("41% retention lift", "Tăng 41% tỷ lệ giữ chân");
     }
 
     if (keyResult === "3.2x faster campaign launch") {
@@ -264,7 +267,7 @@ export function PricingSection() {
             savings > 0
               ? copy(
                   `Save ${savings}% with annual`,
-                  `Tiết kiệm ${savings}% với gói năm`,
+                  `Tiết kiệm ${savings}% khi dùng gói năm`,
                 )
               : "",
         };
@@ -329,13 +332,13 @@ export function PricingSection() {
           <h2 className="mt-4 font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.8rem]">
             {copy(
               "Pick the plan that fits your creator growth stage",
-              "Chọn gói phù hợp với giai đoạn tăng trưởng creator",
+              "Chọn gói phù hợp với giai đoạn tăng trưởng của creator",
             )}
           </h2>
           <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
             {copy(
               "Start with a focused setup and expand into multi-market orchestration as your campaigns scale.",
-              "Bắt đầu với thiết lập tinh gọn và mở rộng điều phối đa thị trường khi chiến dịch tăng trưởng.",
+              "Bắt đầu với thiết lập tinh gọn và mở rộng điều phối đa thị trường khi chiến dịch phát triển.",
             )}
           </p>
 

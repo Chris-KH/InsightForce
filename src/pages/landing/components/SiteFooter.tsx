@@ -75,11 +75,11 @@ export function SiteFooter() {
     }
 
     if (label === "Privacy") {
-      return copy("Privacy", "Riêng tư");
+      return copy("Privacy", "Quyền riêng tư");
     }
 
     if (label === "Terms") {
-      return copy("Terms", "Điều khoản");
+      return copy("Terms", "Điều khoản sử dụng");
     }
 
     if (label === "Security") {
@@ -161,13 +161,13 @@ export function SiteFooter() {
               <h3 className="mt-2 font-heading text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
                 {copy(
                   "Turn audience intelligence into your next growth engine.",
-                  "Biến trí tuệ khách hàng thành động cơ tăng trưởng tiếp theo.",
+                  "Biến insight khách hàng thành động lực tăng trưởng tiếp theo.",
                 )}
               </h3>
               <p className="mt-3 max-w-[56ch] text-sm leading-6 text-muted-foreground sm:text-base">
                 {copy(
                   "Move from scattered decisions to one connected system for creator strategy, content, and campaign execution.",
-                  "Chuyển từ quyết định rời rạc sang một hệ thống kết nối cho chiến lược creator, nội dung và thực thi chiến dịch.",
+                  "Chuyển từ các quyết định rời rạc sang một hệ thống kết nối cho chiến lược creator, nội dung và thực thi chiến dịch.",
                 )}
               </p>
             </div>
@@ -206,7 +206,7 @@ export function SiteFooter() {
             <p className="mt-3 max-w-xs text-sm leading-6 text-muted-foreground">
               {copy(
                 "Creator intelligence infrastructure for teams that need speed, precision, and brand-safe scale.",
-                "Hạ tầng trí tuệ creator cho đội ngũ cần tốc độ, độ chính xác và khả năng mở rộng an toàn thương hiệu.",
+                "Hạ tầng trí tuệ cho creator dành cho đội ngũ cần tốc độ, độ chính xác và khả năng mở rộng an toàn cho thương hiệu.",
               )}
             </p>
             <div className="mt-4 flex items-center gap-3">

@@ -14,11 +14,11 @@ export function GuardianWatchSection() {
 
   const translateKpiLabel = (label: string) => {
     if (label === "Creator data hubs") {
-      return copy("Creator data hubs", "Hub dữ liệu creator");
+      return copy("Creator data hubs", "Trung tâm dữ liệu creator");
     }
 
     if (label === "Uptime SLA") {
-      return copy("Uptime SLA", "SLA thời gian hoạt động");
+      return copy("Uptime SLA", "Cam kết thời gian hoạt động");
     }
 
     if (label === "Global response") {
@@ -30,11 +30,11 @@ export function GuardianWatchSection() {
 
   const translateRegion = (region: string) => {
     if (region === "US West") {
-      return copy("US West", "Bờ Tây Mỹ");
+      return copy("US West", "Miền Tây Hoa Kỳ");
     }
 
     if (region === "US East") {
-      return copy("US East", "Bờ Đông Mỹ");
+      return copy("US East", "Miền Đông Hoa Kỳ");
     }
 
     if (region === "Europe") {
@@ -111,13 +111,13 @@ export function GuardianWatchSection() {
           <h2 className="mt-4 font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.8rem]">
             {copy(
               "Fast, reliable delivery for creator intelligence in every region",
-              "Triển khai nhanh và ổn định cho trí tuệ creator ở mọi khu vực",
+              "Triển khai nhanh, ổn định cho hệ trí tuệ dành cho creator ở mọi khu vực",
             )}
           </h2>
           <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
             {copy(
               "Route audience signals through distributed hubs with low-latency responses, high availability, and operational visibility for every live campaign.",
-              "Định tuyến tín hiệu khách hàng qua các hub phân tán với độ trễ thấp, độ sẵn sàng cao và khả năng quan sát vận hành cho mọi chiến dịch trực tiếp.",
+              "Định tuyến tín hiệu từ khách hàng mục tiêu qua các trung tâm phân tán với độ trễ thấp, độ sẵn sàng cao và khả năng quan sát vận hành cho mọi chiến dịch trực tiếp.",
             )}
           </p>
         </motion.div>
@@ -173,11 +173,17 @@ export function GuardianWatchSection() {
                 <div className="flex items-center gap-2 text-primary">
                   <Globe2 className="size-4" />
                   <p className="text-xs font-semibold tracking-[0.12em] uppercase">
-                    {copy("Regional Delivery Grid", "Lưới phân phối khu vực")}
+                    {copy(
+                      "Regional Delivery Grid",
+                      "Lưới phân phối theo khu vực",
+                    )}
                   </p>
                 </div>
                 <CardTitle className="font-heading text-2xl">
-                  {copy("Live network status", "Trạng thái mạng trực tiếp")}
+                  {copy(
+                    "Live network status",
+                    "Trạng thái mạng theo thời gian thực",
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">

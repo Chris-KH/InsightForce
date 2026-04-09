@@ -31,23 +31,26 @@ export function ExecutiveProjectionsSection() {
     if (label === "Audience events processed today") {
       return copy(
         "Audience events processed today",
-        "Sự kiện khách hàng đã xử lý hôm nay",
+        "Số sự kiện khách hàng đã xử lý hôm nay",
       );
     }
 
     if (label === "Campaign uptime this quarter") {
       return copy(
         "Campaign uptime this quarter",
-        "Thời gian hoạt động chiến dịch quý này",
+        "Thời gian hoạt động của chiến dịch trong quý này",
       );
     }
 
     if (label === "Average agent response") {
-      return copy("Average agent response", "Phản hồi bot trung bình");
+      return copy(
+        "Average agent response",
+        "Thời gian phản hồi trung bình của agent",
+      );
     }
 
     if (label === "Countries activated") {
-      return copy("Countries activated", "Số quốc gia đã kích hoạt");
+      return copy("Countries activated", "Số quốc gia được triển khai");
     }
 
     return label;
@@ -115,7 +118,7 @@ export function ExecutiveProjectionsSection() {
         title: copy("Zero-trust permissions", "Phân quyền zero-trust"),
         description: copy(
           "Fine-grained access controls by campaign, team, and external collaborator.",
-          "Kiểm soát truy cập chi tiết theo chiến dịch, đội ngũ và cộng tác viên bên ngoài.",
+          "Kiểm soát truy cập chi tiết theo chiến dịch, nhóm và cộng tác viên bên ngoài.",
         ),
       };
     }
@@ -177,18 +180,18 @@ export function ExecutiveProjectionsSection() {
           transition={{ duration: 0.6 }}
         >
           <Badge className="border border-primary/30 bg-primary/10 px-3.5 py-1 text-[11px] tracking-[0.13em] uppercase">
-            {copy("Scale Visibility", "Quan sát tăng trưởng")}
+            {copy("Scale Visibility", "Khả năng quan sát khi mở rộng")}
           </Badge>
           <h2 className="mt-4 font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.8rem]">
             {copy(
               "Performance, integrations, and compliance from one control plane",
-              "Hiệu năng, tích hợp và tuân thủ trong một mặt phẳng điều khiển",
+              "Hiệu năng, tích hợp và tuân thủ trên cùng một mặt phẳng điều khiển",
             )}
           </h2>
           <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
             {copy(
               "Track real-time throughput, activate your existing toolchain, and protect every workflow with enterprise security defaults.",
-              "Theo dõi thông lượng theo thời gian thực, kích hoạt toolchain hiện có và bảo vệ mọi quy trình với chuẩn bảo mật doanh nghiệp mặc định.",
+              "Theo dõi thông lượng theo thời gian thực, kích hoạt toolchain hiện có và bảo vệ mọi quy trình bằng các cấu hình bảo mật mặc định cho doanh nghiệp.",
             )}
           </p>
         </motion.div>
@@ -234,13 +237,13 @@ export function ExecutiveProjectionsSection() {
                 <CardTitle className="font-heading text-2xl">
                   {copy(
                     "Connect your stack in minutes",
-                    "Kết nối stack trong vài phút",
+                    "Kết nối toàn bộ stack trong vài phút",
                   )}
                 </CardTitle>
                 <CardDescription>
                   {copy(
                     "Activate cross-platform workflows with prebuilt connectors for channels, CRM, payments, and collaboration.",
-                    "Kích hoạt quy trình đa nền tảng bằng connector dựng sẵn cho kênh, CRM, thanh toán và cộng tác.",
+                    "Kích hoạt các quy trình đa nền tảng bằng các connector dựng sẵn cho kênh, CRM, thanh toán và cộng tác.",
                   )}
                 </CardDescription>
               </CardHeader>
@@ -281,13 +284,13 @@ export function ExecutiveProjectionsSection() {
                 <CardTitle className="font-heading text-2xl">
                   {copy(
                     "Enterprise-ready by default",
-                    "Sẵn sàng cho doanh nghiệp theo mặc định",
+                    "Sẵn sàng cho doanh nghiệp ngay từ đầu",
                   )}
                 </CardTitle>
                 <CardDescription>
                   {copy(
                     "Built-in governance controls for creator, partner, and campaign data across global teams.",
-                    "Tích hợp kiểm soát quản trị cho dữ liệu creator, đối tác và chiến dịch trên các đội ngũ toàn cầu.",
+                    "Tích hợp sẵn các cơ chế quản trị cho dữ liệu creator, đối tác và chiến dịch trên các đội ngũ toàn cầu.",
                   )}
                 </CardDescription>
                 <div className="mt-2 flex flex-wrap gap-2">

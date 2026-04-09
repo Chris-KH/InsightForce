@@ -64,7 +64,7 @@ export function RegisterSuccessPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
               >
-                {copy("Welcome Home,", "Chào mừng trở về,")}
+                {copy("Welcome Home,", "Chào mừng bạn trở về,")}
                 <br />
                 {copy("Creator", "Creator")}
               </motion.h1>
@@ -76,7 +76,7 @@ export function RegisterSuccessPage() {
               >
                 {copy(
                   "Your InsightForge account is ready. Your agents are standing by to analyze your channel.",
-                  "Tài khoản InsightForge của bạn đã sẵn sàng. Các bot đang chờ để phân tích kênh của bạn.",
+                  "Tài khoản InsightForge của bạn đã sẵn sàng. Các agent đang sẵn sàng phân tích kênh của bạn.",
                 )}
               </motion.p>
 
@@ -93,7 +93,7 @@ export function RegisterSuccessPage() {
                   className="mt-8 h-14 rounded-2xl px-8 text-xl font-semibold"
                 >
                   <Link to="/app/dashboard">
-                    {copy("Go to Dashboard", "Vào bảng điều khiển")}
+                    {copy("Go to Dashboard", "Đi tới bảng điều khiển")}
                     <ArrowRight data-icon="inline-end" />
                   </Link>
                 </Button>
@@ -113,17 +113,20 @@ export function RegisterSuccessPage() {
                     title: copy("Connect YouTube", "Kết nối YouTube"),
                     desc: copy(
                       "Sync your latest videos",
-                      "Đồng bộ video mới nhất",
+                      "Đồng bộ các video mới nhất",
                     ),
                     bg: "bg-secondary/20",
                     color: "text-secondary",
                   },
                   {
                     icon: Bot,
-                    title: copy("Tune Your Persona", "Tinh chỉnh persona"),
+                    title: copy(
+                      "Tune Your Persona",
+                      "Tinh chỉnh phong cách AI",
+                    ),
                     desc: copy(
                       "Define your AI's voice",
-                      "Định nghĩa giọng điệu AI",
+                      "Xác định giọng điệu của AI",
                     ),
                     bg: "bg-chart-1/20",
                     color: "text-chart-1",

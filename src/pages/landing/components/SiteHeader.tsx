@@ -113,7 +113,7 @@ export function SiteHeader() {
           <button
             type="button"
             className="rounded-md p-2 md:hidden"
-            aria-label={copy("Toggle mobile menu", "Mở menu di động")}
+            aria-label={copy("Toggle mobile menu", "Mở menu trên điện thoại")}
             onClick={() => setIsMobileMenuOpen((prev) => !prev)}
           >
             {isMobileMenuOpen ? (

@@ -26,8 +26,8 @@ import { RegisterTopBar } from "@/pages/register/components/RegisterTopBar";
 const otpSchema = z.object({
   code: z
     .string()
-    .length(6, "Please enter the 6-digit verification code.")
-    .regex(/^\d+$/, "The verification code must contain only numbers."),
+    .length(6, "Vui lòng nhập mã xác minh gồm 6 chữ số.")
+    .regex(/^\d+$/, "Mã xác minh chỉ được chứa số."),
 });
 
 type OtpValues = z.infer<typeof otpSchema>;
@@ -130,7 +130,7 @@ export function VerifyEmailPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
               >
-                {copy("Verify Your Email", "Xác minh email")}
+                {copy("Verify Your Email", "Xác minh email của bạn")}
               </motion.h1>
               <motion.p
                 className="mt-3 max-w-xl text-lg leading-relaxed text-muted-foreground"
@@ -142,10 +142,10 @@ export function VerifyEmailPage() {
                   "We've sent a 6-digit code to",
                   "Chúng tôi đã gửi mã 6 chữ số tới",
                 )}{" "}
-                <strong className="text-foreground">{email}</strong>. Please{" "}
+                <strong className="text-foreground">{email}</strong>.{" "}
                 {copy(
                   "Please enter it below to continue.",
-                  "Vui lòng nhập bên dưới để tiếp tục.",
+                  "Nhập mã xác minh bên dưới để tiếp tục.",
                 )}
               </motion.p>
 
@@ -223,7 +223,7 @@ export function VerifyEmailPage() {
                     size="lg"
                     className="h-14 rounded-2xl text-xl font-semibold"
                   >
-                    {copy("Verify & Continue", "Xác minh & Tiếp tục")}
+                    {copy("Verify & Continue", "Xác minh và tiếp tục")}
                   </Button>
                 </motion.div>
 
@@ -261,7 +261,7 @@ export function VerifyEmailPage() {
                 >
                   {copy("You can also", "Bạn cũng có thể")}{" "}
                   <span className="font-semibold text-primary">
-                    {copy("click the link", "nhấn vào liên kết")}
+                    {copy("click the link", "bấm vào liên kết")}
                   </span>{" "}
                   {copy(
                     "in the email we just sent to automatically verify your account.",
@@ -283,7 +283,7 @@ export function VerifyEmailPage() {
               className="inline-flex items-center gap-2 text-base font-semibold text-muted-foreground transition-colors hover:text-primary"
             >
               <ArrowLeft className="size-4" />
-              {copy("Back to registration", "Quay lại đăng ký")}
+              {copy("Back to registration", "Quay lại trang đăng ký")}
             </Link>
           </motion.div>
         </motion.div>

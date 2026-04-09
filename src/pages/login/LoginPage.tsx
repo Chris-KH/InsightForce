@@ -27,8 +27,8 @@ import AppleIcon from "@/components/icon/AppleIcon";
 import { Button } from "@/components/animate-ui/components/buttons/button";
 
 const loginSchema = z.object({
-  email: z.email("Please enter a valid email address."),
-  password: z.string().min(8, "Password must be at least 8 characters long."),
+  email: z.email("Vui lòng nhập địa chỉ email hợp lệ."),
+  password: z.string().min(8, "Mật khẩu phải có ít nhất 8 ký tự."),
   remember: z.boolean(),
 });
 
@@ -104,7 +104,7 @@ export function LoginPage() {
             src={FOREST_IMAGE_URL}
             alt={copy(
               "Sunlight filtering through a lush green forest canopy",
-              "Ánh nắng xuyên qua tán rừng xanh mướt",
+              "Ánh nắng lọc qua tán lá xanh mát",
             )}
             className="absolute inset-0 size-full object-cover"
             initial={{ opacity: 0, scale: 1.05 }}
@@ -139,7 +139,7 @@ export function LoginPage() {
             >
               {copy(
                 "Cultivating clarity in a complex world.",
-                "Ươm mầm sự rõ ràng trong một thế giới phức tạp.",
+                "Giữ mọi thứ rõ ràng giữa một thế giới phức tạp.",
               )}
             </motion.h2>
             <motion.p
@@ -150,7 +150,7 @@ export function LoginPage() {
             >
               {copy(
                 "Rooted in intelligence, designed for growth.",
-                "Bắt nguồn từ trí tuệ, được thiết kế để tăng trưởng.",
+                "Lấy trí tuệ làm nền tảng, tối ưu cho tăng trưởng.",
               )}
             </motion.p>
           </motion.div>
@@ -175,7 +175,7 @@ export function LoginPage() {
               <p className="text-muted-foreground">
                 {copy(
                   "Please enter your details to access your dashboard.",
-                  "Vui lòng nhập thông tin để truy cập bảng điều khiển.",
+                  "Nhập thông tin của bạn để truy cập bảng điều khiển.",
                 )}
               </p>
             </motion.div>
@@ -192,7 +192,7 @@ export function LoginPage() {
                 <motion.div variants={formItemVariants}>
                   <Field data-invalid={!!form.formState.errors.email}>
                     <FieldLabel htmlFor="email">
-                      {copy("Email Address", "Địa chỉ email")}
+                      {copy("Email Address", "Email")}
                     </FieldLabel>
                     <InputGroup>
                       <InputGroupInput
@@ -271,7 +271,7 @@ export function LoginPage() {
                           <label htmlFor="remember" className="cursor-pointer">
                             {copy(
                               "Remember me for 30 days",
-                              "Ghi nhớ đăng nhập trong 30 ngày",
+                              "Ghi nhớ tôi trong 30 ngày",
                             )}
                           </label>
                         </FieldDescription>
@@ -362,10 +362,10 @@ export function LoginPage() {
           </p>
           <div className="flex items-center gap-5 text-xs sm:text-sm">
             <Link to="#" className="hover:text-foreground">
-              {copy("Privacy Policy", "Chính sách riêng tư")}
+              {copy("Privacy Policy", "Chính sách quyền riêng tư")}
             </Link>
             <Link to="#" className="hover:text-foreground">
-              {copy("Terms of Service", "Điều khoản dịch vụ")}
+              {copy("Terms of Service", "Điều khoản sử dụng")}
             </Link>
             <Link to="#" className="hover:text-foreground">
               {copy("Help Center", "Trung tâm trợ giúp")}
@@ -373,7 +373,7 @@ export function LoginPage() {
           </div>
           <p className="text-xs sm:text-sm">
             &copy; 2024 InsightForge <span className="text-chart-1">AI</span>.{" "}
-            {copy("Rooted in Intelligence.", "Bắt nguồn từ trí tuệ.")}
+            {copy("Rooted in Intelligence.", "Lấy trí tuệ làm nền tảng.")}
           </p>
         </div>
       </footer>

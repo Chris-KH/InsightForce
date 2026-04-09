@@ -21,11 +21,11 @@ export function AgentSquadSection() {
     }
 
     if (title === "Design agent workflow") {
-      return copy("Design agent workflow", "Thiết kế quy trình bot");
+      return copy("Design agent workflow", "Thiết kế quy trình agent");
     }
 
     if (title === "Ship globally") {
-      return copy("Ship globally", "Triển khai toàn cầu");
+      return copy("Ship globally", "Triển khai trên toàn cầu");
     }
 
     return title;
@@ -38,7 +38,7 @@ export function AgentSquadSection() {
     ) {
       return copy(
         "Sync channels, CRM, ad platforms, and creator analytics in minutes with no custom pipeline setup.",
-        "Đồng bộ kênh, CRM, nền tảng quảng cáo và phân tích creator chỉ trong vài phút mà không cần dựng pipeline tùy chỉnh.",
+        "Đồng bộ kênh, CRM, nền tảng quảng cáo và dữ liệu phân tích creator chỉ trong vài phút mà không cần thiết lập pipeline tùy chỉnh.",
       );
     }
 
@@ -48,7 +48,7 @@ export function AgentSquadSection() {
     ) {
       return copy(
         "Compose Guardian, Architect, and Scout playbooks with measurable checkpoints and approvals.",
-        "Xây dựng playbook cho Guardian, Architect và Scout với các checkpoint đo lường rõ ràng cùng quy trình phê duyệt.",
+        "Xây dựng playbook cho Guardian, Architect và Scout với các mốc kiểm tra có thể đo lường cùng quy trình phê duyệt.",
       );
     }
 
@@ -58,7 +58,7 @@ export function AgentSquadSection() {
     ) {
       return copy(
         "Launch campaign assets, creator outreach, and reporting dashboards across markets with one command.",
-        "Ra mắt tài nguyên chiến dịch, hoạt động kết nối creator và dashboard báo cáo xuyên thị trường chỉ với một lệnh.",
+        "Triển khai tài nguyên chiến dịch, hoạt động tiếp cận creator và dashboard báo cáo trên nhiều thị trường chỉ với một lệnh.",
       );
     }
 
@@ -71,11 +71,11 @@ export function AgentSquadSection() {
     }
 
     if (title === "Content Architect") {
-      return copy("Content Architect", "Thiết kế phân luồng nội dung");
+      return copy("Content Architect", "Kiến trúc nội dung");
     }
 
     if (title === "Scout & Executor") {
-      return copy("Scout & Executor", "Scout & thực thi");
+      return copy("Scout & Executor", "Scout & triển khai");
     }
 
     return title;
@@ -88,7 +88,7 @@ export function AgentSquadSection() {
     ) {
       return copy(
         "Monitors audience sentiment shifts and flags messages that may weaken trust.",
-        "Theo dõi dịch chuyển cảm xúc khách hàng và gắn cờ những thông điệp có thể làm ảnh hưởng uy tín.",
+        "Theo dõi thay đổi cảm xúc của khách hàng và gắn cờ những thông điệp có thể làm suy yếu niềm tin.",
       );
     }
 
@@ -98,7 +98,7 @@ export function AgentSquadSection() {
     ) {
       return copy(
         "Builds narrative systems that convert short-form attention into long-term community.",
-        "Xây dựng hệ thống tường thuật chuyển sự chú ý ngắn hạn thành cộng đồng dài hạn.",
+        "Xây dựng hệ thống câu chuyện biến sự chú ý ngắn hạn thành cộng đồng lâu dài.",
       );
     }
 
@@ -108,7 +108,7 @@ export function AgentSquadSection() {
     ) {
       return copy(
         "Scans market momentum and deploys campaign actions at optimal launch windows.",
-        "Quét động lượng thị trường và triển khai hành động chiến dịch ở khung thời gian ra mắt tối ưu.",
+        "Quét động lực thị trường và triển khai hành động chiến dịch vào thời điểm ra mắt tối ưu.",
       );
     }
 
@@ -121,11 +121,14 @@ export function AgentSquadSection() {
     }
 
     if (metric === "88% viral pattern match") {
-      return copy("88% viral pattern match", "88% độ khớp mẫu lan truyền");
+      return copy(
+        "88% viral pattern match",
+        "88% mức độ khớp xu hướng lan truyền",
+      );
     }
 
     if (metric === "95% timing precision") {
-      return copy("95% timing precision", "95% độ chính xác thời điểm");
+      return copy("95% timing precision", "95% độ chính xác về thời điểm");
     }
 
     return metric;
@@ -187,18 +190,18 @@ export function AgentSquadSection() {
           transition={{ duration: 0.6 }}
         >
           <Badge className="border border-primary/30 bg-primary/10 px-3.5 py-1 text-[11px] tracking-[0.13em] uppercase">
-            {copy("Workflow Engine", "Bộ máy quy trình")}
+            {copy("Workflow Engine", "Bộ điều phối quy trình")}
           </Badge>
           <h2 className="mt-4 font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.85rem]">
             {copy(
               "Build, validate, and ship campaigns with specialized AI agents",
-              "Xây dựng, kiểm định và triển khai chiến dịch với bot AI chuyên biệt",
+              "Xây dựng, kiểm định và triển khai chiến dịch với các agent AI chuyên biệt",
             )}
           </h2>
           <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
             {copy(
               "Connect your data, assign agent responsibilities, and launch globally from a single playbook that keeps strategy, execution, and quality in sync.",
-              "Kết nối dữ liệu, phân công trách nhiệm cho bot và ra mắt toàn cầu từ một playbook duy nhất giúp chiến lược, thực thi và chất lượng luôn đồng bộ.",
+              "Kết nối dữ liệu, phân công trách nhiệm cho các agent và triển khai trên toàn cầu từ một playbook duy nhất giúp chiến lược, thực thi và chất lượng luôn đồng bộ.",
             )}
           </p>
         </motion.div>

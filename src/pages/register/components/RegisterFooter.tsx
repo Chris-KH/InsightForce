@@ -22,7 +22,7 @@ export function RegisterFooter() {
           transition={{ delay: 0.1, duration: 0.5 }}
         >
           &copy; 2024 InsightForge <span className="text-chart-1">AI</span>.{" "}
-          {copy("Rooted in creativity.", "Bắt nguồn từ sáng tạo.")}
+          {copy("Rooted in creativity.", "Lấy sáng tạo làm nền tảng.")}
         </motion.p>
 
         <motion.div
@@ -34,12 +34,12 @@ export function RegisterFooter() {
         >
           <motion.div whileHover={{ color: "var(--color-primary)", y: -1 }}>
             <Link to="#" className="transition-colors hover:text-primary">
-              {copy("Terms of Service", "Điều khoản dịch vụ")}
+              {copy("Terms of Service", "Điều khoản sử dụng")}
             </Link>
           </motion.div>
           <motion.div whileHover={{ color: "var(--color-primary)", y: -1 }}>
             <Link to="#" className="transition-colors hover:text-primary">
-              {copy("Privacy Policy", "Chính sách riêng tư")}
+              {copy("Privacy Policy", "Chính sách quyền riêng tư")}
             </Link>
           </motion.div>
           <motion.div whileHover={{ color: "var(--color-primary)", y: -1 }}>

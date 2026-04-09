@@ -13,19 +13,22 @@ export function CreatorMomentumSection() {
 
   const translateCapabilityTitle = (title: string) => {
     if (title === "Audience Signal Graph") {
-      return copy("Audience Signal Graph", "Đồ thị tín hiệu khách hàng");
+      return copy(
+        "Audience Signal Graph",
+        "Biểu đồ tín hiệu khách hàng mục tiêu",
+      );
     }
 
     if (title === "Narrative Blueprinting") {
-      return copy("Narrative Blueprinting", "Thiết kế bản đồ tường thuật");
+      return copy("Narrative Blueprinting", "Xây dựng khung câu chuyện");
     }
 
     if (title === "KOL Match Intelligence") {
-      return copy("KOL Match Intelligence", "Trí tuệ ghép nối KOL");
+      return copy("KOL Match Intelligence", "Ghép KOL thông minh");
     }
 
     if (title === "Brand Safety Guardian") {
-      return copy("Brand Safety Guardian", "Bảo hộ an toàn thương hiệu");
+      return copy("Brand Safety Guardian", "Giám sát an toàn thương hiệu");
     }
 
     return title;
@@ -38,7 +41,7 @@ export function CreatorMomentumSection() {
     ) {
       return copy(
         "Cluster creator comments, search intent, and purchase language into clear opportunity maps before you publish.",
-        "Phân cụm bình luận creator, ý định tìm kiếm và ngôn ngữ mua hàng thành bản đồ cơ hội rõ ràng trước khi xuất bản.",
+        "Phân nhóm bình luận, ý định tìm kiếm và ngôn ngữ mua hàng thành bản đồ cơ hội rõ ràng trước khi xuất bản.",
       );
     }
 
@@ -48,7 +51,7 @@ export function CreatorMomentumSection() {
     ) {
       return copy(
         "Generate platform-specific content arcs with hook variants, emotional cues, and CTA sequencing tuned for each audience segment.",
-        "Tạo mạch nội dung theo từng nền tảng với biến thể hook, tín hiệu cảm xúc và chuỗi CTA được tinh chỉnh cho từng phân khúc khách hàng.",
+        "Tạo mạch nội dung riêng cho từng nền tảng với các biến thể hook, tín hiệu cảm xúc và chuỗi CTA được tinh chỉnh cho từng phân khúc khách hàng.",
       );
     }
 
@@ -58,7 +61,7 @@ export function CreatorMomentumSection() {
     ) {
       return copy(
         "Prioritize partner creators using trust overlap, category authority, and conversion-fit scoring across regions.",
-        "Ưu tiên creator đối tác bằng mức giao thoa niềm tin, độ uy tín theo ngành hàng và điểm phù hợp chuyển đổi theo từng khu vực.",
+        "Ưu tiên creator đối tác dựa trên mức độ tin cậy tương đồng, uy tín theo ngành hàng và điểm phù hợp chuyển đổi ở từng khu vực.",
       );
     }
 
@@ -68,7 +71,7 @@ export function CreatorMomentumSection() {
     ) {
       return copy(
         "Detect tonal drift and cultural risk in real time, with guardrails that keep every campaign aligned with brand values.",
-        "Phát hiện lệch tông và rủi ro văn hóa theo thời gian thực, cùng guardrail giúp mọi chiến dịch luôn bám sát giá trị thương hiệu.",
+        "Phát hiện lệch tông và rủi ro văn hóa theo thời gian thực, với các rào chắn bảo vệ giúp mọi chiến dịch luôn bám sát giá trị thương hiệu.",
       );
     }
 
@@ -141,7 +144,7 @@ export function CreatorMomentumSection() {
           <h2 className="mt-4 font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.85rem]">
             {copy(
               "The command layer behind high-converting creator campaigns",
-              "Lớp điều phối đứng sau các chiến dịch creator chuyển đổi cao",
+              "Hệ điều phối phía sau các chiến dịch creator chuyển đổi cao",
             )}
           </h2>
           <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">

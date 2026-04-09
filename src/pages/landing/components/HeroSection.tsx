@@ -12,7 +12,7 @@ import { AsciiSphereCanvas } from "./AsciiSphereCanvas";
 import { SectionGridOverlay } from "./SectionGridOverlay";
 import { motion } from "motion/react";
 import { NavLink } from "react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import HERO_IMAGE from "@/assets/hero-section.png";
 import { useBilingual } from "@/hooks/use-bilingual";
 
@@ -46,7 +46,7 @@ export function HeroSection() {
     }
 
     if (label === "qualified leads") {
-      return copy("qualified leads", "lead đạt chuẩn");
+      return copy("qualified leads", "khách hàng tiềm năng đủ chuẩn");
     }
 
     if (label === "campaign ROAS") {
@@ -54,7 +54,7 @@ export function HeroSection() {
     }
 
     if (label === "retention growth") {
-      return copy("retention growth", "tăng trưởng giữ chân");
+      return copy("retention growth", "tăng tỷ lệ giữ chân");
     }
 
     return label;
@@ -70,10 +70,7 @@ export function HeroSection() {
     return () => window.clearInterval(intervalId);
   }, []);
 
-  const activeWord = useMemo(
-    () => translateWord(HERO_ROTATING_WORDS[activeWordIndex]),
-    [activeWordIndex],
-  );
+  const activeWord = translateWord(HERO_ROTATING_WORDS[activeWordIndex]);
 
   return (
     <section className="relative isolate overflow-hidden px-4 pt-30 pb-16 sm:px-6 sm:pt-34 sm:pb-20 lg:px-8 lg:pt-36 lg:pb-24">
@@ -144,7 +141,7 @@ export function HeroSection() {
             </motion.span>
             {copy(
               "and scale every creator campaign with autonomous precision.",
-              "và mở rộng mọi chiến dịch creator với độ chính xác tự chủ.",
+              "và mở rộng mọi chiến dịch creator với độ chính xác vượt trội.",
             )}
           </motion.h1>
 
@@ -156,7 +153,7 @@ export function HeroSection() {
           >
             {copy(
               "InsightForce synchronizes your audience signals, creator workflows, and campaign execution into one intelligence layer so you can move faster without sacrificing brand trust.",
-              "InsightForce đồng bộ tín hiệu khách hàng, quy trình creator và thực thi chiến dịch vào một lớp trí tuệ thống nhất, giúp bạn tăng tốc mà vẫn giữ vững niềm tin thương hiệu.",
+              "InsightForce đồng bộ tín hiệu từ khách hàng mục tiêu, quy trình creator và thực thi chiến dịch vào một lớp trí tuệ thống nhất, giúp bạn tăng tốc mà vẫn giữ vững niềm tin thương hiệu.",
             )}
           </motion.p>
 
@@ -205,7 +202,7 @@ export function HeroSection() {
             <p className="text-sm text-muted-foreground">
               {copy(
                 "Trusted by 2,000+ creators, agencies, and KOL teams.",
-                "Được tin dùng bởi hơn 2,000 creator, agency và đội ngũ KOL.",
+                "Được tin dùng bởi hơn 2.000 creator, agency và đội ngũ KOL.",
               )}
             </p>
           </motion.div>
@@ -222,7 +219,7 @@ export function HeroSection() {
               src={HERO_IMAGE}
               alt={copy(
                 "Creator intelligence dashboard",
-                "Bảng điều khiển trí tuệ creator",
+                "Bảng điều khiển thông minh cho creator",
               )}
               className="h-108 w-full object-cover sm:h-128"
               loading="lazy"

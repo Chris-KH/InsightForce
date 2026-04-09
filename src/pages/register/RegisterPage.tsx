@@ -29,12 +29,9 @@ import { RegisterFooter } from "@/pages/register/components/RegisterFooter";
 import { RegisterTopBar } from "@/pages/register/components/RegisterTopBar";
 
 const registerSchema = z.object({
-  fullName: z
-    .string()
-    .trim()
-    .min(2, "Name must be at least 2 characters long."),
-  email: z.string().trim().email("Please enter a valid email address."),
-  password: z.string().min(8, "Password must be at least 8 characters long."),
+  fullName: z.string().trim().min(2, "Tên phải có ít nhất 2 ký tự."),
+  email: z.string().trim().email("Vui lòng nhập địa chỉ email hợp lệ."),
+  password: z.string().min(8, "Mật khẩu phải có ít nhất 8 ký tự."),
 });
 
 type RegisterValues = z.infer<typeof registerSchema>;
@@ -75,12 +72,12 @@ function RegisterFields({
   return (
     <FieldGroup>
       <Field data-invalid={!!form.formState.errors.fullName}>
-        <FieldLabel htmlFor="full-name">{copy("Name", "Họ tên")}</FieldLabel>
+        <FieldLabel htmlFor="full-name">{copy("Name", "Họ và tên")}</FieldLabel>
         <InputGroup>
           <InputGroupInput
             id="full-name"
             type="text"
-            placeholder={copy("Enter your full name", "Nhập họ tên đầy đủ")}
+            placeholder={copy("Enter your full name", "Nhập họ và tên đầy đủ")}
             autoComplete="name"
             aria-invalid={!!form.formState.errors.fullName}
             {...form.register("fullName")}
@@ -91,7 +88,7 @@ function RegisterFields({
 
       <Field data-invalid={!!form.formState.errors.email}>
         <FieldLabel htmlFor="email">
-          {copy("Email Address", "Địa chỉ email")}
+          {copy("Email Address", "Email")}
         </FieldLabel>
         <InputGroup>
           <InputGroupInput
@@ -117,7 +114,7 @@ function RegisterFields({
           <InputGroupInput
             id="password"
             type={isPasswordVisible ? "text" : "password"}
-            placeholder={copy("Min. 8 characters", "Tối thiểu 8 ký tự")}
+            placeholder={copy("Min. 8 characters", "Ít nhất 8 ký tự")}
             autoComplete="new-password"
             aria-invalid={!!form.formState.errors.password}
             {...form.register("password")}
@@ -141,13 +138,13 @@ function RegisterFields({
       </Field>
 
       <FieldDescription className="text-xs leading-relaxed text-muted-foreground">
-        {copy(
-          "By joining, you agree to our",
-          "Bằng việc tham gia, bạn đồng ý với",
-        )}{" "}
-        <Link to="#">{copy("Terms of Service", "Điều khoản dịch vụ")}</Link>{" "}
+        {copy("By joining, you agree to our", "Khi đăng ký, bạn đồng ý với")}{" "}
+        <Link to="#">{copy("Terms of Service", "Điều khoản sử dụng")}</Link>{" "}
         {copy("and", "và")}{" "}
-        <Link to="#">{copy("Privacy Policy", "Chính sách riêng tư")}</Link>.
+        <Link to="#">
+          {copy("Privacy Policy", "Chính sách quyền riêng tư")}
+        </Link>
+        .
       </FieldDescription>
     </FieldGroup>
   );
@@ -218,7 +215,7 @@ export function RegisterPage() {
                   src={FOREST_IMAGE_URL}
                   alt={copy(
                     "Sunlight streaming through a dense green forest canopy",
-                    "Ánh nắng chiếu xuyên qua tán rừng xanh dày",
+                    "Ánh nắng lọc qua tán lá xanh dày",
                   )}
                   className="absolute inset-0 size-full object-cover"
                   initial={{ opacity: 0, scale: 1.05 }}
@@ -239,14 +236,17 @@ export function RegisterPage() {
                   transition={{ delay: 0.4, duration: 0.6 }}
                 >
                   <h2 className="font-heading text-5xl leading-tight font-semibold text-primary-foreground drop-shadow-sm">
-                    {copy("Rooted in Community.", "Bắt nguồn từ cộng đồng.")}
+                    {copy(
+                      "Rooted in Community.",
+                      "Lấy cộng đồng làm nền tảng.",
+                    )}
                     <br />
-                    {copy("Driven by Insight.", "Dẫn lối bởi dữ liệu.")}
+                    {copy("Driven by Insight.", "Được dẫn dắt bởi Insight.")}
                   </h2>
                   <p className="text-lg leading-relaxed text-primary-foreground/90">
                     {copy(
                       "Join a global network of creators and analysts shaping the future through collective intelligence.",
-                      "Gia nhập mạng lưới toàn cầu của creator và nhà phân tích đang định hình tương lai bằng trí tuệ tập thể.",
+                      "Gia nhập mạng lưới toàn cầu của creator và nhà phân tích, cùng định hình tương lai bằng trí tuệ tập thể.",
                     )}
                   </p>
                 </motion.div>
@@ -285,7 +285,7 @@ export function RegisterPage() {
                     >
                       {copy(
                         "Start turning your community insights into action.",
-                        "Bắt đầu biến insight cộng đồng thành hành động.",
+                        "Bắt đầu biến insight từ cộng đồng thành hành động.",
                       )}
                     </motion.p>
                   </motion.div>
