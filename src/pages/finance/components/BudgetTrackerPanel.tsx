@@ -1,6 +1,10 @@
+import { motion } from "motion/react";
+
+import { RevealBlock, SurfaceGrid } from "@/components/app-futuristic";
 import { Button } from "@/components/ui/button";
 import { PanelCard, ProgressBar } from "@/components/app-section";
 import { useBilingual } from "@/hooks/use-bilingual";
+import { cn } from "@/lib/utils";
 
 export function BudgetTrackerPanel() {
   const copy = useBilingual();
@@ -29,6 +33,13 @@ export function BudgetTrackerPanel() {
     },
   ] as const;
 
+  const getToneClass = (tone: "primary" | "secondary" | "tertiary") =>
+    tone === "primary"
+      ? "border-primary/25 bg-primary/6"
+      : tone === "secondary"
+        ? "border-chart-2/30 bg-chart-2/8"
+        : "border-chart-3/30 bg-chart-3/8";
+
   return (
     <PanelCard
       title={copy("AI Budget Tracker", "Bộ theo dõi ngân sách AI")}
@@ -42,29 +53,42 @@ export function BudgetTrackerPanel() {
         </Button>
       }
     >
-      <div className="flex flex-col gap-7">
-        {allocations.map((allocation) => (
-          <div key={allocation.label}>
-            <div className="mb-2 flex items-center justify-between gap-4">
-              <div>
-                <p className="font-semibold text-foreground">
-                  {allocation.label}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {allocation.note}
-                </p>
-              </div>
-              <span className="text-xs font-medium text-muted-foreground">
-                {allocation.amount}
-              </span>
-            </div>
-            <ProgressBar
-              value={allocation.value}
-              tone={allocation.tone}
-              className="h-3"
-            />
-          </div>
-        ))}
+      <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-background/65 p-4">
+        <SurfaceGrid className="opacity-28" />
+
+        <div className="relative flex flex-col gap-4">
+          {allocations.map((allocation, index) => (
+            <RevealBlock key={allocation.label} delay={index * 0.06}>
+              <motion.div
+                whileHover={{ y: -2 }}
+                className={cn(
+                  "rounded-2xl border px-4 py-3 shadow-[0_10px_22px_rgba(15,23,42,0.06)]",
+                  getToneClass(allocation.tone),
+                )}
+              >
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {allocation.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {allocation.note}
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-border/65 bg-background/85 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                    {allocation.amount}
+                  </span>
+                </div>
+
+                <ProgressBar
+                  value={allocation.value}
+                  tone={allocation.tone}
+                  className="h-3"
+                />
+              </motion.div>
+            </RevealBlock>
+          ))}
+        </div>
       </div>
     </PanelCard>
   );

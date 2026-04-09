@@ -1,5 +1,6 @@
 import { Banknote, Calculator, Wallet } from "lucide-react";
 
+import { RevealBlock } from "@/components/app-futuristic";
 import { MetricCard } from "@/components/app-section";
 import { useBilingual } from "@/hooks/use-bilingual";
 
@@ -25,18 +26,17 @@ export function FinanceMetrics() {
       label: copy("Total Agent Commissions", "Tổng hoa hồng bot"),
       value: "$11,402.50",
       delta: "8.2% Avg",
-      detail: copy(
-        "Across 12 active agents",
-        "Trên 12 bot đang hoạt động",
-      ),
+      detail: copy("Across 12 active agents", "Trên 12 bot đang hoạt động"),
       icon: <Banknote className="size-4" />,
     },
   ] as const;
 
   return (
     <div className="grid gap-6 md:grid-cols-3">
-      {metrics.map((metric) => (
-        <MetricCard key={metric.label} {...metric} />
+      {metrics.map((metric, index) => (
+        <RevealBlock key={metric.label} delay={index * 0.06}>
+          <MetricCard {...metric} />
+        </RevealBlock>
       ))}
     </div>
   );

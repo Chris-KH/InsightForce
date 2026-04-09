@@ -1,5 +1,7 @@
+import { motion } from "motion/react";
 import { ArrowDownRight } from "lucide-react";
 
+import { RevealBlock, SurfaceGrid } from "@/components/app-futuristic";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBilingual } from "@/hooks/use-bilingual";
@@ -47,8 +49,12 @@ export function TransactionHistoryCard() {
   ] as const;
 
   return (
-    <Card className="rounded-3xl border-border/60 shadow-sm">
-      <CardHeader className="pb-4">
+    <Card className="relative overflow-hidden rounded-3xl border-border/70 bg-card/88 shadow-[0_22px_42px_rgba(15,23,42,0.1)]">
+      <div className="absolute inset-0">
+        <SurfaceGrid className="opacity-22" />
+      </div>
+
+      <CardHeader className="relative pb-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <CardTitle className="font-heading text-2xl font-semibold text-foreground">
@@ -64,93 +70,109 @@ export function TransactionHistoryCard() {
           <div className="flex items-center gap-3">
             <Badge
               variant="outline"
-              className="rounded-full border-primary/20 text-primary"
+              className="rounded-full border-primary/20 bg-background/80 text-primary"
             >
               {copy("Verified 2", "Đã xác thực 2")}
             </Badge>
             <Badge
               variant="outline"
-              className="rounded-full border-amber-500/20 text-amber-700"
+              className="rounded-full border-chart-3/30 bg-background/80 text-chart-3"
             >
               {copy("Pending 1", "Chờ xử lý 1")}
             </Badge>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="overflow-hidden rounded-2xl border border-border/50 bg-background">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-muted/30 text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-              <tr>
-                <th className="px-4 py-4">
-                  {copy("Transaction Details", "Chi tiết giao dịch")}
-                </th>
-                <th className="px-4 py-4">
-                  {copy("Executing Agent", "Bot thực thi")}
-                </th>
-                <th className="px-4 py-4">{copy("Date", "Ngày")}</th>
-                <th className="px-4 py-4">{copy("Amount", "Số tiền")}</th>
-                <th className="px-4 py-4">
-                  {copy("Comm. (8%)", "Hoa hồng (8%)")}
-                </th>
-                <th className="px-4 py-4">{copy("Status", "Trạng thái")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((row, index) => (
-                <tr
-                  key={row.ref}
-                  className={
-                    index !== transactions.length - 1
-                      ? "border-b border-border/50"
-                      : ""
-                  }
-                >
-                  <td className="px-4 py-4">
-                    <div>
-                      <p className="font-medium text-foreground">{row.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {copy("Ref", "Mã")}: {row.ref}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-muted-foreground">
-                    <span className="inline-flex items-center gap-2">
-                      <span className="inline-flex size-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
-                        {row.agent.slice(0, 1)}
-                      </span>
-                      {row.agent}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 text-muted-foreground">
-                    {row.date}
-                  </td>
-                  <td className="px-4 py-4 font-medium text-foreground">
-                    {row.amount}
-                  </td>
-                  <td className="px-4 py-4 font-medium text-chart-4">
-                    {row.commission}
-                  </td>
-                  <td className="px-4 py-4">
-                    <Badge
-                      variant="outline"
-                      className={
-                        row.statusKey === "verified"
-                          ? "rounded-full border-primary/20 text-primary"
-                          : "rounded-full border-amber-500/20 text-amber-700"
-                      }
-                    >
-                      {row.status}
-                    </Badge>
-                  </td>
+
+      <CardContent className="relative">
+        <RevealBlock>
+          <div className="overflow-hidden rounded-2xl border border-border/65 bg-background/82">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-muted/35 text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                <tr>
+                  <th className="px-4 py-4">
+                    {copy("Transaction Details", "Chi tiết giao dịch")}
+                  </th>
+                  <th className="px-4 py-4">
+                    {copy("Executing Agent", "Bot thực thi")}
+                  </th>
+                  <th className="px-4 py-4">{copy("Date", "Ngày")}</th>
+                  <th className="px-4 py-4">{copy("Amount", "Số tiền")}</th>
+                  <th className="px-4 py-4">
+                    {copy("Comm. (8%)", "Hoa hồng (8%)")}
+                  </th>
+                  <th className="px-4 py-4">{copy("Status", "Trạng thái")}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {transactions.map((row, index) => (
+                  <motion.tr
+                    key={row.ref}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{
+                      duration: 0.3,
+                      delay: 0.04 * index,
+                      ease: "easeOut",
+                    }}
+                    className={
+                      index !== transactions.length - 1
+                        ? "border-b border-border/50 transition-colors hover:bg-muted/25"
+                        : "transition-colors hover:bg-muted/25"
+                    }
+                  >
+                    <td className="px-4 py-4">
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {row.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {copy("Ref", "Mã")}: {row.ref}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-muted-foreground">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="inline-flex size-6 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-[10px] font-semibold text-primary">
+                          {row.agent.slice(0, 1)}
+                        </span>
+                        {row.agent}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-muted-foreground">
+                      {row.date}
+                    </td>
+                    <td className="px-4 py-4 font-medium text-foreground">
+                      {row.amount}
+                    </td>
+                    <td className="px-4 py-4 font-medium text-chart-4">
+                      {row.commission}
+                    </td>
+                    <td className="px-4 py-4">
+                      <Badge
+                        variant="outline"
+                        className={
+                          row.statusKey === "verified"
+                            ? "rounded-full border-primary/20 bg-primary/10 text-primary"
+                            : "rounded-full border-chart-3/30 bg-chart-3/10 text-chart-3"
+                        }
+                      >
+                        {row.status}
+                      </Badge>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </RevealBlock>
+
         <div className="flex justify-center pt-5 text-sm text-primary">
-          {copy("View all transactions", "Xem toàn bộ giao dịch")}{" "}
-          <ArrowDownRight className="ml-2 size-4" />
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3 py-1.5">
+            {copy("View all transactions", "Xem toàn bộ giao dịch")}
+            <ArrowDownRight className="size-4" />
+          </span>
         </div>
       </CardContent>
     </Card>
