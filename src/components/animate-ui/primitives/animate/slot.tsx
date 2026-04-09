@@ -1,13 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { motion, isMotionComponent, type HTMLMotionProps } from "motion/react";
+import {
+  motion,
+  isMotionComponent,
+  type HTMLMotionProps,
+  type HTMLElements,
+} from "motion/react";
 import { cn } from "@/lib/utils";
 
 type AnyProps = Record<string, unknown>;
 
 type DOMMotionProps<T extends HTMLElement = HTMLElement> = Omit<
-  HTMLMotionProps<keyof HTMLElementTagNameMap>,
+  HTMLMotionProps<keyof HTMLElements>,
   "ref"
 > & { ref?: React.Ref<T> };
 
@@ -82,10 +87,10 @@ function Slot<T extends HTMLElement = HTMLElement>({
 
   const mergedProps = mergeProps(childProps, props);
 
-  return (
-    // eslint-disable-next-line
-    <Base {...mergedProps} ref={mergeRefs(childRef as React.Ref<T>, ref)} />
-  );
+  return React.createElement(Base as React.ElementType, {
+    ...mergedProps,
+    ref: mergeRefs(childRef as React.Ref<T>, ref),
+  });
 }
 
 export {

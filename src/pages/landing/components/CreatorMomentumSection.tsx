@@ -40,6 +40,30 @@ const CAPABILITY_VISUALS: Record<string, CapabilityVisual> = {
 export function CreatorMomentumSection() {
   const copy = useBilingual();
 
+  const creatorTracks = [
+    {
+      name: copy("KOL Discovery", "Khám phá KOL"),
+      value: "1.9K",
+      detail: copy("Profiles scored weekly", "Hồ sơ được chấm điểm mỗi tuần"),
+      score: 92,
+    },
+    {
+      name: copy("Content Studio", "Studio nội dung"),
+      value: "340",
+      detail: copy("Briefs generated per month", "Brief tạo mới mỗi tháng"),
+      score: 88,
+    },
+    {
+      name: copy("Campaign Ops", "Vận hành chiến dịch"),
+      value: "96%",
+      detail: copy(
+        "On-time creator deliverables",
+        "Nội dung creator giao đúng hạn",
+      ),
+      score: 96,
+    },
+  ];
+
   const translateCapabilityTitle = (title: string) => {
     if (title === "Audience Signal Graph") {
       return copy(
@@ -209,6 +233,42 @@ export function CreatorMomentumSection() {
             )}
           </p>
         </motion.div>
+
+        <div className="mt-8 grid gap-3 sm:grid-cols-3">
+          {creatorTracks.map((track, index) => (
+            <motion.div
+              key={track.name}
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.35 }}
+              transition={{ duration: 0.45, delay: index * 0.06 }}
+            >
+              <Card className="h-full border-border/65 bg-card/65 shadow-sm backdrop-blur-sm">
+                <CardContent className="px-4 py-4">
+                  <p className="text-[11px] font-semibold tracking-[0.11em] text-muted-foreground uppercase">
+                    {track.name}
+                  </p>
+                  <p className="mt-1 font-heading text-2xl leading-none font-semibold tracking-tight text-foreground">
+                    {track.value}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {track.detail}
+                  </p>
+
+                  <div className="mt-2 h-1.5 rounded-full bg-muted/60">
+                    <motion.div
+                      className="h-full rounded-full bg-linear-to-r from-chart-1 via-chart-2 to-primary"
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${track.score}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.55 }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2 lg:mt-12">
           {CAPABILITY_ITEMS.map((item, index) => {

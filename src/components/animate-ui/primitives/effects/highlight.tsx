@@ -254,13 +254,15 @@ function Highlight<T extends React.ElementType = "div">({
 
   const render = (children: React.ReactNode) => {
     if (mode === "parent") {
-      return (
-        <Component
-          ref={localRef}
-          data-slot="motion-highlight-container"
-          style={{ position: "relative", zIndex: 1 }}
-          className={(props as ParentModeHighlightProps)?.containerClassName}
-        >
+      return React.createElement(
+        Component as React.ElementType,
+        {
+          ref: localRef,
+          "data-slot": "motion-highlight-container",
+          style: { position: "relative", zIndex: 1 },
+          className: (props as ParentModeHighlightProps)?.containerClassName,
+        },
+        <>
           <AnimatePresence initial={false} mode="wait">
             {boundsState && (
               <motion.div
@@ -293,7 +295,7 @@ function Highlight<T extends React.ElementType = "div">({
             )}
           </AnimatePresence>
           {children}
-        </Component>
+        </>,
       );
     }
 

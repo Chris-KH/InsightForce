@@ -72,14 +72,19 @@ export function SiteHeader() {
           transition={{ duration: 0.55 }}
         >
           <NavLink to="/" className="group inline-flex items-center gap-2">
-            <span
-              className={cn(
-                "font-heading leading-none font-semibold tracking-tight text-primary transition-all duration-500",
-                isScrolled ? "text-[1.35rem]" : "text-[1.7rem]",
-              )}
-            >
-              Insight<span className="text-chart-1">Forge AI</span>
-            </span>
+            <div>
+              <span
+                className={cn(
+                  "font-heading leading-none font-semibold tracking-tight text-primary transition-all duration-500",
+                  isScrolled ? "text-[1.35rem]" : "text-[1.7rem]",
+                )}
+              >
+                Insight<span className="text-chart-1">Forge AI</span>
+              </span>
+              <p className="mt-0.5 hidden text-[10px] font-medium tracking-widest text-muted-foreground uppercase lg:block">
+                {copy("for Creator & KOL teams", "cho đội ngũ Creator & KOL")}
+              </p>
+            </div>
           </NavLink>
 
           <div className="hidden items-center gap-10 md:flex">

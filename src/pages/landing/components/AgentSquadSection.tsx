@@ -5,7 +5,6 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { AGENT_MODULES, WORKFLOW_STEPS } from "../data";
 import { AsciiTetrahedronCanvas } from "./AsciiTetrahedronCanvas";
 import { AsciiWaveCanvas } from "./AsciiWaveCanvas";
@@ -13,17 +12,46 @@ import { SectionGridOverlay } from "./SectionGridOverlay";
 import { motion } from "motion/react";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { CircleCheckBig, Sparkles, TrendingUp, UsersRound } from "lucide-react";
+import {
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  Legend,
+  LineElement,
+  LinearScale,
+  PointElement,
+  RadialLinearScale,
+  Tooltip,
+} from "chart.js";
+import { Bar, Doughnut, Line, Radar } from "react-chartjs-2";
+
+ChartJS.register(
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Filler,
+  Legend,
+  LineElement,
+  LinearScale,
+  PointElement,
+  RadialLinearScale,
+  Tooltip,
+);
 
 type StepVisualData = {
-  score: number;
-  bars: number[];
+  chartType: "bar" | "line" | "radar";
+  labels: string[];
+  values: number[];
   outcomes: string[];
 };
 
 const STEP_VISUALS: Record<string, StepVisualData> = {
   "Connect creator data": {
-    score: 96,
-    bars: [62, 74, 82, 88, 92, 96],
+    chartType: "bar",
+    labels: ["YouTube", "TikTok", "Instagram", "CRM", "Commerce"],
+    values: [88, 95, 84, 92, 86],
     outcomes: [
       "12 channels connected",
       "31 audience segments synced",
@@ -31,8 +59,9 @@ const STEP_VISUALS: Record<string, StepVisualData> = {
     ],
   },
   "Design agent workflow": {
-    score: 91,
-    bars: [58, 69, 78, 85, 90, 91],
+    chartType: "line",
+    labels: ["Brief", "Tone", "Hook", "CTA", "Approval"],
+    values: [82, 90, 86, 88, 93],
     outcomes: [
       "17 brief variants approved",
       "96% brand-tone match",
@@ -40,8 +69,9 @@ const STEP_VISUALS: Record<string, StepVisualData> = {
     ],
   },
   "Ship globally": {
-    score: 94,
-    bars: [55, 66, 73, 86, 91, 94],
+    chartType: "radar",
+    labels: ["SEA", "JP", "US", "EU", "LATAM"],
+    values: [91, 94, 95, 92, 89],
     outcomes: [
       "14 markets activated",
       "2.4h to publish globally",
@@ -50,10 +80,186 @@ const STEP_VISUALS: Record<string, StepVisualData> = {
   },
 };
 
-const MODULE_TRENDS: Record<string, number[]> = {
-  "Psychological Guardian": [54, 63, 72, 79, 86, 92],
-  "Content Architect": [48, 58, 67, 74, 82, 88],
-  "Scout & Executor": [52, 61, 75, 83, 90, 95],
+type ModuleVisualData = {
+  type: "doughnut" | "line" | "bar";
+  labels: string[];
+  values: number[];
+};
+
+const MODULE_VISUALS: Record<string, ModuleVisualData> = {
+  "Psychological Guardian": {
+    type: "doughnut",
+    labels: ["Aligned", "Risk"],
+    values: [92, 8],
+  },
+  "Content Architect": {
+    type: "line",
+    labels: ["W1", "W2", "W3", "W4", "W5", "W6"],
+    values: [54, 61, 68, 74, 82, 88],
+  },
+  "Scout & Executor": {
+    type: "bar",
+    labels: ["SEA", "JP", "US", "EU", "BR"],
+    values: [83, 89, 95, 91, 86],
+  },
+};
+
+const stepBarOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      displayColors: false,
+      backgroundColor: "rgba(15, 23, 42, 0.94)",
+      bodyColor: "#e2e8f0",
+      titleColor: "#ffffff",
+    },
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: {
+        color: "rgba(148, 163, 184, 0.9)",
+        font: { size: 10 },
+      },
+    },
+    y: {
+      beginAtZero: true,
+      max: 100,
+      ticks: { display: false },
+      grid: { color: "rgba(148, 163, 184, 0.16)" },
+    },
+  },
+};
+
+const stepLineOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      displayColors: false,
+      backgroundColor: "rgba(15, 23, 42, 0.94)",
+      bodyColor: "#e2e8f0",
+      titleColor: "#ffffff",
+    },
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: {
+        color: "rgba(148, 163, 184, 0.9)",
+        font: { size: 10 },
+      },
+    },
+    y: {
+      min: 50,
+      max: 100,
+      ticks: { display: false },
+      grid: { color: "rgba(148, 163, 184, 0.16)" },
+    },
+  },
+};
+
+const stepRadarOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      displayColors: false,
+      backgroundColor: "rgba(15, 23, 42, 0.94)",
+      bodyColor: "#e2e8f0",
+      titleColor: "#ffffff",
+    },
+  },
+  scales: {
+    r: {
+      min: 0,
+      max: 100,
+      ticks: { display: false },
+      grid: { color: "rgba(148, 163, 184, 0.2)" },
+      angleLines: { color: "rgba(148, 163, 184, 0.22)" },
+      pointLabels: {
+        color: "rgba(148, 163, 184, 0.88)",
+        font: { size: 9 },
+      },
+    },
+  },
+};
+
+const moduleDoughnutOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  cutout: "72%",
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      displayColors: false,
+      backgroundColor: "rgba(15, 23, 42, 0.94)",
+      bodyColor: "#e2e8f0",
+      titleColor: "#ffffff",
+    },
+  },
+};
+
+const moduleLineOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      displayColors: false,
+      backgroundColor: "rgba(15, 23, 42, 0.94)",
+      bodyColor: "#e2e8f0",
+      titleColor: "#ffffff",
+    },
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: {
+        color: "rgba(148, 163, 184, 0.85)",
+        font: { size: 10 },
+      },
+    },
+    y: {
+      min: 40,
+      max: 100,
+      ticks: { display: false },
+      grid: { color: "rgba(148, 163, 184, 0.16)" },
+    },
+  },
+};
+
+const moduleBarOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      displayColors: false,
+      backgroundColor: "rgba(15, 23, 42, 0.94)",
+      bodyColor: "#e2e8f0",
+      titleColor: "#ffffff",
+    },
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: {
+        color: "rgba(148, 163, 184, 0.85)",
+        font: { size: 10 },
+      },
+    },
+    y: {
+      beginAtZero: true,
+      max: 100,
+      ticks: { display: false },
+      grid: { color: "rgba(148, 163, 184, 0.16)" },
+    },
+  },
 };
 
 export function AgentSquadSection() {
@@ -228,7 +434,7 @@ export function AgentSquadSection() {
     {
       icon: UsersRound,
       value: "72",
-      label: copy("Creators onboarded", "Creator onboard"),
+      label: copy("Creators onboarded", "Creator mới onboard"),
       detail: copy("This week", "Tuần này"),
     },
     {
@@ -356,103 +562,129 @@ export function AgentSquadSection() {
 
         <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1.35fr_0.65fr]">
           <div className="space-y-4">
-            {WORKFLOW_STEPS.map((step, index) => (
-              <motion.div
-                key={step.title}
-                initial={{ opacity: 0, y: 22 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.25 }}
-                transition={{ duration: 0.55, delay: index * 0.08 }}
-              >
-                <Card className="border-border/65 bg-card/72 shadow-sm">
-                  <CardHeader className="gap-3 pb-2">
-                    <div className="flex items-center gap-3">
-                      <span className="inline-flex size-8 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-xs font-semibold text-primary">
-                        {step.number}
-                      </span>
-                      <h3 className="font-heading text-2xl leading-tight font-semibold tracking-tight">
-                        {translateStepTitle(step.title)}
-                      </h3>
-                    </div>
-                    <CardDescription className="text-sm leading-6">
-                      {translateStepDescription(step.description)}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-1">
-                    {(() => {
-                      const stepVisual = STEP_VISUALS[step.title];
-                      const score = stepVisual?.score ?? 85;
-                      const bars = stepVisual?.bars ?? [52, 61, 69, 75, 82, 85];
-                      const outcomes = stepVisual?.outcomes ?? [];
+            {WORKFLOW_STEPS.map((step, index) => {
+              const stepVisual = STEP_VISUALS[step.title] ?? {
+                chartType: "bar",
+                labels: ["A", "B", "C", "D", "E"],
+                values: [70, 76, 82, 86, 90],
+                outcomes: [],
+              };
 
-                      return (
-                        <>
-                          <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-                            <span>{copy("Readiness", "Mức sẵn sàng")}</span>
-                            <span className="text-primary">{score}%</span>
-                          </div>
-                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted/60">
-                            <motion.div
-                              className="h-full rounded-full bg-linear-to-r from-chart-1 via-chart-2 to-primary"
-                              initial={{ width: 0 }}
-                              whileInView={{ width: `${score}%` }}
-                              viewport={{ once: true }}
-                              transition={{
-                                duration: 0.7,
-                                delay: 0.08 + index * 0.06,
-                              }}
-                            />
-                          </div>
+              return (
+                <motion.div
+                  key={step.title}
+                  initial={{ opacity: 0, y: 22 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.25 }}
+                  transition={{ duration: 0.55, delay: index * 0.08 }}
+                >
+                  <Card className="border-border/65 bg-card/72 shadow-sm">
+                    <CardHeader className="gap-3 pb-2">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex size-8 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-xs font-semibold text-primary">
+                          {step.number}
+                        </span>
+                        <h3 className="font-heading text-2xl leading-tight font-semibold tracking-tight">
+                          {translateStepTitle(step.title)}
+                        </h3>
+                      </div>
+                      <CardDescription className="text-sm leading-6">
+                        {translateStepDescription(step.description)}
+                      </CardDescription>
+                    </CardHeader>
 
-                          <div className="mt-4 grid grid-cols-6 gap-1.5">
-                            {bars.map((height, barIndex) => (
-                              <div
-                                key={`${step.title}-${height}-${barIndex}`}
-                                className="relative h-10 overflow-hidden rounded-sm bg-muted/55"
-                              >
-                                <motion.span
-                                  className={cn(
-                                    "absolute inset-x-0 bottom-0 rounded-sm",
-                                    barIndex % 3 === 0 && "bg-chart-1/80",
-                                    barIndex % 3 === 1 && "bg-chart-2/80",
-                                    barIndex % 3 === 2 && "bg-primary/80",
-                                  )}
-                                  initial={{ height: 0 }}
-                                  whileInView={{ height: `${height}%` }}
-                                  viewport={{ once: true }}
-                                  transition={{
-                                    duration: 0.45,
-                                    delay:
-                                      0.12 + index * 0.05 + barIndex * 0.03,
-                                  }}
-                                />
-                              </div>
-                            ))}
-                          </div>
+                    <CardContent className="pt-1">
+                      <div className="h-36 rounded-xl border border-border/70 bg-background/75 p-2.5">
+                        {stepVisual.chartType === "bar" && (
+                          <Bar
+                            data={{
+                              labels: stepVisual.labels,
+                              datasets: [
+                                {
+                                  data: stepVisual.values,
+                                  borderRadius: 8,
+                                  maxBarThickness: 28,
+                                  backgroundColor: [
+                                    "rgba(56, 189, 248, 0.88)",
+                                    "rgba(34, 211, 238, 0.88)",
+                                    "rgba(14, 165, 233, 0.88)",
+                                    "rgba(99, 102, 241, 0.86)",
+                                    "rgba(45, 212, 191, 0.86)",
+                                  ],
+                                },
+                              ],
+                            }}
+                            options={stepBarOptions}
+                          />
+                        )}
 
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            {outcomes.map((outcome) => (
-                              <span
-                                key={`${step.title}-${outcome}`}
-                                className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/80 px-2.5 py-1 text-[11px] font-medium"
-                              >
-                                <CircleCheckBig className="size-3 text-primary" />
-                                {translateStepOutcome(outcome)}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      );
-                    })()}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                        {stepVisual.chartType === "line" && (
+                          <Line
+                            data={{
+                              labels: stepVisual.labels,
+                              datasets: [
+                                {
+                                  data: stepVisual.values,
+                                  fill: true,
+                                  borderWidth: 2.4,
+                                  tension: 0.36,
+                                  borderColor: "rgba(56, 189, 248, 0.95)",
+                                  backgroundColor: "rgba(56, 189, 248, 0.15)",
+                                  pointRadius: 2.6,
+                                  pointBackgroundColor:
+                                    "rgba(99, 102, 241, 0.95)",
+                                },
+                              ],
+                            }}
+                            options={stepLineOptions}
+                          />
+                        )}
+
+                        {stepVisual.chartType === "radar" && (
+                          <Radar
+                            data={{
+                              labels: stepVisual.labels,
+                              datasets: [
+                                {
+                                  data: stepVisual.values,
+                                  borderWidth: 2,
+                                  borderColor: "rgba(34, 211, 238, 0.95)",
+                                  backgroundColor: "rgba(34, 211, 238, 0.2)",
+                                  pointRadius: 2.2,
+                                  pointBackgroundColor:
+                                    "rgba(45, 212, 191, 0.95)",
+                                },
+                              ],
+                            }}
+                            options={stepRadarOptions}
+                          />
+                        )}
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {stepVisual.outcomes.map((outcome) => (
+                          <span
+                            key={`${step.title}-${outcome}`}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/80 px-2.5 py-1 text-[11px] font-medium"
+                          >
+                            <CircleCheckBig className="size-3 text-primary" />
+                            {translateStepOutcome(outcome)}
+                          </span>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
 
           <div className="space-y-4">
             {AGENT_MODULES.map((module, index) => {
               const Icon = module.icon;
+              const moduleVisual =
+                MODULE_VISUALS[module.title as keyof typeof MODULE_VISUALS];
+
               return (
                 <motion.div
                   key={module.title}
@@ -473,61 +705,75 @@ export function AgentSquadSection() {
                         </h3>
                       </div>
                     </CardHeader>
+
                     <CardContent>
-                      {(() => {
-                        const confidence = Number.parseInt(module.metric, 10);
-                        const normalizedConfidence = Number.isNaN(confidence)
-                          ? 78
-                          : confidence;
-                        const trendBars = MODULE_TRENDS[module.title] ?? [
-                          50, 58, 63, 70, 76, 82,
-                        ];
+                      <div className="h-30 rounded-xl border border-border/70 bg-background/75 p-2.5">
+                        {moduleVisual?.type === "doughnut" && (
+                          <Doughnut
+                            data={{
+                              labels: moduleVisual.labels,
+                              datasets: [
+                                {
+                                  data: moduleVisual.values,
+                                  borderWidth: 0,
+                                  backgroundColor: [
+                                    "rgba(56, 189, 248, 0.9)",
+                                    "rgba(248, 113, 113, 0.85)",
+                                  ],
+                                },
+                              ],
+                            }}
+                            options={moduleDoughnutOptions}
+                          />
+                        )}
 
-                        return (
-                          <>
-                            <div className="flex items-center justify-between gap-4">
-                              <div className="relative grid size-16 place-items-center rounded-full bg-muted/70">
-                                <div
-                                  className="absolute inset-0 rounded-full"
-                                  style={{
-                                    background: `conic-gradient(hsl(var(--primary)) ${normalizedConfidence * 3.6}deg, hsl(var(--muted)) 0deg)`,
-                                  }}
-                                />
-                                <div className="absolute inset-1.5 rounded-full bg-card/95" />
-                                <span className="relative text-[11px] font-semibold text-foreground">
-                                  {normalizedConfidence}%
-                                </span>
-                              </div>
+                        {moduleVisual?.type === "line" && (
+                          <Line
+                            data={{
+                              labels: moduleVisual.labels,
+                              datasets: [
+                                {
+                                  data: moduleVisual.values,
+                                  fill: true,
+                                  borderWidth: 2,
+                                  tension: 0.34,
+                                  borderColor: "rgba(56, 189, 248, 0.95)",
+                                  backgroundColor: "rgba(56, 189, 248, 0.14)",
+                                  pointRadius: 2.5,
+                                  pointBackgroundColor:
+                                    "rgba(34, 211, 238, 0.95)",
+                                },
+                              ],
+                            }}
+                            options={moduleLineOptions}
+                          />
+                        )}
 
-                              <div className="flex-1">
-                                <div className="grid grid-cols-6 gap-1.5">
-                                  {trendBars.map((value, trendIndex) => (
-                                    <span
-                                      key={`${module.title}-${value}-${trendIndex}`}
-                                      className="block h-8 rounded-sm bg-primary/18"
-                                      style={{
-                                        height: `${Math.max(22, value * 0.4)}px`,
-                                        backgroundColor:
-                                          trendIndex % 2 === 0
-                                            ? "hsl(var(--chart-1) / 0.62)"
-                                            : "hsl(var(--chart-2) / 0.62)",
-                                      }}
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
+                        {moduleVisual?.type === "bar" && (
+                          <Bar
+                            data={{
+                              labels: moduleVisual.labels,
+                              datasets: [
+                                {
+                                  data: moduleVisual.values,
+                                  borderRadius: 8,
+                                  maxBarThickness: 26,
+                                  backgroundColor: "rgba(14, 165, 233, 0.88)",
+                                },
+                              ],
+                            }}
+                            options={moduleBarOptions}
+                          />
+                        )}
+                      </div>
 
-                            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                              {translateModuleDetail(module.detail)}
-                            </p>
-                            <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold tracking-[0.12em] text-primary uppercase">
-                              <CircleCheckBig className="size-3.5" />
-                              {translateModuleMetric(module.metric)}
-                            </p>
-                          </>
-                        );
-                      })()}
+                      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                        {translateModuleDetail(module.detail)}
+                      </p>
+                      <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold tracking-[0.12em] text-primary uppercase">
+                        <CircleCheckBig className="size-3.5" />
+                        {translateModuleMetric(module.metric)}
+                      </p>
                     </CardContent>
                   </Card>
                 </motion.div>

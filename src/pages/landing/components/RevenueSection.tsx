@@ -16,43 +16,117 @@ import { CometTrails } from "./CometTrails";
 import { FloatingShards } from "./FloatingShards";
 import { OrbitRings } from "./OrbitRings";
 import { SectionGridOverlay } from "./SectionGridOverlay";
-import {
-  BarChart3,
-  CircleCheckBig,
-  Link2,
-  PlugZap,
-  Shield,
-} from "lucide-react";
+import { CircleCheckBig, PlugZap, Shield, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 import { useBilingual } from "@/hooks/use-bilingual";
-import { SocialIcon } from "react-social-icons";
+import { useIsInView } from "@/hooks/use-is-in-view";
+import { lazy, Suspense, useRef } from "react";
 
 function formatMetric(value: number, prefix?: string, suffix?: string) {
   return `${prefix ?? ""}${value}${suffix ?? ""}`;
 }
 
-const METRIC_TRENDS = [
-  [48, 56, 64, 71, 79, 88],
-  [72, 79, 83, 88, 92, 96],
-  [34, 42, 51, 64, 77, 89],
-  [52, 59, 66, 72, 81, 90],
-];
-
 const METRIC_DELTA = [18, 6, 23, 14];
 
-const INTEGRATION_NETWORKS: Record<string, string> = {
-  YouTube: "youtube",
-  TikTok: "tiktok",
-  Instagram: "instagram",
-  Slack: "slack",
+type IntegrationVisual = {
+  icon: string;
+  color: string;
+  fallback: string;
 };
 
-const INTEGRATION_COLORS: Record<string, string> = {
-  YouTube: "#ff0033",
-  TikTok: "#111111",
-  Instagram: "#e1306c",
-  Slack: "#4a154b",
+const INTEGRATION_VISUALS: Record<string, IntegrationVisual> = {
+  YouTube: {
+    icon: "simple-icons:youtube",
+    color: "#FF0000",
+    fallback: "YT",
+  },
+  TikTok: {
+    icon: "simple-icons:tiktok",
+    color: "#111111",
+    fallback: "TT",
+  },
+  Instagram: {
+    icon: "simple-icons:instagram",
+    color: "#E4405F",
+    fallback: "IG",
+  },
+  Shopify: {
+    icon: "simple-icons:shopify",
+    color: "#95BF47",
+    fallback: "SH",
+  },
+  Stripe: {
+    icon: "simple-icons:stripe",
+    color: "#635BFF",
+    fallback: "ST",
+  },
+  HubSpot: {
+    icon: "simple-icons:hubspot",
+    color: "#FF7A59",
+    fallback: "HB",
+  },
+  Notion: {
+    icon: "simple-icons:notion",
+    color: "#111111",
+    fallback: "NO",
+  },
+  Figma: {
+    icon: "simple-icons:figma",
+    color: "#F24E1E",
+    fallback: "FG",
+  },
+  PostgreSQL: {
+    icon: "simple-icons:postgresql",
+    color: "#4169E1",
+    fallback: "PG",
+  },
+  Vercel: {
+    icon: "simple-icons:vercel",
+    color: "#111111",
+    fallback: "VE",
+  },
+  Slack: {
+    icon: "simple-icons:slack",
+    color: "#4A154B",
+    fallback: "SL",
+  },
+  OpenAI: {
+    icon: "simple-icons:openai",
+    color: "#10A37F",
+    fallback: "AI",
+  },
 };
+
+const LazyIntegrationPlanetScene = lazy(() =>
+  import("./IntegrationPlanetScene").then((module) => ({
+    default: module.IntegrationPlanetScene,
+  })),
+);
+
+function PlanetSceneFallback() {
+  return (
+    <div className="relative mx-auto h-[27rem] w-full max-w-[42rem] overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_52%_45%,hsl(var(--primary)/0.24),hsl(var(--background))_62%)] shadow-[0_34px_110px_-46px_hsl(var(--primary)/0.85)]">
+      <motion.div
+        className="absolute inset-[16%] rounded-full border border-primary/35"
+        animate={{ scale: [1, 1.06, 1], opacity: [0.45, 0.85, 0.45] }}
+        transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute inset-[6%] rounded-full border border-dashed border-border/45"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
+      />
+      <motion.div
+        className="absolute top-1/2 left-1/2 h-42 w-42 -translate-x-1/2 -translate-y-1/2 rounded-full bg-linear-to-br from-indigo-400 via-sky-400 to-cyan-300 shadow-[0_26px_95px_-35px_hsl(var(--primary)/0.95)]"
+        animate={{ scale: [1, 1.05, 1], y: [0, -6, 0] }}
+        transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <div className="absolute right-4 bottom-4 rounded-full border border-primary/35 bg-background/72 px-3 py-1 text-[10px] font-semibold tracking-wide text-primary uppercase">
+        Loading 3D scene...
+      </div>
+    </div>
+  );
+}
 
 export function ExecutiveProjectionsSection() {
   const copy = useBilingual();
@@ -130,20 +204,27 @@ export function ExecutiveProjectionsSection() {
     return category;
   };
 
-  const translateMixLabel = (label: string) => {
-    if (label === "Creator channels") {
-      return copy("Creator channels", "Kênh creator");
+  const translateMetricHint = (hint: string) => {
+    if (hint === "Live creator telemetry") {
+      return copy(
+        "Live creator telemetry",
+        "Telemetry creator theo thời gian thực",
+      );
     }
 
-    if (label === "Commerce + payments") {
-      return copy("Commerce + payments", "Thương mại + thanh toán");
+    if (hint === "Campaign reliability") {
+      return copy("Campaign reliability", "Độ ổn định chiến dịch");
     }
 
-    if (label === "Operations + AI") {
-      return copy("Operations + AI", "Vận hành + AI");
+    if (hint === "Response performance") {
+      return copy("Response performance", "Hiệu năng phản hồi");
     }
 
-    return label;
+    if (hint === "Global availability") {
+      return copy("Global availability", "Khả năng sẵn sàng toàn cầu");
+    }
+
+    return hint;
   };
 
   const translateSecurityFeature = (title: string, description: string) => {
@@ -183,27 +264,57 @@ export function ExecutiveProjectionsSection() {
     };
   };
 
-  const integrationMix = [
-    { label: "Creator channels", value: 46, colorClass: "bg-chart-1" },
-    { label: "Commerce + payments", value: 32, colorClass: "bg-chart-2" },
-    { label: "Operations + AI", value: 22, colorClass: "bg-primary" },
+  const metricHints = [
+    "Live creator telemetry",
+    "Campaign reliability",
+    "Response performance",
+    "Global availability",
   ];
+
+  const orbitNodes = INTEGRATIONS.map((integration) => {
+    const visual = INTEGRATION_VISUALS[integration.name] ?? {
+      icon: "mdi:hexagon-multiple-outline",
+      color: "#334155",
+      fallback: integration.name.slice(0, 2).toUpperCase(),
+    };
+
+    return {
+      ...integration,
+      visual,
+    };
+  });
+
+  const orbitSceneNodes = orbitNodes.map((node) => ({
+    name: node.name,
+    category: translateIntegrationCategory(node.category),
+    icon: node.visual.icon,
+    color: node.visual.color,
+    fallback: node.visual.fallback,
+  }));
+
+  const orbitInViewRef = useRef<HTMLDivElement>(null);
+  const { ref: orbitViewportRef, isInView: shouldLoadOrbitScene } =
+    useIsInView<HTMLDivElement>(orbitInViewRef, {
+      inView: true,
+      inViewOnce: true,
+      inViewMargin: "0px 0px -18% 0px",
+    });
 
   const securityPulse = [
     {
       label: copy("Threats blocked", "Mối đe dọa đã chặn"),
       value: "2.8M",
-      score: 94,
+      note: copy("Monitored continuously", "Giám sát liên tục"),
     },
     {
       label: copy("Safe workflow runs", "Workflow an toàn"),
       value: "99.7%",
-      score: 97,
+      note: copy("No critical incidents", "Không có sự cố nghiêm trọng"),
     },
     {
       label: copy("Audit trace coverage", "Độ phủ log kiểm toán"),
       value: "100%",
-      score: 100,
+      note: copy("Ready for review", "Sẵn sàng cho kiểm toán"),
     },
   ];
 
@@ -297,21 +408,10 @@ export function ExecutiveProjectionsSection() {
                     {translatePerformanceLabel(metric.label)}
                   </p>
 
-                  <div className="mt-3 flex h-9 items-end gap-1.5">
-                    {(METRIC_TRENDS[index] ?? [52, 61, 68, 74, 81, 86]).map(
-                      (value, trendIndex) => (
-                        <span
-                          key={`${metric.label}-${value}-${trendIndex}`}
-                          className="w-full rounded-sm"
-                          style={{
-                            height: `${Math.max(24, value * 0.35)}px`,
-                            backgroundColor:
-                              trendIndex % 2 === 0
-                                ? "hsl(var(--chart-1) / 0.75)"
-                                : "hsl(var(--chart-2) / 0.75)",
-                          }}
-                        />
-                      ),
+                  <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/75 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                    <Sparkles className="size-3 text-primary" />
+                    {translateMetricHint(
+                      metricHints[index] ?? "Live creator telemetry",
                     )}
                   </div>
                 </CardContent>
@@ -320,14 +420,14 @@ export function ExecutiveProjectionsSection() {
           ))}
         </div>
 
-        <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-2">
+        <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1.35fr_0.65fr]">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.55 }}
           >
-            <Card className="h-full border-border/65 bg-card/72">
+            <Card className="h-full border-primary/25 bg-card/76 shadow-[0_38px_120px_-56px_hsl(var(--primary)/0.85)]">
               <CardHeader>
                 <div className="flex items-center gap-2 text-primary">
                   <PlugZap className="size-4" />
@@ -337,102 +437,42 @@ export function ExecutiveProjectionsSection() {
                 </div>
                 <CardTitle className="font-heading text-2xl">
                   {copy(
-                    "Connect your stack with visual channel blocks",
-                    "Kết nối stack với các khối kênh trực quan",
+                    "Orbit-ready creator integrations",
+                    "Hệ tích hợp creator theo mô hình quỹ đạo",
                   )}
                 </CardTitle>
                 <CardDescription>
                   {copy(
-                    "Use ready-made connectors and monitor your channel mix at a glance.",
-                    "Dùng connector dựng sẵn và theo dõi tỷ trọng kênh chỉ trong một lần nhìn.",
+                    "Your channels and tools revolve around one campaign core so teams can see the whole ecosystem instantly.",
+                    "Các kênh và công cụ của bạn quay quanh một lõi chiến dịch duy nhất để đội ngũ nhìn thấy toàn bộ hệ sinh thái ngay lập tức.",
                   )}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-2 sm:grid-cols-3">
-                  {integrationMix.map((mix) => (
-                    <div
-                      key={mix.label}
-                      className="rounded-lg border border-border/70 bg-background/75 px-3 py-2"
-                    >
-                      <div className="flex items-center justify-between text-[11px] font-semibold uppercase">
-                        <span className="text-muted-foreground">
-                          {translateMixLabel(mix.label)}
-                        </span>
-                        <span className="text-foreground">{mix.value}%</span>
-                      </div>
-                      <div className="mt-1.5 h-1.5 rounded-full bg-muted/60">
-                        <motion.div
-                          className={`h-full rounded-full ${mix.colorClass}`}
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${mix.value}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.55 }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                <div ref={orbitViewportRef}>
+                  {shouldLoadOrbitScene ? (
+                    <Suspense fallback={<PlanetSceneFallback />}>
+                      <LazyIntegrationPlanetScene
+                        nodes={orbitSceneNodes}
+                        coreTagline={copy("Campaign Core", "Lõi chiến dịch")}
+                        coreName="KOL AI"
+                      />
+                    </Suspense>
+                  ) : (
+                    <PlanetSceneFallback />
+                  )}
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {INTEGRATIONS.map((integration, index) => {
-                    const network = INTEGRATION_NETWORKS[integration.name];
-                    const bgColor =
-                      INTEGRATION_COLORS[integration.name] ?? "#334155";
-
-                    return (
-                      <motion.div
-                        key={integration.name}
-                        initial={{ opacity: 0, y: 10 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.35, delay: index * 0.03 }}
-                        className="rounded-xl border border-border/70 bg-background/75 px-3 py-2.5"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          {network ? (
-                            <SocialIcon
-                              as="div"
-                              network={network}
-                              style={{ height: 30, width: 30 }}
-                              bgColor={bgColor}
-                              fgColor="#ffffff"
-                            />
-                          ) : (
-                            <span className="inline-grid size-7 place-items-center rounded-full bg-muted text-xs font-semibold text-foreground">
-                              {integration.name[0]}
-                            </span>
-                          )}
-
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-foreground">
-                              {integration.name}
-                            </p>
-                            <p className="truncate text-[11px] text-muted-foreground uppercase">
-                              {translateIntegrationCategory(
-                                integration.category,
-                              )}
-                            </p>
-                          </div>
-
-                          <Link2 className="ml-auto size-3.5 text-muted-foreground" />
-                        </div>
-
-                        <div className="mt-2 h-1.5 rounded-full bg-muted/60">
-                          <motion.div
-                            className="h-full rounded-full bg-linear-to-r from-chart-1 via-chart-2 to-primary"
-                            initial={{ width: 0 }}
-                            whileInView={{ width: `${62 + (index % 4) * 9}%` }}
-                            viewport={{ once: true }}
-                            transition={{
-                              duration: 0.45,
-                              delay: 0.08 + index * 0.02,
-                            }}
-                          />
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                <div className="flex flex-wrap justify-center gap-2 sm:justify-end">
+                  <span className="rounded-full border border-border/65 bg-background/82 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                    {copy("12 platforms synced", "12 nền tảng đồng bộ")}
+                  </span>
+                  <span className="rounded-full border border-border/65 bg-background/82 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                    {copy("Dual orbit mode", "Mô hình quỹ đạo kép")}
+                  </span>
+                  <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-primary uppercase">
+                    {copy("3D sync visual", "Trực quan đồng bộ 3D")}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -489,15 +529,9 @@ export function ExecutiveProjectionsSection() {
                       <p className="mt-1 font-heading text-lg leading-none font-semibold text-foreground">
                         {pulse.value}
                       </p>
-                      <div className="mt-2 h-1.5 rounded-full bg-muted/60">
-                        <motion.div
-                          className="h-full rounded-full bg-linear-to-r from-chart-2 via-chart-1 to-primary"
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${pulse.score}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.55 }}
-                        />
-                      </div>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        {pulse.note}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -529,14 +563,6 @@ export function ExecutiveProjectionsSection() {
                     </div>
                   );
                 })}
-
-                <div className="flex items-center gap-2 rounded-lg border border-border/65 bg-background/72 px-3 py-2.5 text-xs text-muted-foreground">
-                  <BarChart3 className="size-3.5 text-primary" />
-                  {copy(
-                    "Security telemetry updates every 15 seconds",
-                    "Dữ liệu bảo mật được cập nhật mỗi 15 giây",
-                  )}
-                </div>
               </CardContent>
             </Card>
           </motion.div>
