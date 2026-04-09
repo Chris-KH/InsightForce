@@ -28,7 +28,7 @@ export function MobileSidebarSheet() {
     }
 
     if (path === "/app/audience") {
-      return copy("Audience", "Khán giả");
+      return copy("Audience", "Khách hàng");
     }
 
     if (path === "/app/strategy") {
@@ -52,11 +52,11 @@ export function MobileSidebarSheet() {
     }
 
     if (label === "Architect") {
-      return copy("Architect", "Kiến trúc sư");
+      return copy("Architect", "Thiết kế phân luồng");
     }
 
     if (label === "Scout") {
-      return copy("Scout", "Trinh sát");
+      return copy("Scout", "Phân tích");
     }
 
     return label;
@@ -89,7 +89,7 @@ export function MobileSidebarSheet() {
           <SheetDescription>
             {copy(
               "Navigate your operating dashboard and live agent systems.",
-              "Di chuyển giữa bảng điều khiển vận hành và hệ thống tác vụ viên trực tuyến.",
+              "Di chuyển giữa bảng điều khiển vận hành và hệ thống bot trực tuyến.",
             )}
           </SheetDescription>
         </SheetHeader>
@@ -110,7 +110,7 @@ export function MobileSidebarSheet() {
 
         <div className="flex flex-col gap-2">
           <p className="px-1 text-[11px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-            {copy("Core Guards", "Bảo vệ cốt lõi")}
+            {copy("Core Guards", "Hệ thống phòng vệ cốt lõi")}
           </p>
           {APP_AGENT_ITEMS.map((agent) => {
             const Icon = agent.icon;
@@ -141,7 +141,7 @@ export function MobileSidebarSheet() {
           <p className="mt-1">
             {copy(
               "Realtime orchestration across all active agent lanes.",
-              "Điều phối thời gian thực trên tất cả luồng tác vụ viên đang hoạt động.",
+              "Điều phối thời gian thực trên tất cả luồng bot đang hoạt động.",
             )}
           </p>
           <Link to="/app/finance" className="mt-3 inline-block text-primary">

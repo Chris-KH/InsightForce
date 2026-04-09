@@ -14,10 +14,10 @@ export function AudiencePage() {
   return (
     <div className="grid gap-8">
       <SectionHeader
-        title={copy("Content Architect", "Kiến trúc sư nội dung")}
+        title={copy("Content Architect", "Thiết kế phân luồng nội dung")}
         description={copy(
           "Decoding audience psychology through unstructured data.",
-          "Giải mã tâm lý khán giả qua dữ liệu phi cấu trúc.",
+          "Giải mã tâm lý khách hàng qua dữ liệu phi cấu trúc.",
         )}
         action={
           <div className="flex items-center gap-3">

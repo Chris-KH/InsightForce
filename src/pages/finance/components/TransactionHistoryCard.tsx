@@ -86,7 +86,7 @@ export function TransactionHistoryCard() {
                   {copy("Transaction Details", "Chi tiết giao dịch")}
                 </th>
                 <th className="px-4 py-4">
-                  {copy("Executing Agent", "Tác vụ viên thực thi")}
+                  {copy("Executing Agent", "Bot thực thi")}
                 </th>
                 <th className="px-4 py-4">{copy("Date", "Ngày")}</th>
                 <th className="px-4 py-4">{copy("Amount", "Số tiền")}</th>

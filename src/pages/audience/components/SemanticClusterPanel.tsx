@@ -41,7 +41,7 @@ export function SemanticClusterPanel() {
             {copy("Watch-time Dips", "Điểm rơi thời lượng xem")}
           </Badge>
           <Badge variant="secondary" className="rounded-full bg-background/90">
-            {copy("Viral Hooks", "Móc câu lan truyền")}
+            {copy("Viral Hooks", "Yếu tố thu hút (Hook)")}
           </Badge>
         </div>
         <div className="relative h-90 rounded-2xl border border-border/50 bg-background/20 p-2">

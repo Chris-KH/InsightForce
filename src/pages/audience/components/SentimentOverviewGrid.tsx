@@ -15,12 +15,12 @@ export function SentimentOverviewGrid() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <CardTitle className="font-heading text-2xl font-semibold text-foreground">
-                {copy("Overall Sentiment Share", "Tỷ trọng cảm xúc tổng thể")}
+                {copy("Overall Sentiment Share", "Tỷ lệ cảm xúc tổng thể")}
               </CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
                 {copy(
                   "Audience mood across the last 30 days.",
-                  "Sắc thái cảm xúc của khán giả trong 30 ngày gần nhất.",
+                  "Xu hướng cảm xúc của khách hàng trong 30 ngày gần nhất.",
                 )}
               </p>
             </div>

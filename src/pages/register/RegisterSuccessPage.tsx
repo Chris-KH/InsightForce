@@ -76,7 +76,7 @@ export function RegisterSuccessPage() {
               >
                 {copy(
                   "Your InsightForge account is ready. Your agents are standing by to analyze your channel.",
-                  "Tài khoản InsightForge của bạn đã sẵn sàng. Các tác vụ viên đang chờ để phân tích kênh của bạn.",
+                  "Tài khoản InsightForge của bạn đã sẵn sàng. Các bot đang chờ để phân tích kênh của bạn.",
                 )}
               </motion.p>
 

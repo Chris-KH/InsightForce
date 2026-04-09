@@ -31,7 +31,7 @@ export function ExecutiveProjectionsSection() {
     if (label === "Audience events processed today") {
       return copy(
         "Audience events processed today",
-        "Sự kiện khán giả đã xử lý hôm nay",
+        "Sự kiện khách hàng đã xử lý hôm nay",
       );
     }
 
@@ -43,7 +43,7 @@ export function ExecutiveProjectionsSection() {
     }
 
     if (label === "Average agent response") {
-      return copy("Average agent response", "Phản hồi tác vụ viên trung bình");
+      return copy("Average agent response", "Phản hồi bot trung bình");
     }
 
     if (label === "Countries activated") {

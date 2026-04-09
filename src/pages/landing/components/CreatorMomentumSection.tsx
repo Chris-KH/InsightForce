@@ -13,7 +13,7 @@ export function CreatorMomentumSection() {
 
   const translateCapabilityTitle = (title: string) => {
     if (title === "Audience Signal Graph") {
-      return copy("Audience Signal Graph", "Đồ thị tín hiệu khán giả");
+      return copy("Audience Signal Graph", "Đồ thị tín hiệu khách hàng");
     }
 
     if (title === "Narrative Blueprinting") {
@@ -48,7 +48,7 @@ export function CreatorMomentumSection() {
     ) {
       return copy(
         "Generate platform-specific content arcs with hook variants, emotional cues, and CTA sequencing tuned for each audience segment.",
-        "Tạo mạch nội dung theo từng nền tảng với biến thể hook, tín hiệu cảm xúc và chuỗi CTA được tinh chỉnh cho từng phân khúc khán giả.",
+        "Tạo mạch nội dung theo từng nền tảng với biến thể hook, tín hiệu cảm xúc và chuỗi CTA được tinh chỉnh cho từng phân khúc khách hàng.",
       );
     }
 
@@ -147,7 +147,7 @@ export function CreatorMomentumSection() {
           <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
             {copy(
               "Replace disconnected tools with one intelligence stack that maps audience demand, designs narratives, matches KOL partners, and protects every message before launch.",
-              "Thay thế các công cụ rời rạc bằng một stack trí tuệ thống nhất để lập bản đồ nhu cầu khán giả, thiết kế câu chuyện, ghép KOL phù hợp và bảo vệ mọi thông điệp trước khi ra mắt.",
+              "Thay thế các công cụ rời rạc bằng một stack trí tuệ thống nhất để lập bản đồ nhu cầu khách hàng, thiết kế câu chuyện, ghép KOL phù hợp và bảo vệ mọi thông điệp trước khi ra mắt.",
             )}
           </p>
         </motion.div>

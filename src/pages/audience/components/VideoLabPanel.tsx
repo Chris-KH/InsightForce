@@ -11,10 +11,10 @@ export function VideoLabPanel() {
 
   return (
     <PanelCard
-      title={copy("Multimodal Video Lab", "Phòng lab video đa phương thức")}
+      title={copy("Multimodal Video Lab", "Trình xử lý video")}
       description={copy(
         "Frame-level timeline with audience sentiment spikes.",
-        "Timeline theo từng frame cùng các điểm bùng nổ cảm xúc của khán giả.",
+        "Timeline theo từng frame cùng các điểm cao trào cảm xúc của khách hàng.",
       )}
       action={
         <Badge
@@ -34,7 +34,7 @@ export function VideoLabPanel() {
             04:12 / 12:45
           </div>
           <div className="absolute top-4 right-4 rounded-full bg-primary/90 px-3 py-1 text-xs font-semibold text-primary-foreground">
-            {copy("Peak Sentiment Window", "Khung thời gian cảm xúc đỉnh")}
+            {copy("Peak Sentiment Window", "Khung thời gian cảm xúc cao nhất")}
           </div>
           <div className="absolute right-4 bottom-4 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white">
             {copy("Video Preview", "Xem trước video")}

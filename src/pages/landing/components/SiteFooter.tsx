@@ -161,7 +161,7 @@ export function SiteFooter() {
               <h3 className="mt-2 font-heading text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
                 {copy(
                   "Turn audience intelligence into your next growth engine.",
-                  "Biến trí tuệ khán giả thành động cơ tăng trưởng tiếp theo.",
+                  "Biến trí tuệ khách hàng thành động cơ tăng trưởng tiếp theo.",
                 )}
               </h3>
               <p className="mt-3 max-w-[56ch] text-sm leading-6 text-muted-foreground sm:text-base">

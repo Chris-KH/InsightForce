@@ -117,7 +117,7 @@ export function GuardianWatchSection() {
           <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
             {copy(
               "Route audience signals through distributed hubs with low-latency responses, high availability, and operational visibility for every live campaign.",
-              "Định tuyến tín hiệu khán giả qua các hub phân tán với độ trễ thấp, độ sẵn sàng cao và khả năng quan sát vận hành cho mọi chiến dịch trực tiếp.",
+              "Định tuyến tín hiệu khách hàng qua các hub phân tán với độ trễ thấp, độ sẵn sàng cao và khả năng quan sát vận hành cho mọi chiến dịch trực tiếp.",
             )}
           </p>
         </motion.div>

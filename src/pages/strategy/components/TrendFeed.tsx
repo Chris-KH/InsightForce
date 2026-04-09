@@ -16,7 +16,7 @@ export function TrendFeed() {
       ),
       description: copy(
         "Your audience is showing a 40% spike in sustainable tech queries alongside local-hosting discussions.",
-        "Khán giả của bạn đang tăng 40% truy vấn về công nghệ bền vững cùng các thảo luận về self-host cục bộ.",
+        "Khách hàng của bạn đang tăng 40% truy vấn về công nghệ bền vững cùng các thảo luận về self-host cục bộ.",
       ),
       pills: [
         copy("High Growth", "Tăng trưởng cao"),
@@ -27,7 +27,7 @@ export function TrendFeed() {
     {
       category: copy("Art & Creativity", "Nghệ thuật & Sáng tạo"),
       score: 82,
-      title: copy("Generative Sculpting", "Điêu khắc tạo sinh"),
+      title: copy("Generative Sculpting", "Tinh chỉnh nội dung"),
       description: copy(
         "Emerging interest in 3D-printed AI assets aligns with your Future of Design series.",
         "Mối quan tâm mới với tài sản AI in 3D phù hợp với series Future of Design của bạn.",

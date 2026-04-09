@@ -11,7 +11,7 @@ export function ModerationLogPanel() {
     ),
     copy(
       "[09:00:02] Guardian Agent connected.",
-      "[09:00:02] Tác vụ viên Guardian đã kết nối.",
+      "[09:00:02] Bot Guardian đã kết nối.",
     ),
     copy(
       "[14:21:04] INFO: Scanning message #A92-F1.",
@@ -44,7 +44,7 @@ export function ModerationLogPanel() {
       title={copy("Live Moderation Log", "Nhật ký kiểm duyệt trực tiếp")}
       description={copy(
         "A rolling event stream from the Guardian agent.",
-        "Luồng sự kiện liên tục từ tác vụ viên Guardian.",
+        "Luồng sự kiện liên tục từ bot Guardian.",
       )}
     >
       <div className="rounded-[1.5rem] border border-emerald-900/50 bg-zinc-950 p-5 font-mono text-xs leading-6 text-emerald-400 shadow-[0_14px_28px_rgba(0,0,0,0.4)]">

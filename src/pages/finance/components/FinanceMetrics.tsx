@@ -22,12 +22,12 @@ export function FinanceMetrics() {
       icon: <Calculator className="size-4" />,
     },
     {
-      label: copy("Total Agent Commissions", "Tổng hoa hồng tác vụ viên"),
+      label: copy("Total Agent Commissions", "Tổng hoa hồng bot"),
       value: "$11,402.50",
       delta: "8.2% Avg",
       detail: copy(
         "Across 12 active agents",
-        "Trên 12 tác vụ viên đang hoạt động",
+        "Trên 12 bot đang hoạt động",
       ),
       icon: <Banknote className="size-4" />,
     },

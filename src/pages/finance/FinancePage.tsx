@@ -20,7 +20,7 @@ export function FinancePage() {
         )}
         description={copy(
           "Manage your AI-driven monetization streams, optimize campaign budgets, and track real-time agent commissions with full transparency.",
-          "Quản lý luồng kiếm tiền do AI dẫn dắt, tối ưu ngân sách chiến dịch và theo dõi hoa hồng tác vụ viên theo thời gian thực với tính minh bạch cao.",
+          "Quản lý luồng kiếm tiền do AI dẫn dắt, tối ưu ngân sách chiến dịch và theo dõi hoa hồng bot theo thời gian thực với tính minh bạch cao.",
         )}
         action={
           <div className="flex items-center gap-3">

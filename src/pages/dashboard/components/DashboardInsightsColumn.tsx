@@ -30,7 +30,7 @@ export function DashboardInsightsColumn() {
           <p className="text-sm leading-7 text-foreground/80">
             {copy(
               "Scout Agent wants to launch a $50 ad campaign for",
-              "Tác vụ viên Scout muốn triển khai chiến dịch quảng cáo $50 cho",
+              "Bot Scout muốn triển khai chiến dịch quảng cáo $50 cho",
             )}{" "}
             <strong>{copy("Spring Gear Review", "Đánh giá đồ xuân")}</strong>.
           </p>
@@ -57,7 +57,7 @@ export function DashboardInsightsColumn() {
       >
         <div className="flex flex-col gap-5">
           <div className="rounded-2xl bg-muted/40 px-4 py-4 text-sm leading-7 text-muted-foreground">
-            {copy("Your audience loves the", "Khán giả của bạn rất thích")}{" "}
+            {copy("Your audience loves the", "Khách hàng của bạn rất thích")}{" "}
             <span className="font-medium text-primary">
               {copy('"behind-the-scenes"', '"hậu trường"')}
             </span>{" "}

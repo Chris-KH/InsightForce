@@ -21,7 +21,7 @@ export function AgentSquadSection() {
     }
 
     if (title === "Design agent workflow") {
-      return copy("Design agent workflow", "Thiết kế quy trình tác vụ viên");
+      return copy("Design agent workflow", "Thiết kế quy trình bot");
     }
 
     if (title === "Ship globally") {
@@ -71,7 +71,7 @@ export function AgentSquadSection() {
     }
 
     if (title === "Content Architect") {
-      return copy("Content Architect", "Kiến trúc sư nội dung");
+      return copy("Content Architect", "Thiết kế phân luồng nội dung");
     }
 
     if (title === "Scout & Executor") {
@@ -88,7 +88,7 @@ export function AgentSquadSection() {
     ) {
       return copy(
         "Monitors audience sentiment shifts and flags messages that may weaken trust.",
-        "Theo dõi dịch chuyển cảm xúc khán giả và gắn cờ những thông điệp có thể làm suy giảm niềm tin.",
+        "Theo dõi dịch chuyển cảm xúc khách hàng và gắn cờ những thông điệp có thể làm ảnh hưởng uy tín.",
       );
     }
 
@@ -192,13 +192,13 @@ export function AgentSquadSection() {
           <h2 className="mt-4 font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.85rem]">
             {copy(
               "Build, validate, and ship campaigns with specialized AI agents",
-              "Xây dựng, kiểm định và triển khai chiến dịch với tác vụ viên AI chuyên biệt",
+              "Xây dựng, kiểm định và triển khai chiến dịch với bot AI chuyên biệt",
             )}
           </h2>
           <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
             {copy(
               "Connect your data, assign agent responsibilities, and launch globally from a single playbook that keeps strategy, execution, and quality in sync.",
-              "Kết nối dữ liệu, phân công trách nhiệm cho tác vụ viên và ra mắt toàn cầu từ một playbook duy nhất giúp chiến lược, thực thi và chất lượng luôn đồng bộ.",
+              "Kết nối dữ liệu, phân công trách nhiệm cho bot và ra mắt toàn cầu từ một playbook duy nhất giúp chiến lược, thực thi và chất lượng luôn đồng bộ.",
             )}
           </p>
         </motion.div>

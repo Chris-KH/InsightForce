@@ -13,7 +13,7 @@ export function StrategyPage() {
   return (
     <div className="grid gap-8">
       <SectionHeader
-        title={copy("Content Strategy Scout", "Trinh sát chiến lược nội dung")}
+        title={copy("Content Strategy Scout", "Phân tích chiến lược nội dung")}
         description={copy(
           "Bridging real-time trend detection with high-conversion production planning. Your AI scout has identified new opportunities in your niche.",
           "Kết nối phát hiện xu hướng thời gian thực với kế hoạch sản xuất chuyển đổi cao. Trình sát AI đã nhận diện cơ hội mới trong ngách của bạn.",

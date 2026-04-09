@@ -15,11 +15,11 @@ export function AutomationPage() {
       <SectionHeader
         title={copy(
           "Agent Orchestration Hub",
-          "Trung tâm điều phối tác vụ viên",
+          "Trung tâm điều phối bot",
         )}
         description={copy(
           "War Room: 3 Agents Active • 14 Operations Today",
-          "Phòng điều hành: 3 tác vụ viên đang hoạt động • 14 tác vụ hôm nay",
+          "Phòng điều hành: 3 bot đang hoạt động • 14 tác vụ hôm nay",
         )}
         action={
           <div className="flex flex-wrap items-center gap-3">
@@ -32,7 +32,7 @@ export function AutomationPage() {
             </Button>
             <Button className="rounded-full bg-primary text-primary-foreground">
               <Sparkles data-icon="inline-start" />
-              {copy("Deploy Agent", "Triển khai tác vụ viên")}
+              {copy("Deploy Agent", "Triển khai bot")}
             </Button>
           </div>
         }

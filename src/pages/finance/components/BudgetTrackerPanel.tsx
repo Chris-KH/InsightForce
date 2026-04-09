@@ -10,7 +10,7 @@ export function BudgetTrackerPanel() {
       label: copy("Ads & Marketing", "Quảng cáo & Tiếp thị"),
       value: 80,
       amount: "$64,000 / $80k",
-      note: copy("Controlled by Scout Agent", "Do tác vụ viên Scout điều phối"),
+      note: copy("Controlled by Scout Agent", "Do bot Scout điều phối"),
       tone: "primary" as const,
     },
     {

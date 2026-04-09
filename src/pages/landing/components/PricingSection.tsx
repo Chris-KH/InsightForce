@@ -47,7 +47,7 @@ export function PricingSection() {
     ) {
       return copy(
         "For solo creators and small studios validating audience fit.",
-        "Dành cho creator cá nhân và studio nhỏ đang kiểm chứng độ phù hợp với khán giả.",
+        "Dành cho creator cá nhân và studio nhỏ đang kiểm chứng độ phù hợp với khách hàng.",
       );
     }
 
@@ -76,7 +76,7 @@ export function PricingSection() {
 
   const translateTierFeature = (feature: string) => {
     if (feature === "1 agent workflow") {
-      return copy("1 agent workflow", "1 quy trình tác vụ viên");
+      return copy("1 agent workflow", "1 quy trình bot");
     }
 
     if (feature === "Daily signal digest") {
@@ -92,7 +92,7 @@ export function PricingSection() {
     }
 
     if (feature === "Full agent triad") {
-      return copy("Full agent triad", "Bộ ba tác vụ viên đầy đủ");
+      return copy("Full agent triad", "Bộ ba bot đầy đủ");
     }
 
     if (feature === "Live campaign intelligence") {

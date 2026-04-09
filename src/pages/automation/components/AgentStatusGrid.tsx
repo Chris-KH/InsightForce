@@ -10,7 +10,7 @@ export function AgentStatusGrid() {
 
   const agents = [
     {
-      name: copy("Guardian Agent", "Tác vụ viên Guardian"),
+      name: copy("Guardian Agent", "Bot Guardian"),
       status: copy("Active", "Đang hoạt động"),
       statusKey: "active" as const,
       icon: Shield,
@@ -26,7 +26,7 @@ export function AgentStatusGrid() {
       ),
     },
     {
-      name: copy("Content Architect", "Kiến trúc sư nội dung"),
+      name: copy("Content Architect", "Thiết kế phân luồng nội dung"),
       status: copy("Active", "Đang hoạt động"),
       statusKey: "active" as const,
       icon: Wand2,

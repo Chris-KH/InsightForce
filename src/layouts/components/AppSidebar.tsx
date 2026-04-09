@@ -16,7 +16,7 @@ export function AppSidebar() {
     }
 
     if (path === "/app/audience") {
-      return copy("Audience", "Khán giả");
+      return copy("Audience", "Khách hàng");
     }
 
     if (path === "/app/strategy") {
@@ -40,11 +40,11 @@ export function AppSidebar() {
     }
 
     if (label === "Architect") {
-      return copy("Architect", "Kiến trúc sư");
+      return copy("Architect", "Thiết kế phân luồng");
     }
 
     if (label === "Scout") {
-      return copy("Scout", "Trinh sát");
+      return copy("Scout", "Phân tích");
     }
 
     return label;
@@ -63,7 +63,7 @@ export function AppSidebar() {
 
       <div className="flex-1 overflow-y-auto px-3 py-4">
         <p className="px-2 text-[10px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-          {copy("Agents", "Tác vụ viên")}
+          {copy("Agents", "Bot")}
         </p>
         <p className="px-2 pt-1 text-[11px] text-primary">
           {copy("Live Status", "Trạng thái trực tuyến")}
@@ -83,7 +83,7 @@ export function AppSidebar() {
 
       <div className="border-t border-border/60 px-5 py-4">
         <p className="text-[10px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-          {copy("Core Guards", "Bảo vệ cốt lõi")}
+          {copy("Core Guards", "Hệ thống phòng vệ cốt lõi")}
         </p>
         <div className="mt-3 space-y-2">
           {APP_AGENT_ITEMS.map((agent) => {

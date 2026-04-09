@@ -25,7 +25,7 @@ export function DashboardMetrics() {
       label: copy("Avg. Sentiment", "Cảm xúc trung bình"),
       value: "88%",
       delta: "+2%",
-      detail: copy("Positive audience tone", "Sắc thái tích cực từ khán giả"),
+      detail: copy("Positive audience tone", "Phản hồi tích cực từ khách hàng"),
       icon: <MessageCircleMore className="size-4" />,
     },
   ] as const;

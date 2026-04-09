@@ -156,7 +156,7 @@ export function HeroSection() {
           >
             {copy(
               "InsightForce synchronizes your audience signals, creator workflows, and campaign execution into one intelligence layer so you can move faster without sacrificing brand trust.",
-              "InsightForce đồng bộ tín hiệu khán giả, quy trình creator và thực thi chiến dịch vào một lớp trí tuệ thống nhất, giúp bạn tăng tốc mà vẫn giữ vững niềm tin thương hiệu.",
+              "InsightForce đồng bộ tín hiệu khách hàng, quy trình creator và thực thi chiến dịch vào một lớp trí tuệ thống nhất, giúp bạn tăng tốc mà vẫn giữ vững niềm tin thương hiệu.",
             )}
           </motion.p>
 
