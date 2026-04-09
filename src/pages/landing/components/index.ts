@@ -1,4 +1,5 @@
 export { AgentSquadSection } from "./AgentSquadSection";
+export { CreatorMomentumSection } from "./CreatorMomentumSection";
 export { GuardianWatchSection } from "./HeatmapSection";
 export { HeroSection } from "./HeroSection";
 export { PricingSection } from "./PricingSection";
