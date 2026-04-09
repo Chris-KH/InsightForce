@@ -51,7 +51,7 @@ const CAPABILITY_VISUALS: Record<string, CapabilityVisual> = {
 };
 
 const CAPABILITY_LAYOUTS = [
-  "lg:col-span-7 lg:row-span-2",
+  "lg:col-span-7",
   "lg:col-span-5",
   "lg:col-span-4",
   "lg:col-span-8",
@@ -95,12 +95,6 @@ const CAPABILITY_THEMES: CapabilityTheme[] = [
     sparkTo: "#fb923c",
   },
 ];
-
-function sparkPoints(trend: number[]) {
-  return trend
-    .map((value, index) => `${index * 24},${46 - Math.round(value * 0.31)}`)
-    .join(" ");
-}
 
 export function CreatorMomentumSection() {
   const copy = useBilingual();
@@ -445,7 +439,6 @@ export function CreatorMomentumSection() {
             const theme = CAPABILITY_THEMES[index % CAPABILITY_THEMES.length];
             const layout =
               CAPABILITY_LAYOUTS[index % CAPABILITY_LAYOUTS.length];
-            const sparklineId = `spark-${item.number}`;
 
             return (
               <motion.article
@@ -498,7 +491,7 @@ export function CreatorMomentumSection() {
                       </div>
 
                       <div
-                        className="relative grid size-17 place-items-center rounded-full p-[3px]"
+                        className="relative grid size-17 place-items-center rounded-full p-0.75"
                         style={{
                           background: `conic-gradient(${theme.ring} ${visual.score * 3.6}deg, rgba(148,163,184,0.25) 0deg)`,
                         }}
@@ -509,31 +502,6 @@ export function CreatorMomentumSection() {
                           </span>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="mt-3 rounded-xl border border-border/65 bg-background/64 px-2.5 py-2">
-                      <svg viewBox="0 0 120 48" className="h-10 w-full">
-                        <defs>
-                          <linearGradient
-                            id={sparklineId}
-                            x1="0"
-                            y1="0"
-                            x2="1"
-                            y2="0"
-                          >
-                            <stop offset="0%" stopColor={theme.sparkFrom} />
-                            <stop offset="100%" stopColor={theme.sparkTo} />
-                          </linearGradient>
-                        </defs>
-                        <polyline
-                          fill="none"
-                          stroke={`url(#${sparklineId})`}
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          points={sparkPoints(visual.trend)}
-                        />
-                      </svg>
                     </div>
 
                     <p

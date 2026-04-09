@@ -20,7 +20,7 @@ import { CircleCheckBig, PlugZap, Shield, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { useIsInView } from "@/hooks/use-is-in-view";
-import { lazy, Suspense, useRef } from "react";
+import React, { lazy, Suspense, useRef, useState } from "react";
 
 function formatMetric(value: number, prefix?: string, suffix?: string) {
   return `${prefix ?? ""}${value}${suffix ?? ""}`;
@@ -98,14 +98,64 @@ const INTEGRATION_VISUALS: Record<string, IntegrationVisual> = {
 };
 
 const LazyIntegrationPlanetScene = lazy(() =>
-  import("./IntegrationPlanetScene.tsx").then((module) => ({
+  import("./IntegrationPlanetScene").then((module) => ({
     default: module.IntegrationPlanetScene,
   })),
 );
 
-function PlanetSceneFallback() {
+type SceneErrorBoundaryProps = {
+  fallback: React.ReactNode;
+  children: React.ReactNode;
+  resetKey?: number;
+};
+
+type SceneErrorBoundaryState = {
+  hasError: boolean;
+};
+
+class SceneErrorBoundary extends React.Component<
+  SceneErrorBoundaryProps,
+  SceneErrorBoundaryState
+> {
+  constructor(props: SceneErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): SceneErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error("Integration scene failed to render", error);
+  }
+
+  componentDidUpdate(prevProps: SceneErrorBoundaryProps) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+
+    return this.props.children;
+  }
+}
+
+type PlanetSceneFallbackProps = {
+  title?: string;
+  onRetry?: () => void;
+};
+
+function PlanetSceneFallback({
+  title = "Loading 3D scene...",
+  onRetry,
+}: PlanetSceneFallbackProps) {
   return (
-    <div className="relative mx-auto h-120 w-full max-w-184 overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_52%_45%,hsl(var(--primary)/0.24),hsl(var(--background))_64%)] shadow-[0_44px_150px_-62px_hsl(var(--primary)/0.95)]">
+    <div className="relative mx-auto h-[32rem] w-full max-w-[50rem] overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_50%_36%,#1f3a8a_0%,#0b1c44_42%,#030712_100%)] shadow-[0_44px_150px_-62px_hsl(var(--primary)/0.95)]">
       <motion.div
         className="absolute inset-[16%] rounded-full border border-primary/35"
         animate={{ scale: [1, 1.06, 1], opacity: [0.45, 0.85, 0.45] }}
@@ -117,12 +167,21 @@ function PlanetSceneFallback() {
         transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
       />
       <motion.div
-        className="absolute top-1/2 left-1/2 h-46 w-46 -translate-x-1/2 -translate-y-1/2 rounded-full bg-linear-to-br from-indigo-400 via-sky-400 to-cyan-300 shadow-[0_30px_100px_-30px_hsl(var(--primary)/0.95)]"
+        className="absolute top-1/2 left-1/2 h-42 w-42 -translate-x-1/2 -translate-y-1/2 rounded-full bg-linear-to-br from-indigo-400 via-sky-400 to-cyan-300 shadow-[0_30px_100px_-30px_hsl(var(--primary)/0.95)]"
         animate={{ scale: [1, 1.05, 1], y: [0, -6, 0] }}
         transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
       />
-      <div className="absolute right-4 bottom-4 rounded-full border border-primary/35 bg-background/72 px-3 py-1 text-[10px] font-semibold tracking-wide text-primary uppercase">
-        Loading 3D scene...
+      <div className="absolute right-4 bottom-4 flex items-center gap-2 rounded-full border border-primary/35 bg-background/72 px-3 py-1 text-[10px] font-semibold tracking-wide text-primary uppercase">
+        <span>{title}</span>
+        {onRetry ? (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="rounded-full border border-primary/35 bg-primary/12 px-2 py-0.5 text-[10px] leading-none"
+          >
+            Retry
+          </button>
+        ) : null}
       </div>
     </div>
   );
@@ -130,6 +189,7 @@ function PlanetSceneFallback() {
 
 export function ExecutiveProjectionsSection() {
   const copy = useBilingual();
+  const [orbitSceneRevision, setOrbitSceneRevision] = useState(0);
 
   const translatePerformanceLabel = (label: string) => {
     if (label === "Audience events processed today") {
@@ -451,15 +511,39 @@ export function ExecutiveProjectionsSection() {
               <CardContent className="space-y-4">
                 <div ref={orbitViewportRef}>
                   {shouldLoadOrbitScene ? (
-                    <Suspense fallback={<PlanetSceneFallback />}>
-                      <LazyIntegrationPlanetScene
-                        nodes={orbitSceneNodes}
-                        coreTagline={copy("Campaign Core", "Lõi chiến dịch")}
-                        coreName="KOL AI"
-                      />
-                    </Suspense>
+                    <SceneErrorBoundary
+                      resetKey={orbitSceneRevision}
+                      fallback={
+                        <PlanetSceneFallback
+                          title={copy("3D scene paused", "Cảnh 3D tạm dừng")}
+                          onRetry={() =>
+                            setOrbitSceneRevision((value) => value + 1)
+                          }
+                        />
+                      }
+                    >
+                      <Suspense
+                        fallback={
+                          <PlanetSceneFallback
+                            title={copy(
+                              "Loading 3D scene...",
+                              "Đang tải cảnh 3D...",
+                            )}
+                          />
+                        }
+                      >
+                        <LazyIntegrationPlanetScene
+                          key={orbitSceneRevision}
+                          nodes={orbitSceneNodes}
+                          coreTagline={copy("Campaign Core", "Lõi chiến dịch")}
+                          coreName="KOL AI"
+                        />
+                      </Suspense>
+                    </SceneErrorBoundary>
                   ) : (
-                    <PlanetSceneFallback />
+                    <PlanetSceneFallback
+                      title={copy("Loading 3D scene...", "Đang tải cảnh 3D...")}
+                    />
                   )}
                 </div>
 
