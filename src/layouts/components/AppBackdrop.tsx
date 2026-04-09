@@ -1,5 +1,15 @@
 import { motion } from "motion/react";
 
+import HERO_IMAGE from "@/assets/hero-section.png";
+import {
+  CometRailOverlay,
+  FloatingShardField,
+  OrbitHalo,
+  PanelOrbital3D,
+  SignalWaveCanvas,
+  SketchFlowLines,
+} from "@/components/app-futuristic";
+
 export function AppBackdrop() {
   return (
     <div
@@ -35,6 +45,71 @@ export function AppBackdrop() {
           repeat: Number.POSITIVE_INFINITY,
           ease: "easeInOut",
           delay: 0.8,
+        }}
+      />
+
+      <SignalWaveCanvas
+        className="opacity-40 dark:opacity-18"
+        cell={30}
+        speed={0.018}
+      />
+      <SketchFlowLines className="opacity-40 dark:opacity-22" tone="mixed" />
+      <SketchFlowLines className="opacity-24 dark:opacity-14" tone="primary" />
+      <CometRailOverlay className="opacity-64 dark:opacity-34" density="high" />
+      <FloatingShardField
+        className="opacity-58 dark:opacity-26"
+        density="high"
+      />
+
+      <OrbitHalo
+        className="top-14 right-8 hidden h-96 w-96 opacity-42 lg:block dark:opacity-28"
+        tone="mixed"
+        spin="slow"
+      />
+      <OrbitHalo
+        className="-bottom-10 -left-8 hidden h-84 w-84 opacity-34 xl:block dark:opacity-22"
+        tone="primary"
+        spin="medium"
+      />
+
+      <PanelOrbital3D
+        variant="satellite"
+        className="top-auto -right-28 -bottom-24 left-auto hidden size-160 opacity-50 xl:block"
+      />
+      <PanelOrbital3D
+        variant="tetra"
+        className="-top-22 right-auto bottom-auto -left-26 hidden size-132 opacity-42 xl:block"
+      />
+      <PanelOrbital3D
+        variant="crystal"
+        className="top-[34%] -right-16 bottom-auto left-auto hidden size-116 opacity-34 2xl:block"
+      />
+
+      <div
+        className="absolute h-[64vh] w-[56vw] max-w-245 rounded-full opacity-36 blur-[1px] dark:opacity-14"
+        style={{
+          right: "-16%",
+          bottom: "-20%",
+          backgroundImage: `linear-gradient(132deg, rgba(30,41,59,0.12) 0%, rgba(15,23,42,0.62) 64%, rgba(2,6,23,0.72) 100%), url(${HERO_IMAGE})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          maskImage:
+            "radial-gradient(circle at 32% 36%, rgba(0,0,0,0.98), rgba(0,0,0,0.84) 32%, rgba(0,0,0,0.2) 70%, transparent 100%)",
+          WebkitMaskImage:
+            "radial-gradient(circle at 32% 36%, rgba(0,0,0,0.98), rgba(0,0,0,0.84) 32%, rgba(0,0,0,0.2) 70%, transparent 100%)",
+        }}
+      />
+
+      <div
+        className="absolute -top-36 left-[44%] hidden size-120 rounded-full opacity-24 blur-[0.5px] xl:block dark:opacity-10"
+        style={{
+          backgroundImage: `linear-gradient(142deg, rgba(59,130,246,0.22) 0%, rgba(2,6,23,0.62) 72%), url(${HERO_IMAGE})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          maskImage:
+            "radial-gradient(circle at 56% 44%, rgba(0,0,0,0.96), rgba(0,0,0,0.72) 34%, rgba(0,0,0,0.14) 74%, transparent 100%)",
+          WebkitMaskImage:
+            "radial-gradient(circle at 56% 44%, rgba(0,0,0,0.96), rgba(0,0,0,0.72) 34%, rgba(0,0,0,0.14) 74%, transparent 100%)",
         }}
       />
 

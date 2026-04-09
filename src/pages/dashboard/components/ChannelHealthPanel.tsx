@@ -1,11 +1,7 @@
 import { motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 
-import {
-  PanelOrbital3D,
-  RevealBlock,
-  SurfaceGrid,
-} from "@/components/app-futuristic";
+import { RevealBlock, SurfaceGrid } from "@/components/app-futuristic";
 import { Button } from "@/components/ui/button";
 import { PanelCard } from "@/components/app-section";
 import { useBilingual } from "@/hooks/use-bilingual";
@@ -50,7 +46,6 @@ export function ChannelHealthPanel() {
     >
       <div className="relative overflow-hidden rounded-2xl border border-border/65 bg-linear-to-br from-background/88 via-background/65 to-muted/30 p-4">
         <SurfaceGrid className="opacity-24 dark:opacity-16" />
-        <PanelOrbital3D className="top-auto -right-8 -bottom-10 left-auto hidden h-[92%] w-[42%] sm:block" />
 
         <RevealBlock className="relative">
           <div className="mb-4 inline-flex items-center rounded-full border border-primary/20 bg-primary/8 px-3 py-1 text-[10px] font-semibold tracking-[0.16em] text-primary uppercase">

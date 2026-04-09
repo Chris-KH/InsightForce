@@ -1,11 +1,7 @@
 import { motion } from "motion/react";
 import { Sparkles } from "lucide-react";
 
-import {
-  PanelOrbital3D,
-  RevealBlock,
-  SurfaceGrid,
-} from "@/components/app-futuristic";
+import { RevealBlock, SurfaceGrid } from "@/components/app-futuristic";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +17,6 @@ export function DashboardInsightsColumn() {
         <Card className="relative overflow-hidden rounded-3xl border border-amber-300/65 bg-linear-to-br from-amber-100/88 via-amber-50/72 to-card/88 shadow-[0_22px_44px_rgba(180,83,9,0.16)] dark:border-amber-300/20 dark:from-amber-300/12 dark:via-card/92 dark:to-card/86 dark:shadow-[0_22px_46px_rgba(2,6,23,0.35)]">
           <div className="absolute inset-0">
             <SurfaceGrid className="opacity-20 dark:opacity-14" />
-            <PanelOrbital3D className="-top-12 -right-16 bottom-auto left-auto h-56 w-56 opacity-75" />
           </div>
 
           <CardHeader className="relative pb-4">
