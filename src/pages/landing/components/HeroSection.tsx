@@ -16,6 +16,12 @@ import { useEffect, useState } from "react";
 import HERO_IMAGE from "@/assets/hero-section.png";
 import { useBilingual } from "@/hooks/use-bilingual";
 
+const HERO_SIGNAL_STRIPS = [
+  { label: "Audience intent", value: 92, note: "Rising" },
+  { label: "Content momentum", value: 86, note: "Stable" },
+  { label: "Conversion readiness", value: 89, note: "Strong" },
+];
+
 export function HeroSection() {
   const copy = useBilingual();
   const [activeWordIndex, setActiveWordIndex] = useState(0);
@@ -58,6 +64,38 @@ export function HeroSection() {
     }
 
     return label;
+  };
+
+  const translateSignalLabel = (label: string) => {
+    if (label === "Audience intent") {
+      return copy("Audience intent", "Ý định khách hàng");
+    }
+
+    if (label === "Content momentum") {
+      return copy("Content momentum", "Động lực nội dung");
+    }
+
+    if (label === "Conversion readiness") {
+      return copy("Conversion readiness", "Mức sẵn sàng chuyển đổi");
+    }
+
+    return label;
+  };
+
+  const translateSignalNote = (note: string) => {
+    if (note === "Rising") {
+      return copy("Rising", "Đang tăng");
+    }
+
+    if (note === "Stable") {
+      return copy("Stable", "Ổn định");
+    }
+
+    if (note === "Strong") {
+      return copy("Strong", "Rất tốt");
+    }
+
+    return note;
   };
 
   useEffect(() => {
@@ -177,6 +215,43 @@ export function HeroSection() {
                 {copy("See workflow", "Xem quy trình")}
               </Button>
             </a>
+          </motion.div>
+
+          <motion.div
+            className="grid gap-3 sm:grid-cols-3"
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.28 }}
+          >
+            {HERO_SIGNAL_STRIPS.map((signal, index) => (
+              <Card
+                key={signal.label}
+                className="border-border/65 bg-card/68 shadow-sm backdrop-blur-sm"
+              >
+                <CardContent className="px-3.5 py-3">
+                  <div className="flex items-center justify-between text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                    <span>{translateSignalLabel(signal.label)}</span>
+                    <span className="text-primary">
+                      {translateSignalNote(signal.note)}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 font-heading text-xl leading-none font-semibold">
+                    {signal.value}%
+                  </p>
+                  <div className="mt-2 h-1.5 rounded-full bg-muted/60">
+                    <motion.div
+                      className="h-full rounded-full bg-linear-to-r from-chart-1 via-chart-2 to-primary"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${signal.value}%` }}
+                      transition={{
+                        duration: 0.55,
+                        delay: 0.34 + index * 0.06,
+                      }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </motion.div>
 
           <motion.div

@@ -16,13 +16,43 @@ import { CometTrails } from "./CometTrails";
 import { FloatingShards } from "./FloatingShards";
 import { OrbitRings } from "./OrbitRings";
 import { SectionGridOverlay } from "./SectionGridOverlay";
-import { PlugZap, Shield } from "lucide-react";
+import {
+  BarChart3,
+  CircleCheckBig,
+  Link2,
+  PlugZap,
+  Shield,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { useBilingual } from "@/hooks/use-bilingual";
+import { SocialIcon } from "react-social-icons";
 
 function formatMetric(value: number, prefix?: string, suffix?: string) {
   return `${prefix ?? ""}${value}${suffix ?? ""}`;
 }
+
+const METRIC_TRENDS = [
+  [48, 56, 64, 71, 79, 88],
+  [72, 79, 83, 88, 92, 96],
+  [34, 42, 51, 64, 77, 89],
+  [52, 59, 66, 72, 81, 90],
+];
+
+const METRIC_DELTA = [18, 6, 23, 14];
+
+const INTEGRATION_NETWORKS: Record<string, string> = {
+  YouTube: "youtube",
+  TikTok: "tiktok",
+  Instagram: "instagram",
+  Slack: "slack",
+};
+
+const INTEGRATION_COLORS: Record<string, string> = {
+  YouTube: "#ff0033",
+  TikTok: "#111111",
+  Instagram: "#e1306c",
+  Slack: "#4a154b",
+};
 
 export function ExecutiveProjectionsSection() {
   const copy = useBilingual();
@@ -61,6 +91,14 @@ export function ExecutiveProjectionsSection() {
       return copy("Creator Channel", "Kênh creator");
     }
 
+    if (category === "CRM") {
+      return copy("CRM", "Quản lý khách hàng");
+    }
+
+    if (category === "AI/ML") {
+      return copy("AI/ML", "AI/ML");
+    }
+
     if (category === "Commerce") {
       return copy("Commerce", "Thương mại");
     }
@@ -90,6 +128,22 @@ export function ExecutiveProjectionsSection() {
     }
 
     return category;
+  };
+
+  const translateMixLabel = (label: string) => {
+    if (label === "Creator channels") {
+      return copy("Creator channels", "Kênh creator");
+    }
+
+    if (label === "Commerce + payments") {
+      return copy("Commerce + payments", "Thương mại + thanh toán");
+    }
+
+    if (label === "Operations + AI") {
+      return copy("Operations + AI", "Vận hành + AI");
+    }
+
+    return label;
   };
 
   const translateSecurityFeature = (title: string, description: string) => {
@@ -128,6 +182,30 @@ export function ExecutiveProjectionsSection() {
       description,
     };
   };
+
+  const integrationMix = [
+    { label: "Creator channels", value: 46, colorClass: "bg-chart-1" },
+    { label: "Commerce + payments", value: 32, colorClass: "bg-chart-2" },
+    { label: "Operations + AI", value: 22, colorClass: "bg-primary" },
+  ];
+
+  const securityPulse = [
+    {
+      label: copy("Threats blocked", "Mối đe dọa đã chặn"),
+      value: "2.8M",
+      score: 94,
+    },
+    {
+      label: copy("Safe workflow runs", "Workflow an toàn"),
+      value: "99.7%",
+      score: 97,
+    },
+    {
+      label: copy("Audit trace coverage", "Độ phủ log kiểm toán"),
+      value: "100%",
+      score: 100,
+    },
+  ];
 
   return (
     <section className="relative isolate overflow-hidden bg-muted/35 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
@@ -207,12 +285,35 @@ export function ExecutiveProjectionsSection() {
             >
               <Card className="h-full border-border/65 bg-card/72">
                 <CardContent className="px-4 py-5">
-                  <p className="font-heading text-[1.8rem] leading-none font-semibold tracking-tight text-foreground sm:text-[2.1rem]">
-                    {formatMetric(metric.value, metric.prefix, metric.suffix)}
-                  </p>
+                  <div className="flex items-end justify-between gap-3">
+                    <p className="font-heading text-[1.8rem] leading-none font-semibold tracking-tight text-foreground sm:text-[2.1rem]">
+                      {formatMetric(metric.value, metric.prefix, metric.suffix)}
+                    </p>
+                    <span className="inline-flex rounded-full border border-border/70 bg-background/75 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                      +{METRIC_DELTA[index] ?? 8}%
+                    </span>
+                  </div>
                   <p className="mt-2 text-[11px] tracking-widest text-muted-foreground uppercase">
                     {translatePerformanceLabel(metric.label)}
                   </p>
+
+                  <div className="mt-3 flex h-9 items-end gap-1.5">
+                    {(METRIC_TRENDS[index] ?? [52, 61, 68, 74, 81, 86]).map(
+                      (value, trendIndex) => (
+                        <span
+                          key={`${metric.label}-${value}-${trendIndex}`}
+                          className="w-full rounded-sm"
+                          style={{
+                            height: `${Math.max(24, value * 0.35)}px`,
+                            backgroundColor:
+                              trendIndex % 2 === 0
+                                ? "hsl(var(--chart-1) / 0.75)"
+                                : "hsl(var(--chart-2) / 0.75)",
+                          }}
+                        />
+                      ),
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -236,32 +337,102 @@ export function ExecutiveProjectionsSection() {
                 </div>
                 <CardTitle className="font-heading text-2xl">
                   {copy(
-                    "Connect your stack in minutes",
-                    "Kết nối toàn bộ stack trong vài phút",
+                    "Connect your stack with visual channel blocks",
+                    "Kết nối stack với các khối kênh trực quan",
                   )}
                 </CardTitle>
                 <CardDescription>
                   {copy(
-                    "Activate cross-platform workflows with prebuilt connectors for channels, CRM, payments, and collaboration.",
-                    "Kích hoạt các quy trình đa nền tảng bằng các connector dựng sẵn cho kênh, CRM, thanh toán và cộng tác.",
+                    "Use ready-made connectors and monitor your channel mix at a glance.",
+                    "Dùng connector dựng sẵn và theo dõi tỷ trọng kênh chỉ trong một lần nhìn.",
                   )}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {INTEGRATIONS.map((integration) => (
-                    <span
-                      key={integration.name}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/75 px-3 py-1.5 text-xs"
+              <CardContent className="space-y-4">
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {integrationMix.map((mix) => (
+                    <div
+                      key={mix.label}
+                      className="rounded-lg border border-border/70 bg-background/75 px-3 py-2"
                     >
-                      <span className="font-medium text-foreground">
-                        {integration.name}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {translateIntegrationCategory(integration.category)}
-                      </span>
-                    </span>
+                      <div className="flex items-center justify-between text-[11px] font-semibold uppercase">
+                        <span className="text-muted-foreground">
+                          {translateMixLabel(mix.label)}
+                        </span>
+                        <span className="text-foreground">{mix.value}%</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 rounded-full bg-muted/60">
+                        <motion.div
+                          className={`h-full rounded-full ${mix.colorClass}`}
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${mix.value}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.55 }}
+                        />
+                      </div>
+                    </div>
                   ))}
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {INTEGRATIONS.map((integration, index) => {
+                    const network = INTEGRATION_NETWORKS[integration.name];
+                    const bgColor =
+                      INTEGRATION_COLORS[integration.name] ?? "#334155";
+
+                    return (
+                      <motion.div
+                        key={integration.name}
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.35, delay: index * 0.03 }}
+                        className="rounded-xl border border-border/70 bg-background/75 px-3 py-2.5"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          {network ? (
+                            <SocialIcon
+                              as="div"
+                              network={network}
+                              style={{ height: 30, width: 30 }}
+                              bgColor={bgColor}
+                              fgColor="#ffffff"
+                            />
+                          ) : (
+                            <span className="inline-grid size-7 place-items-center rounded-full bg-muted text-xs font-semibold text-foreground">
+                              {integration.name[0]}
+                            </span>
+                          )}
+
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-foreground">
+                              {integration.name}
+                            </p>
+                            <p className="truncate text-[11px] text-muted-foreground uppercase">
+                              {translateIntegrationCategory(
+                                integration.category,
+                              )}
+                            </p>
+                          </div>
+
+                          <Link2 className="ml-auto size-3.5 text-muted-foreground" />
+                        </div>
+
+                        <div className="mt-2 h-1.5 rounded-full bg-muted/60">
+                          <motion.div
+                            className="h-full rounded-full bg-linear-to-r from-chart-1 via-chart-2 to-primary"
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${62 + (index % 4) * 9}%` }}
+                            viewport={{ once: true }}
+                            transition={{
+                              duration: 0.45,
+                              delay: 0.08 + index * 0.02,
+                            }}
+                          />
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
@@ -306,6 +477,31 @@ export function ExecutiveProjectionsSection() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {securityPulse.map((pulse) => (
+                    <div
+                      key={pulse.label}
+                      className="rounded-lg border border-border/65 bg-background/75 px-2.5 py-2"
+                    >
+                      <p className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                        {pulse.label}
+                      </p>
+                      <p className="mt-1 font-heading text-lg leading-none font-semibold text-foreground">
+                        {pulse.value}
+                      </p>
+                      <div className="mt-2 h-1.5 rounded-full bg-muted/60">
+                        <motion.div
+                          className="h-full rounded-full bg-linear-to-r from-chart-2 via-chart-1 to-primary"
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${pulse.score}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.55 }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 {SECURITY_FEATURES.map((feature) => {
                   const Icon = feature.icon;
                   const translated = translateSecurityFeature(
@@ -326,9 +522,21 @@ export function ExecutiveProjectionsSection() {
                       <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
                         {translated.description}
                       </p>
+                      <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold tracking-wide text-primary uppercase">
+                        <CircleCheckBig className="size-3.5" />
+                        {copy("Compliance active", "Tuân thủ đang hoạt động")}
+                      </p>
                     </div>
                   );
                 })}
+
+                <div className="flex items-center gap-2 rounded-lg border border-border/65 bg-background/72 px-3 py-2.5 text-xs text-muted-foreground">
+                  <BarChart3 className="size-3.5 text-primary" />
+                  {copy(
+                    "Security telemetry updates every 15 seconds",
+                    "Dữ liệu bảo mật được cập nhật mỗi 15 giây",
+                  )}
+                </div>
               </CardContent>
             </Card>
           </motion.div>

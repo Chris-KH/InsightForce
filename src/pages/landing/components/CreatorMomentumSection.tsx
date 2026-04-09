@@ -8,6 +8,35 @@ import { SectionGridOverlay } from "./SectionGridOverlay";
 import { motion } from "motion/react";
 import { useBilingual } from "@/hooks/use-bilingual";
 
+type CapabilityVisual = {
+  score: number;
+  trend: number[];
+  kpi: string;
+};
+
+const CAPABILITY_VISUALS: Record<string, CapabilityVisual> = {
+  "Audience Signal Graph": {
+    score: 93,
+    trend: [48, 58, 66, 75, 84, 93],
+    kpi: "Opportunity windows surfaced",
+  },
+  "Narrative Blueprinting": {
+    score: 89,
+    trend: [44, 56, 64, 73, 81, 89],
+    kpi: "Average hook lift",
+  },
+  "KOL Match Intelligence": {
+    score: 95,
+    trend: [52, 61, 70, 79, 88, 95],
+    kpi: "Creator fit precision",
+  },
+  "Brand Safety Guardian": {
+    score: 97,
+    trend: [58, 66, 74, 82, 90, 97],
+    kpi: "Tone-risk incidents prevented",
+  },
+};
+
 export function CreatorMomentumSection() {
   const copy = useBilingual();
 
@@ -76,6 +105,32 @@ export function CreatorMomentumSection() {
     }
 
     return description;
+  };
+
+  const translateCapabilityKpi = (kpi: string) => {
+    if (kpi === "Opportunity windows surfaced") {
+      return copy(
+        "Opportunity windows surfaced",
+        "Cơ hội tăng trưởng được phát hiện",
+      );
+    }
+
+    if (kpi === "Average hook lift") {
+      return copy("Average hook lift", "Mức tăng hiệu quả hook trung bình");
+    }
+
+    if (kpi === "Creator fit precision") {
+      return copy("Creator fit precision", "Độ chính xác ghép creator");
+    }
+
+    if (kpi === "Tone-risk incidents prevented") {
+      return copy(
+        "Tone-risk incidents prevented",
+        "Sự cố lệch tông đã được ngăn chặn",
+      );
+    }
+
+    return kpi;
   };
 
   return (
@@ -185,6 +240,60 @@ export function CreatorMomentumSection() {
                     <p className="text-sm leading-6 text-muted-foreground">
                       {translateCapabilityDescription(item.description)}
                     </p>
+
+                    {(() => {
+                      const visual = CAPABILITY_VISUALS[item.title];
+                      const score = visual?.score ?? 86;
+                      const trend = visual?.trend ?? [52, 61, 67, 74, 79, 86];
+                      const kpi = visual?.kpi ?? "Opportunity windows surfaced";
+
+                      return (
+                        <>
+                          <div className="mt-4 flex items-center justify-between text-[11px] font-semibold tracking-[0.11em] text-muted-foreground uppercase">
+                            <span>
+                              {copy(
+                                "Execution confidence",
+                                "Độ tin cậy triển khai",
+                              )}
+                            </span>
+                            <span className="text-primary">{score}%</span>
+                          </div>
+
+                          <div className="mt-2 h-2 rounded-full bg-muted/60">
+                            <motion.div
+                              className="h-full rounded-full bg-linear-to-r from-chart-1 via-chart-2 to-primary"
+                              initial={{ width: 0 }}
+                              whileInView={{ width: `${score}%` }}
+                              viewport={{ once: true }}
+                              transition={{
+                                duration: 0.6,
+                                delay: 0.1 + index * 0.06,
+                              }}
+                            />
+                          </div>
+
+                          <div className="mt-3 flex h-8 items-end gap-1.5">
+                            {trend.map((value, trendIndex) => (
+                              <span
+                                key={`${item.title}-${value}-${trendIndex}`}
+                                className="w-full rounded-sm"
+                                style={{
+                                  height: `${Math.max(20, value * 0.32)}px`,
+                                  backgroundColor:
+                                    trendIndex % 2 === 0
+                                      ? "hsl(var(--chart-1) / 0.72)"
+                                      : "hsl(var(--chart-2) / 0.72)",
+                                }}
+                              />
+                            ))}
+                          </div>
+
+                          <p className="mt-3 inline-flex rounded-full border border-border/70 bg-background/75 px-2.5 py-1 text-[11px] font-medium text-foreground">
+                            {translateCapabilityKpi(kpi)}
+                          </p>
+                        </>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </motion.div>

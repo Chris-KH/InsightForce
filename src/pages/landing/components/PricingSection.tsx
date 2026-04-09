@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Star } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,12 @@ import { SectionGridOverlay } from "./SectionGridOverlay";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { useBilingual } from "@/hooks/use-bilingual";
+
+const PLAN_VISUALS: Record<string, { coverage: number; trend: number[] }> = {
+  Creator: { coverage: 68, trend: [34, 41, 49, 58, 63, 68] },
+  Agency: { coverage: 89, trend: [52, 61, 70, 78, 84, 89] },
+  Enterprise: { coverage: 97, trend: [61, 69, 77, 85, 92, 97] },
+};
 
 export function PricingSection() {
   const copy = useBilingual();
@@ -370,6 +376,72 @@ export function PricingSection() {
           </div>
         </motion.div>
 
+        <div className="mt-8 grid gap-3 sm:grid-cols-3">
+          {PRICING_TIERS.map((tier, index) => {
+            const visual = PLAN_VISUALS[tier.name] ?? {
+              coverage: 74,
+              trend: [44, 52, 60, 66, 71, 74],
+            };
+
+            return (
+              <motion.div
+                key={`${tier.name}-visual`}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.35 }}
+                transition={{ duration: 0.45, delay: index * 0.06 }}
+              >
+                <Card
+                  className={cn(
+                    "h-full border-border/70 bg-card/68",
+                    tier.highlighted && "border-primary/70 bg-primary/5",
+                  )}
+                >
+                  <CardContent className="px-4 py-4">
+                    <div className="flex items-end justify-between gap-3">
+                      <p className="text-sm font-semibold text-foreground">
+                        {translateTierName(tier.name)}
+                      </p>
+                      <p className="font-heading text-xl leading-none font-semibold text-primary">
+                        {visual.coverage}%
+                      </p>
+                    </div>
+                    <p className="mt-1 text-[11px] font-semibold tracking-[0.11em] text-muted-foreground uppercase">
+                      {copy("Workflow coverage", "Độ phủ workflow")}
+                    </p>
+
+                    <div className="mt-2 h-1.5 rounded-full bg-muted/60">
+                      <motion.div
+                        className="h-full rounded-full bg-linear-to-r from-chart-1 via-chart-2 to-primary"
+                        initial={{ width: 0 }}
+                        whileInView={{ width: `${visual.coverage}%` }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.55 }}
+                      />
+                    </div>
+
+                    <div className="mt-3 flex h-8 items-end gap-1.5">
+                      {visual.trend.map((value, trendIndex) => (
+                        <span
+                          key={`${tier.name}-${value}-${trendIndex}`}
+                          className="w-full rounded-sm"
+                          style={{
+                            height: `${Math.max(18, value * 0.32)}px`,
+                            backgroundColor:
+                              trendIndex % 2 === 0
+                                ? "hsl(var(--chart-1) / 0.72)"
+                                : "hsl(var(--chart-2) / 0.72)",
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+
         <div className="mt-10 grid gap-6 lg:mt-12 lg:grid-cols-3">
           {PRICING_TIERS.map((tier, index) => {
             const priceMeta = priceRows[index];
@@ -457,6 +529,14 @@ export function PricingSection() {
             >
               <Card className="h-full border-border/65 bg-card/68">
                 <CardContent className="space-y-3 px-4 py-4">
+                  <div className="flex items-center gap-1 text-chart-1">
+                    {Array.from({ length: 5 }, (_, starIndex) => (
+                      <Star
+                        key={`${testimonial.author}-star-${starIndex}`}
+                        className="size-3.5 fill-current"
+                      />
+                    ))}
+                  </div>
                   <p className="text-sm leading-6 text-foreground/90">
                     "{translateQuote(testimonial.quote)}"
                   </p>

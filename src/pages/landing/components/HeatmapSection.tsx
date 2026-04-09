@@ -5,9 +5,16 @@ import { CometTrails } from "./CometTrails";
 import { FloatingShards } from "./FloatingShards";
 import { RadarSweep } from "./RadarSweep";
 import { SectionGridOverlay } from "./SectionGridOverlay";
-import { Globe2, Timer } from "lucide-react";
+import { Activity, Globe2, Timer } from "lucide-react";
 import { motion } from "motion/react";
 import { useBilingual } from "@/hooks/use-bilingual";
+
+const REGION_TRAFFIC = [
+  { label: "North America", value: 37, color: "hsl(var(--chart-1))" },
+  { label: "Asia Pacific", value: 29, color: "hsl(var(--chart-2))" },
+  { label: "Europe", value: 21, color: "hsl(var(--primary))" },
+  { label: "Other", value: 13, color: "hsl(var(--muted-foreground))" },
+];
 
 export function GuardianWatchSection() {
   const copy = useBilingual();
@@ -54,6 +61,26 @@ export function GuardianWatchSection() {
     }
 
     return region;
+  };
+
+  const translateTrafficLabel = (label: string) => {
+    if (label === "North America") {
+      return copy("North America", "Bắc Mỹ");
+    }
+
+    if (label === "Asia Pacific") {
+      return copy("Asia Pacific", "Châu Á - Thái Bình Dương");
+    }
+
+    if (label === "Europe") {
+      return copy("Europe", "Châu Âu");
+    }
+
+    if (label === "Other") {
+      return copy("Other", "Khu vực khác");
+    }
+
+    return label;
   };
 
   return (
@@ -187,20 +214,87 @@ export function GuardianWatchSection() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="grid gap-3 rounded-xl border border-border/65 bg-background/70 p-3 sm:grid-cols-[auto_1fr]">
+                  <div className="relative grid size-24 place-items-center rounded-full bg-muted/60">
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background:
+                          "conic-gradient(hsl(var(--chart-1)) 0deg 133deg, hsl(var(--chart-2)) 133deg 238deg, hsl(var(--primary)) 238deg 313deg, hsl(var(--muted-foreground)) 313deg 360deg)",
+                      }}
+                    />
+                    <div className="absolute inset-2 rounded-full bg-card/95" />
+                    <div className="relative text-center">
+                      <p className="font-heading text-lg leading-none font-semibold">
+                        99.99%
+                      </p>
+                      <p className="text-[10px] font-medium text-muted-foreground uppercase">
+                        SLA
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {REGION_TRAFFIC.map((region) => (
+                      <div key={region.label}>
+                        <div className="flex items-center justify-between text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                          <span>{translateTrafficLabel(region.label)}</span>
+                          <span className="text-foreground">
+                            {region.value}%
+                          </span>
+                        </div>
+                        <div className="mt-1.5 h-1.5 rounded-full bg-muted/60">
+                          <motion.div
+                            className="h-full rounded-full"
+                            style={{ backgroundColor: region.color }}
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${region.value}%` }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {NETWORK_LOCATIONS.map((location) => (
                   <div
                     key={location.city}
-                    className="flex items-center justify-between rounded-lg border border-border/65 bg-background/70 px-3 py-2.5"
+                    className="rounded-lg border border-border/65 bg-background/70 px-3 py-2.5"
                   >
-                    <div>
-                      <p className="text-sm font-semibold">{location.city}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {translateRegion(location.region)}
-                      </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold">{location.city}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {translateRegion(location.region)}
+                        </p>
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+                        <Timer className="size-3.5" />
+                        {location.latency}
+                      </div>
                     </div>
-                    <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
-                      <Timer className="size-3.5" />
-                      {location.latency}
+
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted/60">
+                        <motion.div
+                          className="h-full rounded-full bg-linear-to-r from-chart-1 via-chart-2 to-primary"
+                          initial={{ width: 0 }}
+                          whileInView={{
+                            width: `${Math.max(
+                              30,
+                              100 - Number.parseInt(location.latency, 10),
+                            )}%`,
+                          }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.45 }}
+                        />
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/75 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase">
+                        <Activity className="size-3 text-primary" />
+                        {copy("Healthy", "Ổn định")}
+                      </span>
                     </div>
                   </div>
                 ))}
