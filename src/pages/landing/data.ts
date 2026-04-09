@@ -41,8 +41,7 @@ export const TRUSTED_AVATARS: string[] = [
   "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&w=200&q=80",
 ];
 
-export const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1600&q=80";
+export const HERO_IMAGE = "v.jpg";
 
 export const HEATMAP_IMAGE =
   "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=1800&q=80";

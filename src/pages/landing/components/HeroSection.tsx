@@ -9,6 +9,9 @@ import {
   HERO_ROTATING_WORDS,
   TRUSTED_AVATARS,
 } from "../data";
+import { AsciiSphereCanvas } from "./AsciiSphereCanvas";
+import { AsciiWaveCanvas } from "./AsciiWaveCanvas";
+import { SectionGridOverlay } from "./SectionGridOverlay";
 import { motion } from "motion/react";
 import { NavLink } from "react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -37,6 +40,12 @@ export function HeroSection() {
         className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
         aria-hidden
       >
+        <SectionGridOverlay
+          className="absolute inset-x-0 top-0 h-3/4"
+          cellSize={96}
+          strength="medium"
+          fade="left-to-right"
+        />
         <motion.div
           className="absolute -top-30 left-1/2 h-136 w-136 -translate-x-1/2 rounded-full bg-primary/18 blur-[130px]"
           animate={{ opacity: [0.3, 0.58, 0.3], scale: [1, 1.08, 1] }}
@@ -52,6 +61,22 @@ export function HeroSection() {
             delay: 1.2,
           }}
         />
+
+        <motion.div
+          className="absolute top-1/2 -right-24 hidden h-120 w-120 -translate-y-1/2 lg:block"
+          animate={{ opacity: [0.28, 0.54, 0.28], rotate: [0, 6, 0] }}
+          transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <AsciiSphereCanvas />
+        </motion.div>
+
+        <motion.div
+          className="absolute bottom-8 left-4 hidden h-52 w-96 md:block"
+          animate={{ opacity: [0.16, 0.34, 0.16], x: [0, 12, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <AsciiWaveCanvas />
+        </motion.div>
       </div>
 
       <div className="mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-14">

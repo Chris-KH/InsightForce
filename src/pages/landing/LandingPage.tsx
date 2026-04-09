@@ -3,12 +3,12 @@ import {
   CreatorMomentumSection,
   GuardianWatchSection,
   HeroSection,
-  LandingAtmosphere,
   PricingSection,
   ExecutiveProjectionsSection,
   SiteFooter,
   SiteHeader,
 } from "./components";
+import { LandingAtmosphere } from "./components/LandingAtmosphere";
 import { motion } from "motion/react";
 
 export function LandingPage() {

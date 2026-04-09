@@ -6,14 +6,55 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { AGENT_MODULES, WORKFLOW_STEPS } from "../data";
+import { AsciiTetrahedronCanvas } from "./AsciiTetrahedronCanvas";
+import { AsciiWaveCanvas } from "./AsciiWaveCanvas";
+import { SectionGridOverlay } from "./SectionGridOverlay";
 import { motion } from "motion/react";
 
 export function AgentSquadSection() {
   return (
     <section
       id="workflow"
-      className="bg-muted/35 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+      className="relative isolate overflow-hidden bg-muted/28 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+        aria-hidden
+      >
+        <SectionGridOverlay
+          className="absolute inset-x-0 top-0 h-96"
+          cellSize={104}
+          strength="soft"
+          fade="top-to-bottom"
+        />
+
+        <motion.div
+          className="absolute top-12 right-6 hidden h-64 w-64 xl:block"
+          animate={{
+            opacity: [0.2, 0.45, 0.2],
+            y: [0, -8, 0],
+            rotate: [0, 6, 0],
+          }}
+          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <AsciiTetrahedronCanvas />
+        </motion.div>
+
+        <motion.div
+          className="absolute -bottom-6 -left-8 hidden h-44 w-80 lg:block"
+          animate={{ opacity: [0.12, 0.3, 0.12], x: [0, 10, 0] }}
+          transition={{ duration: 12.5, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <AsciiWaveCanvas />
+        </motion.div>
+
+        <motion.div
+          className="absolute -top-10 left-[16%] h-44 w-44 rounded-full bg-primary/10 blur-[95px]"
+          animate={{ opacity: [0.16, 0.38, 0.16], scale: [1, 1.09, 1] }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
       <div className="mx-auto w-full max-w-7xl">
         <motion.div
           className="mx-auto max-w-3xl text-center"

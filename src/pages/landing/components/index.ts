@@ -1,9 +1,12 @@
 export { AgentSquadSection } from "./AgentSquadSection";
+export { AsciiSphereCanvas } from "./AsciiSphereCanvas";
+export { AsciiTetrahedronCanvas } from "./AsciiTetrahedronCanvas";
+export { AsciiWaveCanvas } from "./AsciiWaveCanvas";
 export { CreatorMomentumSection } from "./CreatorMomentumSection";
 export { GuardianWatchSection } from "./HeatmapSection";
 export { HeroSection } from "./HeroSection";
-export { LandingAtmosphere } from "./LandingAtmosphere";
 export { PricingSection } from "./PricingSection";
 export { ExecutiveProjectionsSection } from "./RevenueSection";
+export { SectionGridOverlay } from "./SectionGridOverlay";
 export { SiteFooter } from "./SiteFooter";
 export { SiteHeader } from "./SiteHeader";
