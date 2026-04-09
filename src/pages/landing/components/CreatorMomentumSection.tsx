@@ -6,8 +6,75 @@ import { FloatingShards } from "./FloatingShards";
 import { OrbitRings } from "./OrbitRings";
 import { SectionGridOverlay } from "./SectionGridOverlay";
 import { motion } from "motion/react";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 export function CreatorMomentumSection() {
+  const copy = useBilingual();
+
+  const translateCapabilityTitle = (title: string) => {
+    if (title === "Audience Signal Graph") {
+      return copy("Audience Signal Graph", "Đồ thị tín hiệu khán giả");
+    }
+
+    if (title === "Narrative Blueprinting") {
+      return copy("Narrative Blueprinting", "Thiết kế bản đồ tường thuật");
+    }
+
+    if (title === "KOL Match Intelligence") {
+      return copy("KOL Match Intelligence", "Trí tuệ ghép nối KOL");
+    }
+
+    if (title === "Brand Safety Guardian") {
+      return copy("Brand Safety Guardian", "Bảo hộ an toàn thương hiệu");
+    }
+
+    return title;
+  };
+
+  const translateCapabilityDescription = (description: string) => {
+    if (
+      description ===
+      "Cluster creator comments, search intent, and purchase language into clear opportunity maps before you publish."
+    ) {
+      return copy(
+        "Cluster creator comments, search intent, and purchase language into clear opportunity maps before you publish.",
+        "Phân cụm bình luận creator, ý định tìm kiếm và ngôn ngữ mua hàng thành bản đồ cơ hội rõ ràng trước khi xuất bản.",
+      );
+    }
+
+    if (
+      description ===
+      "Generate platform-specific content arcs with hook variants, emotional cues, and CTA sequencing tuned for each audience segment."
+    ) {
+      return copy(
+        "Generate platform-specific content arcs with hook variants, emotional cues, and CTA sequencing tuned for each audience segment.",
+        "Tạo mạch nội dung theo từng nền tảng với biến thể hook, tín hiệu cảm xúc và chuỗi CTA được tinh chỉnh cho từng phân khúc khán giả.",
+      );
+    }
+
+    if (
+      description ===
+      "Prioritize partner creators using trust overlap, category authority, and conversion-fit scoring across regions."
+    ) {
+      return copy(
+        "Prioritize partner creators using trust overlap, category authority, and conversion-fit scoring across regions.",
+        "Ưu tiên creator đối tác bằng mức giao thoa niềm tin, độ uy tín theo ngành hàng và điểm phù hợp chuyển đổi theo từng khu vực.",
+      );
+    }
+
+    if (
+      description ===
+      "Detect tonal drift and cultural risk in real time, with guardrails that keep every campaign aligned with brand values."
+    ) {
+      return copy(
+        "Detect tonal drift and cultural risk in real time, with guardrails that keep every campaign aligned with brand values.",
+        "Phát hiện lệch tông và rủi ro văn hóa theo thời gian thực, cùng guardrail giúp mọi chiến dịch luôn bám sát giá trị thương hiệu.",
+      );
+    }
+
+    return description;
+  };
+
   return (
     <section
       id="capabilities"
@@ -69,15 +136,19 @@ export function CreatorMomentumSection() {
           transition={{ duration: 0.6 }}
         >
           <Badge className="border border-primary/30 bg-primary/10 px-3.5 py-1 text-[11px] tracking-[0.13em] uppercase">
-            Core Capabilities
+            {copy("Core Capabilities", "Năng lực cốt lõi")}
           </Badge>
           <h2 className="mt-4 font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.85rem]">
-            The command layer behind high-converting creator campaigns
+            {copy(
+              "The command layer behind high-converting creator campaigns",
+              "Lớp điều phối đứng sau các chiến dịch creator chuyển đổi cao",
+            )}
           </h2>
           <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
-            Replace disconnected tools with one intelligence stack that maps
-            audience demand, designs narratives, matches KOL partners, and
-            protects every message before launch.
+            {copy(
+              "Replace disconnected tools with one intelligence stack that maps audience demand, designs narratives, matches KOL partners, and protects every message before launch.",
+              "Thay thế các công cụ rời rạc bằng một stack trí tuệ thống nhất để lập bản đồ nhu cầu khán giả, thiết kế câu chuyện, ghép KOL phù hợp và bảo vệ mọi thông điệp trước khi ra mắt.",
+            )}
           </p>
         </motion.div>
 
@@ -100,7 +171,7 @@ export function CreatorMomentumSection() {
                         {item.number}
                       </p>
                       <h3 className="mt-2 font-heading text-2xl leading-tight font-semibold tracking-tight">
-                        {item.title}
+                        {translateCapabilityTitle(item.title)}
                       </h3>
                     </div>
                     <div className="rounded-xl border border-border/70 bg-background/80 p-3 text-primary">
@@ -109,7 +180,7 @@ export function CreatorMomentumSection() {
                   </CardHeader>
                   <CardContent className="pt-0">
                     <p className="text-sm leading-6 text-muted-foreground">
-                      {item.description}
+                      {translateCapabilityDescription(item.description)}
                     </p>
                   </CardContent>
                 </Card>

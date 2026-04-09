@@ -14,9 +14,51 @@ import { motion } from "motion/react";
 import { NavLink } from "react-router";
 import { useEffect, useMemo, useState } from "react";
 import HERO_IMAGE from "@/assets/hero-section.png";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 export function HeroSection() {
+  const copy = useBilingual();
   const [activeWordIndex, setActiveWordIndex] = useState(0);
+
+  const translateWord = (word: string) => {
+    if (word === "launch") {
+      return copy("launch", "khởi chạy");
+    }
+
+    if (word === "orchestrate") {
+      return copy("orchestrate", "điều phối");
+    }
+
+    if (word === "scale") {
+      return copy("scale", "mở rộng");
+    }
+
+    if (word === "monetize") {
+      return copy("monetize", "kiếm tiền");
+    }
+
+    return word;
+  };
+
+  const translateImpactLabel = (label: string) => {
+    if (label === "saved weekly") {
+      return copy("saved weekly", "tiết kiệm mỗi tuần");
+    }
+
+    if (label === "qualified leads") {
+      return copy("qualified leads", "lead đạt chuẩn");
+    }
+
+    if (label === "campaign ROAS") {
+      return copy("campaign ROAS", "ROAS chiến dịch");
+    }
+
+    if (label === "retention growth") {
+      return copy("retention growth", "tăng trưởng giữ chân");
+    }
+
+    return label;
+  };
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -29,7 +71,7 @@ export function HeroSection() {
   }, []);
 
   const activeWord = useMemo(
-    () => HERO_ROTATING_WORDS[activeWordIndex],
+    () => translateWord(HERO_ROTATING_WORDS[activeWordIndex]),
     [activeWordIndex],
   );
 
@@ -78,7 +120,10 @@ export function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            AI Operating System For Creator Teams
+            {copy(
+              "AI Operating System For Creator Teams",
+              "Hệ điều hành AI cho đội ngũ creator",
+            )}
           </motion.p>
 
           <motion.h1
@@ -87,7 +132,7 @@ export function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.08 }}
           >
-            Plan,
+            {copy("Plan,", "Lên kế hoạch,")}
             <motion.span
               key={activeWord}
               className="mx-2 inline-block text-primary"
@@ -97,7 +142,10 @@ export function HeroSection() {
             >
               {activeWord}
             </motion.span>
-            and scale every creator campaign with autonomous precision.
+            {copy(
+              "and scale every creator campaign with autonomous precision.",
+              "và mở rộng mọi chiến dịch creator với độ chính xác tự chủ.",
+            )}
           </motion.h1>
 
           <motion.p
@@ -106,9 +154,10 @@ export function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.16 }}
           >
-            InsightForce synchronizes your audience signals, creator workflows,
-            and campaign execution into one intelligence layer so you can move
-            faster without sacrificing brand trust.
+            {copy(
+              "InsightForce synchronizes your audience signals, creator workflows, and campaign execution into one intelligence layer so you can move faster without sacrificing brand trust.",
+              "InsightForce đồng bộ tín hiệu khán giả, quy trình creator và thực thi chiến dịch vào một lớp trí tuệ thống nhất, giúp bạn tăng tốc mà vẫn giữ vững niềm tin thương hiệu.",
+            )}
           </motion.p>
 
           <motion.div
@@ -119,7 +168,7 @@ export function HeroSection() {
           >
             <NavLink to="/register">
               <Button className="h-12 rounded-full px-7 text-[15px] font-semibold">
-                Start creating
+                {copy("Start creating", "Bắt đầu tạo")}
                 <ArrowRight className="size-4" />
               </Button>
             </NavLink>
@@ -128,7 +177,7 @@ export function HeroSection() {
                 variant="outline"
                 className="h-12 rounded-full px-7 text-[15px] font-semibold"
               >
-                See workflow
+                {copy("See workflow", "Xem quy trình")}
               </Button>
             </a>
           </motion.div>
@@ -144,7 +193,7 @@ export function HeroSection() {
                 <img
                   key={avatar}
                   src={avatar}
-                  alt="Creator"
+                  alt={copy("Creator", "Nhà sáng tạo")}
                   className={cn(
                     "size-10 rounded-full border-2 border-background object-cover",
                     index !== 0 && "-ml-2",
@@ -154,7 +203,10 @@ export function HeroSection() {
               ))}
             </div>
             <p className="text-sm text-muted-foreground">
-              Trusted by 2,000+ creators, agencies, and KOL teams.
+              {copy(
+                "Trusted by 2,000+ creators, agencies, and KOL teams.",
+                "Được tin dùng bởi hơn 2,000 creator, agency và đội ngũ KOL.",
+              )}
             </p>
           </motion.div>
         </div>
@@ -168,7 +220,10 @@ export function HeroSection() {
           <Card className="overflow-hidden border-border/65 bg-card/68 p-0 shadow-2xl backdrop-blur-sm">
             <img
               src={HERO_IMAGE}
-              alt="Creator intelligence dashboard"
+              alt={copy(
+                "Creator intelligence dashboard",
+                "Bảng điều khiển trí tuệ creator",
+              )}
               className="h-108 w-full object-cover sm:h-128"
               loading="lazy"
             />
@@ -188,7 +243,7 @@ export function HeroSection() {
                         {item.value}
                       </p>
                       <p className="mt-1 text-xs tracking-widest text-muted-foreground uppercase">
-                        {item.label}
+                        {translateImpactLabel(item.label)}
                       </p>
                       <p className="mt-2 text-[11px] font-semibold text-primary">
                         {item.brand}

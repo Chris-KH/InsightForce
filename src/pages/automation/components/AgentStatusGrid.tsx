@@ -3,45 +3,67 @@ import { Clock3, MoreVertical, PlayCircle, Shield, Wand2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/app-section";
-
-const AGENTS = [
-  {
-    name: "Guardian Agent",
-    status: "Active",
-    icon: Shield,
-    reason: "Content Integrity",
-    progress: 84,
-    detail:
-      "Analyzing semantic drift in community thread #429 for potential toxic pivot.",
-    impact: "122 actions prevented spam today.",
-  },
-  {
-    name: "Content Architect",
-    status: "Active",
-    icon: Wand2,
-    reason: "Campaign Structuring",
-    progress: 32,
-    detail:
-      "Drafting modular response templates for the next launch based on 2023 engagement data.",
-    impact: "Generated 4 high-quality campaign drafts.",
-  },
-  {
-    name: "Scout Executor",
-    status: "Idle",
-    icon: PlayCircle,
-    reason: "Waiting for trigger",
-    progress: 0,
-    detail: "Ready to deploy data extraction tasks on the next signal.",
-    impact: "Last active: 22 minutes ago.",
-  },
-] as const;
+import { useBilingual } from "@/hooks/use-bilingual";
 
 export function AgentStatusGrid() {
+  const copy = useBilingual();
+
+  const agents = [
+    {
+      name: copy("Guardian Agent", "Tác vụ viên Guardian"),
+      status: copy("Active", "Đang hoạt động"),
+      statusKey: "active" as const,
+      icon: Shield,
+      reason: copy("Content Integrity", "Toàn vẹn nội dung"),
+      progress: 84,
+      detail: copy(
+        "Analyzing semantic drift in community thread #429 for potential toxic pivot.",
+        "Đang phân tích lệch nghĩa trong luồng cộng đồng #429 để phát hiện rủi ro chuyển hướng tiêu cực.",
+      ),
+      impact: copy(
+        "122 actions prevented spam today.",
+        "122 hành động đã chặn spam hôm nay.",
+      ),
+    },
+    {
+      name: copy("Content Architect", "Kiến trúc sư nội dung"),
+      status: copy("Active", "Đang hoạt động"),
+      statusKey: "active" as const,
+      icon: Wand2,
+      reason: copy("Campaign Structuring", "Cấu trúc chiến dịch"),
+      progress: 32,
+      detail: copy(
+        "Drafting modular response templates for the next launch based on 2023 engagement data.",
+        "Đang xây dựng mẫu phản hồi theo module cho đợt ra mắt tiếp theo dựa trên dữ liệu tương tác 2023.",
+      ),
+      impact: copy(
+        "Generated 4 high-quality campaign drafts.",
+        "Đã tạo 4 bản nháp chiến dịch chất lượng cao.",
+      ),
+    },
+    {
+      name: copy("Scout Executor", "Scout thực thi"),
+      status: copy("Idle", "Tạm nghỉ"),
+      statusKey: "idle" as const,
+      icon: PlayCircle,
+      reason: copy("Waiting for trigger", "Đang chờ kích hoạt"),
+      progress: 0,
+      detail: copy(
+        "Ready to deploy data extraction tasks on the next signal.",
+        "Sẵn sàng triển khai tác vụ trích xuất dữ liệu khi có tín hiệu tiếp theo.",
+      ),
+      impact: copy(
+        "Last active: 22 minutes ago.",
+        "Hoạt động gần nhất: 22 phút trước.",
+      ),
+    },
+  ] as const;
+
   return (
     <div className="grid gap-6 lg:grid-cols-3">
-      {AGENTS.map((agent) => {
+      {agents.map((agent) => {
         const Icon = agent.icon;
-        const isIdle = agent.status === "Idle";
+        const isIdle = agent.statusKey === "idle";
 
         return (
           <Card
@@ -86,13 +108,17 @@ export function AgentStatusGrid() {
             <CardContent className="flex flex-col gap-5">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Reasoning: {agent.reason}</span>
+                  <span>
+                    {copy("Reasoning", "Lập luận")}: {agent.reason}
+                  </span>
                   <span>{agent.progress}%</span>
                 </div>
                 <ProgressBar value={agent.progress} />
               </div>
               <div className="rounded-2xl border border-border/60 bg-muted/35 px-4 py-4 text-sm leading-7 text-muted-foreground">
-                <strong className="text-foreground">Live Logic:</strong>{" "}
+                <strong className="text-foreground">
+                  {copy("Live Logic:", "Logic trực tiếp:")}
+                </strong>{" "}
                 {agent.detail}
               </div>
               <div className="flex items-center gap-2 border-t border-border/60 pt-4 text-xs text-muted-foreground">

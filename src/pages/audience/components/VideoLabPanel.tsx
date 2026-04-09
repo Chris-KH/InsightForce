@@ -2,20 +2,26 @@ import { PlayCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { PanelCard } from "@/components/app-section";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 const SENTIMENT_BARS = [24, 32, 26, 44, 58, 42, 66];
 
 export function VideoLabPanel() {
+  const copy = useBilingual();
+
   return (
     <PanelCard
-      title="Multimodal Video Lab"
-      description="Frame-level timeline with audience sentiment spikes."
+      title={copy("Multimodal Video Lab", "Phòng lab video đa phương thức")}
+      description={copy(
+        "Frame-level timeline with audience sentiment spikes.",
+        "Timeline theo từng frame cùng các điểm bùng nổ cảm xúc của khán giả.",
+      )}
       action={
         <Badge
           variant="outline"
           className="rounded-full border-primary/20 text-primary"
         >
-          Live Syncing
+          {copy("Live Syncing", "Đồng bộ trực tiếp")}
         </Badge>
       }
     >
@@ -28,16 +34,16 @@ export function VideoLabPanel() {
             04:12 / 12:45
           </div>
           <div className="absolute top-4 right-4 rounded-full bg-primary/90 px-3 py-1 text-xs font-semibold text-primary-foreground">
-            Peak Sentiment Window
+            {copy("Peak Sentiment Window", "Khung thời gian cảm xúc đỉnh")}
           </div>
           <div className="absolute right-4 bottom-4 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white">
-            Video Preview
+            {copy("Video Preview", "Xem trước video")}
           </div>
         </div>
 
         <div>
           <p className="mb-3 text-[11px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-            Sentiment Timeline
+            {copy("Sentiment Timeline", "Timeline cảm xúc")}
           </p>
           <div className="flex h-12 items-end gap-1 rounded-full bg-primary/10 px-2 py-2">
             {SENTIMENT_BARS.map((bar, index) => (
@@ -57,15 +63,15 @@ export function VideoLabPanel() {
           <div className="mt-3 flex items-center gap-5 text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
             <span className="inline-flex items-center gap-2">
               <span className="size-2 rounded-full bg-primary" />
-              Positive
+              {copy("Positive", "Tích cực")}
             </span>
             <span className="inline-flex items-center gap-2">
               <span className="size-2 rounded-full bg-red-500" />
-              Negative
+              {copy("Negative", "Tiêu cực")}
             </span>
             <span className="inline-flex items-center gap-2">
               <span className="size-2 rounded-full bg-amber-500" />
-              Neutral
+              {copy("Neutral", "Trung tính")}
             </span>
           </div>
         </div>

@@ -10,8 +10,127 @@ import { AsciiTetrahedronCanvas } from "./AsciiTetrahedronCanvas";
 import { AsciiWaveCanvas } from "./AsciiWaveCanvas";
 import { SectionGridOverlay } from "./SectionGridOverlay";
 import { motion } from "motion/react";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 export function AgentSquadSection() {
+  const copy = useBilingual();
+
+  const translateStepTitle = (title: string) => {
+    if (title === "Connect creator data") {
+      return copy("Connect creator data", "Kết nối dữ liệu creator");
+    }
+
+    if (title === "Design agent workflow") {
+      return copy("Design agent workflow", "Thiết kế quy trình tác vụ viên");
+    }
+
+    if (title === "Ship globally") {
+      return copy("Ship globally", "Triển khai toàn cầu");
+    }
+
+    return title;
+  };
+
+  const translateStepDescription = (description: string) => {
+    if (
+      description ===
+      "Sync channels, CRM, ad platforms, and creator analytics in minutes with no custom pipeline setup."
+    ) {
+      return copy(
+        "Sync channels, CRM, ad platforms, and creator analytics in minutes with no custom pipeline setup.",
+        "Đồng bộ kênh, CRM, nền tảng quảng cáo và phân tích creator chỉ trong vài phút mà không cần dựng pipeline tùy chỉnh.",
+      );
+    }
+
+    if (
+      description ===
+      "Compose Guardian, Architect, and Scout playbooks with measurable checkpoints and approvals."
+    ) {
+      return copy(
+        "Compose Guardian, Architect, and Scout playbooks with measurable checkpoints and approvals.",
+        "Xây dựng playbook cho Guardian, Architect và Scout với các checkpoint đo lường rõ ràng cùng quy trình phê duyệt.",
+      );
+    }
+
+    if (
+      description ===
+      "Launch campaign assets, creator outreach, and reporting dashboards across markets with one command."
+    ) {
+      return copy(
+        "Launch campaign assets, creator outreach, and reporting dashboards across markets with one command.",
+        "Ra mắt tài nguyên chiến dịch, hoạt động kết nối creator và dashboard báo cáo xuyên thị trường chỉ với một lệnh.",
+      );
+    }
+
+    return description;
+  };
+
+  const translateModuleTitle = (title: string) => {
+    if (title === "Psychological Guardian") {
+      return copy("Psychological Guardian", "Guardian tâm lý");
+    }
+
+    if (title === "Content Architect") {
+      return copy("Content Architect", "Kiến trúc sư nội dung");
+    }
+
+    if (title === "Scout & Executor") {
+      return copy("Scout & Executor", "Scout & thực thi");
+    }
+
+    return title;
+  };
+
+  const translateModuleDetail = (detail: string) => {
+    if (
+      detail ===
+      "Monitors audience sentiment shifts and flags messages that may weaken trust."
+    ) {
+      return copy(
+        "Monitors audience sentiment shifts and flags messages that may weaken trust.",
+        "Theo dõi dịch chuyển cảm xúc khán giả và gắn cờ những thông điệp có thể làm suy giảm niềm tin.",
+      );
+    }
+
+    if (
+      detail ===
+      "Builds narrative systems that convert short-form attention into long-term community."
+    ) {
+      return copy(
+        "Builds narrative systems that convert short-form attention into long-term community.",
+        "Xây dựng hệ thống tường thuật chuyển sự chú ý ngắn hạn thành cộng đồng dài hạn.",
+      );
+    }
+
+    if (
+      detail ===
+      "Scans market momentum and deploys campaign actions at optimal launch windows."
+    ) {
+      return copy(
+        "Scans market momentum and deploys campaign actions at optimal launch windows.",
+        "Quét động lượng thị trường và triển khai hành động chiến dịch ở khung thời gian ra mắt tối ưu.",
+      );
+    }
+
+    return detail;
+  };
+
+  const translateModuleMetric = (metric: string) => {
+    if (metric === "92% alignment confidence") {
+      return copy("92% alignment confidence", "92% độ tin cậy đồng bộ");
+    }
+
+    if (metric === "88% viral pattern match") {
+      return copy("88% viral pattern match", "88% độ khớp mẫu lan truyền");
+    }
+
+    if (metric === "95% timing precision") {
+      return copy("95% timing precision", "95% độ chính xác thời điểm");
+    }
+
+    return metric;
+  };
+
   return (
     <section
       id="workflow"
@@ -68,15 +187,19 @@ export function AgentSquadSection() {
           transition={{ duration: 0.6 }}
         >
           <Badge className="border border-primary/30 bg-primary/10 px-3.5 py-1 text-[11px] tracking-[0.13em] uppercase">
-            Workflow Engine
+            {copy("Workflow Engine", "Bộ máy quy trình")}
           </Badge>
           <h2 className="mt-4 font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.85rem]">
-            Build, validate, and ship campaigns with specialized AI agents
+            {copy(
+              "Build, validate, and ship campaigns with specialized AI agents",
+              "Xây dựng, kiểm định và triển khai chiến dịch với tác vụ viên AI chuyên biệt",
+            )}
           </h2>
           <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
-            Connect your data, assign agent responsibilities, and launch
-            globally from a single playbook that keeps strategy, execution, and
-            quality in sync.
+            {copy(
+              "Connect your data, assign agent responsibilities, and launch globally from a single playbook that keeps strategy, execution, and quality in sync.",
+              "Kết nối dữ liệu, phân công trách nhiệm cho tác vụ viên và ra mắt toàn cầu từ một playbook duy nhất giúp chiến lược, thực thi và chất lượng luôn đồng bộ.",
+            )}
           </p>
         </motion.div>
 
@@ -97,11 +220,11 @@ export function AgentSquadSection() {
                         {step.number}
                       </span>
                       <h3 className="font-heading text-2xl leading-tight font-semibold tracking-tight">
-                        {step.title}
+                        {translateStepTitle(step.title)}
                       </h3>
                     </div>
                     <CardDescription className="text-sm leading-6">
-                      {step.description}
+                      {translateStepDescription(step.description)}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -133,16 +256,16 @@ export function AgentSquadSection() {
                           <Icon className="size-4" />
                         </div>
                         <h3 className="font-heading text-lg font-semibold tracking-tight">
-                          {module.title}
+                          {translateModuleTitle(module.title)}
                         </h3>
                       </div>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm leading-6 text-muted-foreground">
-                        {module.detail}
+                        {translateModuleDetail(module.detail)}
                       </p>
                       <p className="mt-3 text-xs font-semibold tracking-[0.12em] text-primary uppercase">
-                        {module.metric}
+                        {translateModuleMetric(module.metric)}
                       </p>
                     </CardContent>
                   </Card>

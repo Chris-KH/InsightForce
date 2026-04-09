@@ -2,53 +2,61 @@ import { ArrowUpRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PanelCard } from "@/components/app-section";
-
-const VIDEO_ROWS = [
-  {
-    title: "The Future of AI...",
-    views: "842K",
-    reactions: "42.5K",
-    sentiment: "94%",
-    tone: "primary",
-  },
-  {
-    title: "Daily Vlog: Minimalist...",
-    views: "612K",
-    reactions: "18.2K",
-    sentiment: "89%",
-    tone: "primary",
-  },
-  {
-    title: "Setup Tour 2024",
-    views: "501K",
-    reactions: "31.0K",
-    sentiment: "78%",
-    tone: "secondary",
-  },
-] as const;
+import { useBilingual } from "@/hooks/use-bilingual";
 
 export function TopVideosPanel() {
+  const copy = useBilingual();
+
+  const videoRows = [
+    {
+      title: copy("The Future of AI...", "Tương lai của AI..."),
+      views: "842K",
+      reactions: "42.5K",
+      sentiment: "94%",
+      tone: "primary",
+    },
+    {
+      title: copy("Daily Vlog: Minimalist...", "Vlog hằng ngày: Tối giản..."),
+      views: "612K",
+      reactions: "18.2K",
+      sentiment: "89%",
+      tone: "primary",
+    },
+    {
+      title: copy("Setup Tour 2024", "Tham quan góc setup 2024"),
+      views: "501K",
+      reactions: "31.0K",
+      sentiment: "78%",
+      tone: "secondary",
+    },
+  ] as const;
+
   return (
     <PanelCard
-      title="Top Performing Videos"
-      description="The strongest content driving retention and revenue."
+      title={copy("Top Performing Videos", "Video hiệu suất cao")}
+      description={copy(
+        "The strongest content driving retention and revenue.",
+        "Những nội dung hiệu quả nhất thúc đẩy giữ chân và doanh thu.",
+      )}
     >
       <div className="overflow-hidden rounded-2xl border border-border/50 bg-background">
         <table className="w-full text-left text-sm">
           <thead className="bg-muted/30 text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
             <tr>
-              <th className="px-4 py-4">Title</th>
-              <th className="px-4 py-4">Views</th>
-              <th className="px-4 py-4">Reactions</th>
-              <th className="px-4 py-4">Sentiment Score</th>
+              <th className="px-4 py-4">{copy("Title", "Tiêu đề")}</th>
+              <th className="px-4 py-4">{copy("Views", "Lượt xem")}</th>
+              <th className="px-4 py-4">{copy("Reactions", "Phản hồi")}</th>
+              <th className="px-4 py-4">
+                {copy("Sentiment Score", "Điểm cảm xúc")}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {VIDEO_ROWS.map((row, index) => (
+            {videoRows.map((row, index) => (
               <tr
                 key={row.title}
                 className={
-                  index !== VIDEO_ROWS.length - 1
+                  index !== videoRows.length - 1
                     ? "border-b border-border/50"
                     : ""
                 }
@@ -67,7 +75,10 @@ export function TopVideosPanel() {
                         {row.title}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        Short-form + long-form multi-channel lift
+                        {copy(
+                          "Short-form + long-form multi-channel lift",
+                          "Tăng trưởng đa kênh từ nội dung ngắn + dài",
+                        )}
                       </span>
                     </div>
                   </div>
@@ -95,7 +106,7 @@ export function TopVideosPanel() {
       </div>
       <div className="flex justify-end pt-5">
         <Button variant="link" className="h-auto px-0 text-primary">
-          View All Content
+          {copy("View All Content", "Xem toàn bộ nội dung")}
           <ArrowUpRight data-icon="inline-end" />
         </Button>
       </div>

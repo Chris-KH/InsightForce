@@ -5,6 +5,7 @@ import { type UseFormReturn, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { motion } from "motion/react";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { Card } from "@/components/ui/card";
@@ -64,20 +65,22 @@ function RegisterFields({
   form,
   isPasswordVisible,
   onTogglePassword,
+  copy,
 }: {
   form: UseFormReturn<RegisterValues>;
   isPasswordVisible: boolean;
   onTogglePassword: () => void;
+  copy: (english: string, vietnamese: string) => string;
 }) {
   return (
     <FieldGroup>
       <Field data-invalid={!!form.formState.errors.fullName}>
-        <FieldLabel htmlFor="full-name">Name</FieldLabel>
+        <FieldLabel htmlFor="full-name">{copy("Name", "Họ tên")}</FieldLabel>
         <InputGroup>
           <InputGroupInput
             id="full-name"
             type="text"
-            placeholder="Enter your full name"
+            placeholder={copy("Enter your full name", "Nhập họ tên đầy đủ")}
             autoComplete="name"
             aria-invalid={!!form.formState.errors.fullName}
             {...form.register("fullName")}
@@ -87,12 +90,17 @@ function RegisterFields({
       </Field>
 
       <Field data-invalid={!!form.formState.errors.email}>
-        <FieldLabel htmlFor="email">Email Address</FieldLabel>
+        <FieldLabel htmlFor="email">
+          {copy("Email Address", "Địa chỉ email")}
+        </FieldLabel>
         <InputGroup>
           <InputGroupInput
             id="email"
             type="email"
-            placeholder="example@insightforge.com"
+            placeholder={copy(
+              "example@insightforge.com",
+              "example@insightforge.com",
+            )}
             autoComplete="email"
             aria-invalid={!!form.formState.errors.email}
             {...form.register("email")}
@@ -102,12 +110,14 @@ function RegisterFields({
       </Field>
 
       <Field data-invalid={!!form.formState.errors.password}>
-        <FieldLabel htmlFor="password">Password</FieldLabel>
+        <FieldLabel htmlFor="password">
+          {copy("Password", "Mật khẩu")}
+        </FieldLabel>
         <InputGroup>
           <InputGroupInput
             id="password"
             type={isPasswordVisible ? "text" : "password"}
-            placeholder="Min. 8 characters"
+            placeholder={copy("Min. 8 characters", "Tối thiểu 8 ký tự")}
             autoComplete="new-password"
             aria-invalid={!!form.formState.errors.password}
             {...form.register("password")}
@@ -116,7 +126,11 @@ function RegisterFields({
             <InputGroupButton
               type="button"
               variant="ghost"
-              aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+              aria-label={
+                isPasswordVisible
+                  ? copy("Hide password", "Ẩn mật khẩu")
+                  : copy("Show password", "Hiện mật khẩu")
+              }
               onClick={onTogglePassword}
             >
               {isPasswordVisible ? <EyeOff /> : <Eye />}
@@ -127,14 +141,20 @@ function RegisterFields({
       </Field>
 
       <FieldDescription className="text-xs leading-relaxed text-muted-foreground">
-        By joining, you agree to our <Link to="#">Terms of Service</Link> and{" "}
-        <Link to="#">Privacy Policy</Link>.
+        {copy(
+          "By joining, you agree to our",
+          "Bằng việc tham gia, bạn đồng ý với",
+        )}{" "}
+        <Link to="#">{copy("Terms of Service", "Điều khoản dịch vụ")}</Link>{" "}
+        {copy("and", "và")}{" "}
+        <Link to="#">{copy("Privacy Policy", "Chính sách riêng tư")}</Link>.
       </FieldDescription>
     </FieldGroup>
   );
 }
 
 export function RegisterPage() {
+  const copy = useBilingual();
   const navigate = useNavigate();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -196,7 +216,10 @@ export function RegisterPage() {
               >
                 <motion.img
                   src={FOREST_IMAGE_URL}
-                  alt="Sunlight streaming through a dense green forest canopy"
+                  alt={copy(
+                    "Sunlight streaming through a dense green forest canopy",
+                    "Ánh nắng chiếu xuyên qua tán rừng xanh dày",
+                  )}
                   className="absolute inset-0 size-full object-cover"
                   initial={{ opacity: 0, scale: 1.05 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -216,13 +239,15 @@ export function RegisterPage() {
                   transition={{ delay: 0.4, duration: 0.6 }}
                 >
                   <h2 className="font-heading text-5xl leading-tight font-semibold text-primary-foreground drop-shadow-sm">
-                    Rooted in Community.
+                    {copy("Rooted in Community.", "Bắt nguồn từ cộng đồng.")}
                     <br />
-                    Driven by Insight.
+                    {copy("Driven by Insight.", "Dẫn lối bởi dữ liệu.")}
                   </h2>
                   <p className="text-lg leading-relaxed text-primary-foreground/90">
-                    Join a global network of creators and analysts shaping the
-                    future through collective intelligence.
+                    {copy(
+                      "Join a global network of creators and analysts shaping the future through collective intelligence.",
+                      "Gia nhập mạng lưới toàn cầu của creator và nhà phân tích đang định hình tương lai bằng trí tuệ tập thể.",
+                    )}
                   </p>
                 </motion.div>
               </motion.section>
@@ -250,7 +275,7 @@ export function RegisterPage() {
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.1, duration: 0.6 }}
                     >
-                      Join the Forge
+                      {copy("Join the Forge", "Gia nhập Forge")}
                     </motion.h1>
                     <motion.p
                       className="mt-1 text-base text-muted-foreground"
@@ -258,7 +283,10 @@ export function RegisterPage() {
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2, duration: 0.6 }}
                     >
-                      Start turning your community insights into action.
+                      {copy(
+                        "Start turning your community insights into action.",
+                        "Bắt đầu biến insight cộng đồng thành hành động.",
+                      )}
                     </motion.p>
                   </motion.div>
 
@@ -281,7 +309,7 @@ export function RegisterPage() {
                           className="w-full rounded-xl py-2 font-medium"
                         >
                           <GoogleIcon />
-                          Continue with Google
+                          {copy("Continue with Google", "Tiếp tục với Google")}
                         </Button>
                       </motion.div>
                       <motion.div
@@ -295,14 +323,17 @@ export function RegisterPage() {
                           className="w-full rounded-xl bg-black py-2 text-white hover:bg-black/90"
                         >
                           <AppleIcon className="text-white" />
-                          Continue with Apple
+                          {copy("Continue with Apple", "Tiếp tục với Apple")}
                         </Button>
                       </motion.div>
                     </div>
 
                     <motion.div variants={formItemVariants}>
                       <FieldSeparator className="mt-8 mb-7">
-                        Or sign up with email
+                        {copy(
+                          "Or sign up with email",
+                          "Hoặc đăng ký bằng email",
+                        )}
                       </FieldSeparator>
                     </motion.div>
 
@@ -318,6 +349,7 @@ export function RegisterPage() {
                         <RegisterFields
                           form={form}
                           isPasswordVisible={isPasswordVisible}
+                          copy={copy}
                           onTogglePassword={() =>
                             setIsPasswordVisible((previous) => !previous)
                           }
@@ -335,15 +367,20 @@ export function RegisterPage() {
                           className="mt-1 h-14 w-full rounded-2xl text-xl font-semibold"
                           disabled={form.formState.isSubmitting}
                         >
-                          {form.formState.isSubmitting
-                            ? "Creating Account..."
-                            : "Create Account"}
+                          {copy(
+                            form.formState.isSubmitting
+                              ? "Creating Account..."
+                              : "Create Account",
+                            form.formState.isSubmitting
+                              ? "Đang tạo tài khoản..."
+                              : "Tạo tài khoản",
+                          )}
                         </Button>
                       </motion.div>
                     </motion.form>
 
                     <p className="mt-8 text-center text-base text-muted-foreground">
-                      Already have an account?{" "}
+                      {copy("Already have an account?", "Đã có tài khoản?")}{" "}
                       <Link
                         to="/login"
                         className="font-semibold text-primary underline-offset-4 hover:underline"
@@ -352,7 +389,7 @@ export function RegisterPage() {
                           whileHover={{ x: 2 }}
                           className="inline-block"
                         >
-                          Log in
+                          {copy("Log in", "Đăng nhập")}
                         </motion.span>
                       </Link>
                     </p>

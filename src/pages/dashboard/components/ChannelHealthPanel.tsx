@@ -2,20 +2,42 @@ import { ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PanelCard } from "@/components/app-section";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 const CHANNEL_BARS = [40, 55, 45, 70, 85, 60, 75, 95, 80, 50, 55];
 
 export function ChannelHealthPanel() {
+  const copy = useBilingual();
+
+  const getTickLabel = (index: number) => {
+    if (index === 2) {
+      return copy("Oct 01", "01 Th10");
+    }
+
+    if (index === 6) {
+      return copy("Oct 15", "15 Th10");
+    }
+
+    if (index === 10) {
+      return copy("Oct 30", "30 Th10");
+    }
+
+    return "";
+  };
+
   return (
     <PanelCard
-      title="Channel Health"
-      description="Engagement volume over the last 30 days"
+      title={copy("Channel Health", "Sức khỏe kênh")}
+      description={copy(
+        "Engagement volume over the last 30 days",
+        "Khối lượng tương tác trong 30 ngày gần nhất",
+      )}
       action={
         <Button
           variant="outline"
           className="h-9 rounded-full border-border/70 bg-background px-4 text-xs font-semibold text-muted-foreground"
         >
-          Last 30 Days
+          {copy("Last 30 Days", "30 ngày gần nhất")}
           <ChevronDown data-icon="inline-end" />
         </Button>
       }
@@ -34,13 +56,7 @@ export function ChannelHealthPanel() {
               style={{ height: `${bar}%` }}
             />
             <span className="text-[10px] tracking-[0.15em] text-muted-foreground uppercase">
-              {index === 2
-                ? "Oct 01"
-                : index === 6
-                  ? "Oct 15"
-                  : index === 10
-                    ? "Oct 30"
-                    : ""}
+              {getTickLabel(index)}
             </span>
           </div>
         ))}

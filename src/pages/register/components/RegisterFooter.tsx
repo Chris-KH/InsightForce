@@ -1,7 +1,10 @@
 import { Link } from "react-router";
 import { motion } from "motion/react";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 export function RegisterFooter() {
+  const copy = useBilingual();
+
   return (
     <footer className="border-t border-border/50 px-4 py-8 sm:px-6 lg:px-8">
       <motion.div
@@ -18,8 +21,8 @@ export function RegisterFooter() {
           viewport={{ once: true }}
           transition={{ delay: 0.1, duration: 0.5 }}
         >
-          &copy; 2024 InsightForge <span className="text-chart-1">AI</span>.
-          Rooted in creativity.
+          &copy; 2024 InsightForge <span className="text-chart-1">AI</span>.{" "}
+          {copy("Rooted in creativity.", "Bắt nguồn từ sáng tạo.")}
         </motion.p>
 
         <motion.div
@@ -31,17 +34,17 @@ export function RegisterFooter() {
         >
           <motion.div whileHover={{ color: "var(--color-primary)", y: -1 }}>
             <Link to="#" className="transition-colors hover:text-primary">
-              Terms of Service
+              {copy("Terms of Service", "Điều khoản dịch vụ")}
             </Link>
           </motion.div>
           <motion.div whileHover={{ color: "var(--color-primary)", y: -1 }}>
             <Link to="#" className="transition-colors hover:text-primary">
-              Privacy Policy
+              {copy("Privacy Policy", "Chính sách riêng tư")}
             </Link>
           </motion.div>
           <motion.div whileHover={{ color: "var(--color-primary)", y: -1 }}>
             <Link to="#" className="transition-colors hover:text-primary">
-              Help Center
+              {copy("Help Center", "Trung tâm trợ giúp")}
             </Link>
           </motion.div>
         </motion.div>

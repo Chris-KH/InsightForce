@@ -1,20 +1,23 @@
 import { NavLink } from "react-router";
 import { motion } from "motion/react";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 type RegisterProcessStep = "account" | "verification" | "profile";
-
-const STEP_ITEMS: Array<{ key: RegisterProcessStep; label: string }> = [
-  { key: "account", label: "Account" },
-  { key: "verification", label: "Verification" },
-  { key: "profile", label: "Profile" },
-];
 
 export function RegisterTopBar({
   activeStep,
 }: {
   activeStep: RegisterProcessStep;
 }) {
-  const activeStepIndex = STEP_ITEMS.findIndex(
+  const copy = useBilingual();
+
+  const stepItems: Array<{ key: RegisterProcessStep; label: string }> = [
+    { key: "account", label: copy("Account", "Tài khoản") },
+    { key: "verification", label: copy("Verification", "Xác minh") },
+    { key: "profile", label: copy("Profile", "Hồ sơ") },
+  ];
+
+  const activeStepIndex = stepItems.findIndex(
     (step) => step.key === activeStep,
   );
 
@@ -40,7 +43,7 @@ export function RegisterTopBar({
         </motion.div>
 
         <nav className="hidden items-center gap-3 md:flex">
-          {STEP_ITEMS.map((step, index) => {
+          {stepItems.map((step, index) => {
             const isCompleted = index < activeStepIndex;
             const isActive = index === activeStepIndex;
 
@@ -80,7 +83,7 @@ export function RegisterTopBar({
                   </span>
                 </div>
 
-                {index < STEP_ITEMS.length - 1 ? (
+                {index < stepItems.length - 1 ? (
                   <motion.span
                     className="h-px w-12 bg-border"
                     initial={{ opacity: 0, width: 0 }}

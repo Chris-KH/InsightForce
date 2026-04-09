@@ -1,4 +1,8 @@
+import { useBilingual } from "@/hooks/use-bilingual";
+
 export function SentimentDonut() {
+  const copy = useBilingual();
+
   return (
     <div className="flex items-center gap-8">
       <div className="relative flex size-40 items-center justify-center rounded-full bg-[conic-gradient(from_0deg,#4a7c59_0_65%,#d1b06b_65_85%,#b83d3d_85_100%)]">
@@ -8,7 +12,7 @@ export function SentimentDonut() {
               65%
             </p>
             <p className="text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-              Positive
+              {copy("Positive", "Tích cực")}
             </p>
           </div>
         </div>
@@ -16,15 +20,18 @@ export function SentimentDonut() {
       <div className="flex flex-col gap-3 text-sm text-muted-foreground">
         <div className="flex items-center gap-3">
           <span className="size-2 rounded-full bg-primary" />
-          Positive <span className="ml-auto text-foreground">4,120</span>
+          {copy("Positive", "Tích cực")}
+          <span className="ml-auto text-foreground">4,120</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="size-2 rounded-full bg-amber-500" />
-          Neutral <span className="ml-auto text-foreground">1,204</span>
+          {copy("Neutral", "Trung tính")}
+          <span className="ml-auto text-foreground">1,204</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="size-2 rounded-full bg-red-500" />
-          Negative <span className="ml-auto text-foreground">943</span>
+          {copy("Negative", "Tiêu cực")}
+          <span className="ml-auto text-foreground">943</span>
         </div>
       </div>
     </div>

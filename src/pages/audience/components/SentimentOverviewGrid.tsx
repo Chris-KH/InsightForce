@@ -1,10 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useBilingual } from "@/hooks/use-bilingual";
 import { SentimentDonut } from "@/pages/audience/components/SentimentDonut";
 
 const SENTIMENT_BARS = [24, 32, 26, 44, 58, 42, 66];
 
 export function SentimentOverviewGrid() {
+  const copy = useBilingual();
+
   return (
     <div className="grid gap-6 xl:grid-cols-2">
       <Card className="rounded-3xl border-border/60 shadow-sm">
@@ -12,17 +15,20 @@ export function SentimentOverviewGrid() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <CardTitle className="font-heading text-2xl font-semibold text-foreground">
-                Overall Sentiment Share
+                {copy("Overall Sentiment Share", "Tỷ trọng cảm xúc tổng thể")}
               </CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
-                Audience mood across the last 30 days.
+                {copy(
+                  "Audience mood across the last 30 days.",
+                  "Sắc thái cảm xúc của khán giả trong 30 ngày gần nhất.",
+                )}
               </p>
             </div>
             <Badge
               variant="outline"
               className="rounded-full border-primary/20 text-primary"
             >
-              65% Positive
+              {copy("65% Positive", "65% Tích cực")}
             </Badge>
           </div>
         </CardHeader>
@@ -38,15 +44,20 @@ export function SentimentOverviewGrid() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <CardTitle className="font-heading text-2xl font-semibold text-foreground">
-                Sentiment Over Time
+                {copy(
+                  "Sentiment Over Time",
+                  "Biến động cảm xúc theo thời gian",
+                )}
               </CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">Last 7 days</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {copy("Last 7 days", "7 ngày gần nhất")}
+              </p>
             </div>
             <Badge
               variant="outline"
               className="rounded-full border-primary/20 text-primary"
             >
-              Trending Up
+              {copy("Trending Up", "Đang tăng")}
             </Badge>
           </div>
         </CardHeader>
@@ -66,7 +77,17 @@ export function SentimentOverviewGrid() {
                   style={{ height: `${bar}%` }}
                 />
                 <span className="text-[10px] tracking-[0.12em] text-muted-foreground uppercase">
-                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][index]}
+                  {
+                    [
+                      copy("Mon", "T2"),
+                      copy("Tue", "T3"),
+                      copy("Wed", "T4"),
+                      copy("Thu", "T5"),
+                      copy("Fri", "T6"),
+                      copy("Sat", "T7"),
+                      copy("Sun", "CN"),
+                    ][index]
+                  }
                 </span>
               </div>
             ))}

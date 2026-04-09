@@ -5,6 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, MailCheck } from "lucide-react";
 import { motion } from "motion/react";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,6 +53,7 @@ const verifyItemVariants = {
 };
 
 export function VerifyEmailPage() {
+  const copy = useBilingual();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [isResending, setIsResending] = useState(false);
@@ -128,7 +130,7 @@ export function VerifyEmailPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
               >
-                Verify Your Email
+                {copy("Verify Your Email", "Xác minh email")}
               </motion.h1>
               <motion.p
                 className="mt-3 max-w-xl text-lg leading-relaxed text-muted-foreground"
@@ -136,9 +138,15 @@ export function VerifyEmailPage() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
               >
-                We&apos;ve sent a 6-digit code to{" "}
-                <strong className="text-foreground">{email}</strong>. Please
-                enter it below to continue.
+                {copy(
+                  "We've sent a 6-digit code to",
+                  "Chúng tôi đã gửi mã 6 chữ số tới",
+                )}{" "}
+                <strong className="text-foreground">{email}</strong>. Please{" "}
+                {copy(
+                  "Please enter it below to continue.",
+                  "Vui lòng nhập bên dưới để tiếp tục.",
+                )}
               </motion.p>
 
               <motion.form
@@ -215,7 +223,7 @@ export function VerifyEmailPage() {
                     size="lg"
                     className="h-14 rounded-2xl text-xl font-semibold"
                   >
-                    Verify & Continue
+                    {copy("Verify & Continue", "Xác minh & Tiếp tục")}
                   </Button>
                 </motion.div>
 
@@ -223,7 +231,10 @@ export function VerifyEmailPage() {
                   className="text-sm text-muted-foreground"
                   variants={verifyItemVariants}
                 >
-                  Didn&apos;t receive the email? Check your spam folder or{" "}
+                  {copy(
+                    "Didn't receive the email? Check your spam folder or",
+                    "Không nhận được email? Hãy kiểm tra thư rác hoặc",
+                  )}{" "}
                   <Button
                     type="button"
                     variant="link"
@@ -232,25 +243,30 @@ export function VerifyEmailPage() {
                     onClick={onResendCode}
                     disabled={isResending}
                   >
-                    {isResending ? "Resending..." : "Resend Code"}
+                    {copy(
+                      isResending ? "Resending..." : "Resend Code",
+                      isResending ? "Đang gửi lại..." : "Gửi lại mã",
+                    )}
                   </Button>
                   .
                 </motion.p>
 
                 <motion.div variants={verifyItemVariants}>
-                  <FieldSeparator>Or</FieldSeparator>
+                  <FieldSeparator>{copy("Or", "Hoặc")}</FieldSeparator>
                 </motion.div>
 
                 <motion.p
                   className="text-sm text-muted-foreground"
                   variants={verifyItemVariants}
                 >
-                  You can also{" "}
+                  {copy("You can also", "Bạn cũng có thể")}{" "}
                   <span className="font-semibold text-primary">
-                    click the link
+                    {copy("click the link", "nhấn vào liên kết")}
                   </span>{" "}
-                  in the email we just sent to automatically verify your
-                  account.
+                  {copy(
+                    "in the email we just sent to automatically verify your account.",
+                    "trong email vừa gửi để tự động xác minh tài khoản.",
+                  )}
                 </motion.p>
               </motion.form>
             </CardContent>
@@ -267,7 +283,7 @@ export function VerifyEmailPage() {
               className="inline-flex items-center gap-2 text-base font-semibold text-muted-foreground transition-colors hover:text-primary"
             >
               <ArrowLeft className="size-4" />
-              Back to registration
+              {copy("Back to registration", "Quay lại đăng ký")}
             </Link>
           </motion.div>
         </motion.div>

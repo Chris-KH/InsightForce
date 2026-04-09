@@ -8,8 +8,103 @@ import { SectionGridOverlay } from "./SectionGridOverlay";
 import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import { NavLink } from "react-router";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 export function SiteFooter() {
+  const copy = useBilingual();
+
+  const translateFooterGroup = (group: string) => {
+    if (group === "Product") {
+      return copy("Product", "Sản phẩm");
+    }
+
+    if (group === "Developers") {
+      return copy("Developers", "Nhà phát triển");
+    }
+
+    if (group === "Company") {
+      return copy("Company", "Công ty");
+    }
+
+    if (group === "Legal") {
+      return copy("Legal", "Pháp lý");
+    }
+
+    return group;
+  };
+
+  const translateFooterLabel = (label: string) => {
+    if (label === "Capabilities") {
+      return copy("Capabilities", "Năng lực");
+    }
+
+    if (label === "Workflow") {
+      return copy("Workflow", "Quy trình");
+    }
+
+    if (label === "Infrastructure") {
+      return copy("Infrastructure", "Hạ tầng");
+    }
+
+    if (label === "Pricing") {
+      return copy("Pricing", "Bảng giá");
+    }
+
+    if (label === "Documentation") {
+      return copy("Documentation", "Tài liệu");
+    }
+
+    if (label === "API Reference") {
+      return copy("API Reference", "Tài liệu API");
+    }
+
+    if (label === "Status") {
+      return copy("Status", "Trạng thái");
+    }
+
+    if (label === "About") {
+      return copy("About", "Giới thiệu");
+    }
+
+    if (label === "Careers") {
+      return copy("Careers", "Tuyển dụng");
+    }
+
+    if (label === "Contact") {
+      return copy("Contact", "Liên hệ");
+    }
+
+    if (label === "Privacy") {
+      return copy("Privacy", "Riêng tư");
+    }
+
+    if (label === "Terms") {
+      return copy("Terms", "Điều khoản");
+    }
+
+    if (label === "Security") {
+      return copy("Security", "Bảo mật");
+    }
+
+    return label;
+  };
+
+  const translateSocialLabel = (label: string) => {
+    if (label === "Twitter") {
+      return copy("Twitter", "Twitter");
+    }
+
+    if (label === "GitHub") {
+      return copy("GitHub", "GitHub");
+    }
+
+    if (label === "LinkedIn") {
+      return copy("LinkedIn", "LinkedIn");
+    }
+
+    return label;
+  };
+
   return (
     <footer className="relative isolate overflow-hidden border-t border-border/60 bg-card/45 px-4 pt-10 pb-8 sm:px-6 sm:pt-12 lg:px-8 lg:pt-14">
       <div
@@ -61,26 +156,31 @@ export function SiteFooter() {
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
-                Ready To Launch
+                {copy("Ready To Launch", "Sẵn sàng ra mắt")}
               </p>
               <h3 className="mt-2 font-heading text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
-                Turn audience intelligence into your next growth engine.
+                {copy(
+                  "Turn audience intelligence into your next growth engine.",
+                  "Biến trí tuệ khán giả thành động cơ tăng trưởng tiếp theo.",
+                )}
               </h3>
               <p className="mt-3 max-w-[56ch] text-sm leading-6 text-muted-foreground sm:text-base">
-                Move from scattered decisions to one connected system for
-                creator strategy, content, and campaign execution.
+                {copy(
+                  "Move from scattered decisions to one connected system for creator strategy, content, and campaign execution.",
+                  "Chuyển từ quyết định rời rạc sang một hệ thống kết nối cho chiến lược creator, nội dung và thực thi chiến dịch.",
+                )}
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <NavLink to="/register">
                 <Button className="h-11 rounded-full px-6">
-                  Start creating
+                  {copy("Start creating", "Bắt đầu tạo")}
                   <ArrowRight className="size-4" />
                 </Button>
               </NavLink>
               <NavLink to="/login">
                 <Button variant="outline" className="h-11 rounded-full px-6">
-                  Book demo
+                  {copy("Book demo", "Đặt lịch demo")}
                 </Button>
               </NavLink>
             </div>
@@ -104,8 +204,10 @@ export function SiteFooter() {
               Insight<span className="text-chart-1">Force AI</span>
             </p>
             <p className="mt-3 max-w-xs text-sm leading-6 text-muted-foreground">
-              Creator intelligence infrastructure for teams that need speed,
-              precision, and brand-safe scale.
+              {copy(
+                "Creator intelligence infrastructure for teams that need speed, precision, and brand-safe scale.",
+                "Hạ tầng trí tuệ creator cho đội ngũ cần tốc độ, độ chính xác và khả năng mở rộng an toàn thương hiệu.",
+              )}
             </p>
             <div className="mt-4 flex items-center gap-3">
               {SOCIAL_LINKS.map((social) => (
@@ -114,7 +216,7 @@ export function SiteFooter() {
                   href={social.href}
                   className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {social.label}
+                  {translateSocialLabel(social.label)}
                 </a>
               ))}
             </div>
@@ -122,7 +224,9 @@ export function SiteFooter() {
 
           {Object.entries(FOOTER_LINK_GROUPS).map(([group, links]) => (
             <div key={group}>
-              <p className="font-heading text-base font-semibold">{group}</p>
+              <p className="font-heading text-base font-semibold">
+                {translateFooterGroup(group)}
+              </p>
               <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                 {links.map((link) => (
                   <li key={link.label}>
@@ -130,7 +234,7 @@ export function SiteFooter() {
                       href={link.href}
                       className="transition-colors hover:text-foreground"
                     >
-                      {link.label}
+                      {translateFooterLabel(link.label)}
                     </a>
                   </li>
                 ))}
@@ -142,8 +246,18 @@ export function SiteFooter() {
         <Separator className="mt-8" />
 
         <div className="mt-5 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 InsightForce AI. All rights reserved.</p>
-          <p>Built for creator operators and KOL growth teams.</p>
+          <p>
+            {copy(
+              "© 2026 InsightForce AI. All rights reserved.",
+              "© 2026 InsightForce AI. Đã đăng ký bản quyền.",
+            )}
+          </p>
+          <p>
+            {copy(
+              "Built for creator operators and KOL growth teams.",
+              "Xây dựng cho đội ngũ vận hành creator và nhóm tăng trưởng KOL.",
+            )}
+          </p>
         </div>
       </div>
     </footer>

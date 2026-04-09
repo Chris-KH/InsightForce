@@ -1,16 +1,26 @@
 import { PanelCard } from "@/components/app-section";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 export function RoiPredictorPanel() {
+  const copy = useBilingual();
+
   return (
-    <PanelCard title="ROI Predictor" description="6-Month Strategic Projection">
+    <PanelCard
+      title={copy("ROI Predictor", "Dự báo ROI")}
+      description={copy(
+        "6-Month Strategic Projection",
+        "Dự phóng chiến lược 6 tháng",
+      )}
+    >
       <div className="flex flex-col gap-4 rounded-2xl bg-muted/30 p-4">
         <div className="flex items-center gap-4 text-xs font-semibold text-muted-foreground">
           <span className="inline-flex items-center gap-2">
-            <span className="size-2 rounded-full bg-primary" /> Suggested
+            <span className="size-2 rounded-full bg-primary" />
+            {copy("Suggested", "Đề xuất")}
           </span>
           <span className="inline-flex items-center gap-2">
-            <span className="size-2 rounded-full bg-muted-foreground" />{" "}
-            Baseline
+            <span className="size-2 rounded-full bg-muted-foreground" />
+            {copy("Baseline", "Cơ sở")}
           </span>
         </div>
         <svg viewBox="0 0 520 260" className="h-64 w-full">
@@ -94,7 +104,7 @@ export function RoiPredictorPanel() {
             fontWeight="700"
             textAnchor="middle"
           >
-            +42% Peak Alpha
+            {copy("+42% Peak Alpha", "+42% đỉnh tăng trưởng")}
           </text>
         </svg>
       </div>

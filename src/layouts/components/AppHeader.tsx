@@ -3,12 +3,15 @@ import { Bell, Search, UserCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { MobileSidebarSheet } from "@/layouts/components/MobileSidebarSheet";
 import { APP_HEADER_TABS } from "@/layouts/components/app-layout-data";
+import { useBilingual } from "@/hooks/use-bilingual";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
 
 export function AppHeader() {
+  const copy = useBilingual();
   const location = useLocation();
 
   const activeTopTab = location.pathname.includes("/finance")
@@ -17,6 +20,18 @@ export function AppHeader() {
         location.pathname.includes("/automation")
       ? "Reports"
       : "Settings";
+
+  const getTabLabel = (tab: (typeof APP_HEADER_TABS)[number]) => {
+    if (tab === "Finance") {
+      return copy("Finance", "Tài chính");
+    }
+
+    if (tab === "Reports") {
+      return copy("Reports", "Báo cáo");
+    }
+
+    return copy("Settings", "Cài đặt");
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur">
@@ -34,8 +49,11 @@ export function AppHeader() {
         <div className="relative hidden max-w-sm flex-1 md:block">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            aria-label="Search workspace"
-            placeholder="Search financials..."
+            aria-label={copy("Search workspace", "Tìm kiếm không gian")}
+            placeholder={copy(
+              "Search financials...",
+              "Tìm kiếm dữ liệu tài chính...",
+            )}
             className="h-10 rounded-full border-border/60 bg-muted/30 pl-10 shadow-none"
           />
         </div>
@@ -60,7 +78,7 @@ export function AppHeader() {
                     : "border-transparent text-foreground/70 hover:text-foreground",
                 )}
               >
-                {tab}
+                {getTabLabel(tab)}
               </NavLink>
             );
           })}
@@ -69,12 +87,15 @@ export function AppHeader() {
         <div className="ml-auto flex items-center gap-1 md:ml-0 md:gap-2">
           <Button variant="ghost" size="icon-sm">
             <Bell />
-            <span className="sr-only">Notifications</span>
+            <span className="sr-only">
+              {copy("Notifications", "Thông báo")}
+            </span>
           </Button>
           <Button variant="ghost" size="icon-sm">
             <UserCircle2 />
-            <span className="sr-only">Account</span>
+            <span className="sr-only">{copy("Account", "Tài khoản")}</span>
           </Button>
+          <LanguageSwitcher compact triggerVariant="ghost" />
           <ModeToggle />
         </div>
       </div>

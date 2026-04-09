@@ -18,12 +18,114 @@ import { OrbitRings } from "./OrbitRings";
 import { SectionGridOverlay } from "./SectionGridOverlay";
 import { PlugZap, Shield } from "lucide-react";
 import { motion } from "motion/react";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 function formatMetric(value: number, prefix?: string, suffix?: string) {
   return `${prefix ?? ""}${value}${suffix ?? ""}`;
 }
 
 export function ExecutiveProjectionsSection() {
+  const copy = useBilingual();
+
+  const translatePerformanceLabel = (label: string) => {
+    if (label === "Audience events processed today") {
+      return copy(
+        "Audience events processed today",
+        "Sự kiện khán giả đã xử lý hôm nay",
+      );
+    }
+
+    if (label === "Campaign uptime this quarter") {
+      return copy(
+        "Campaign uptime this quarter",
+        "Thời gian hoạt động chiến dịch quý này",
+      );
+    }
+
+    if (label === "Average agent response") {
+      return copy("Average agent response", "Phản hồi tác vụ viên trung bình");
+    }
+
+    if (label === "Countries activated") {
+      return copy("Countries activated", "Số quốc gia đã kích hoạt");
+    }
+
+    return label;
+  };
+
+  const translateIntegrationCategory = (category: string) => {
+    if (category === "Creator Channel") {
+      return copy("Creator Channel", "Kênh creator");
+    }
+
+    if (category === "Commerce") {
+      return copy("Commerce", "Thương mại");
+    }
+
+    if (category === "Payments") {
+      return copy("Payments", "Thanh toán");
+    }
+
+    if (category === "Workspace") {
+      return copy("Workspace", "Không gian làm việc");
+    }
+
+    if (category === "Design") {
+      return copy("Design", "Thiết kế");
+    }
+
+    if (category === "Communication") {
+      return copy("Communication", "Giao tiếp");
+    }
+
+    if (category === "Database") {
+      return copy("Database", "Cơ sở dữ liệu");
+    }
+
+    if (category === "Hosting") {
+      return copy("Hosting", "Lưu trữ");
+    }
+
+    return category;
+  };
+
+  const translateSecurityFeature = (title: string, description: string) => {
+    if (title === "SOC 2 Type II controls") {
+      return {
+        title: copy("SOC 2 Type II controls", "Kiểm soát SOC 2 Type II"),
+        description: copy(
+          "Security controls audited continuously to meet enterprise governance requirements.",
+          "Các kiểm soát bảo mật được kiểm toán liên tục để đáp ứng yêu cầu quản trị doanh nghiệp.",
+        ),
+      };
+    }
+
+    if (title === "End-to-end encryption") {
+      return {
+        title: copy("End-to-end encryption", "Mã hóa đầu cuối"),
+        description: copy(
+          "TLS 1.3 in transit and AES-256 at rest for creator, partner, and campaign data.",
+          "TLS 1.3 khi truyền và AES-256 khi lưu trữ cho dữ liệu creator, đối tác và chiến dịch.",
+        ),
+      };
+    }
+
+    if (title === "Zero-trust permissions") {
+      return {
+        title: copy("Zero-trust permissions", "Phân quyền zero-trust"),
+        description: copy(
+          "Fine-grained access controls by campaign, team, and external collaborator.",
+          "Kiểm soát truy cập chi tiết theo chiến dịch, đội ngũ và cộng tác viên bên ngoài.",
+        ),
+      };
+    }
+
+    return {
+      title,
+      description,
+    };
+  };
+
   return (
     <section className="relative isolate overflow-hidden bg-muted/35 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
@@ -75,14 +177,19 @@ export function ExecutiveProjectionsSection() {
           transition={{ duration: 0.6 }}
         >
           <Badge className="border border-primary/30 bg-primary/10 px-3.5 py-1 text-[11px] tracking-[0.13em] uppercase">
-            Scale Visibility
+            {copy("Scale Visibility", "Quan sát tăng trưởng")}
           </Badge>
           <h2 className="mt-4 font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.8rem]">
-            Performance, integrations, and compliance from one control plane
+            {copy(
+              "Performance, integrations, and compliance from one control plane",
+              "Hiệu năng, tích hợp và tuân thủ trong một mặt phẳng điều khiển",
+            )}
           </h2>
           <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
-            Track real-time throughput, activate your existing toolchain, and
-            protect every workflow with enterprise security defaults.
+            {copy(
+              "Track real-time throughput, activate your existing toolchain, and protect every workflow with enterprise security defaults.",
+              "Theo dõi thông lượng theo thời gian thực, kích hoạt toolchain hiện có và bảo vệ mọi quy trình với chuẩn bảo mật doanh nghiệp mặc định.",
+            )}
           </p>
         </motion.div>
 
@@ -101,7 +208,7 @@ export function ExecutiveProjectionsSection() {
                     {formatMetric(metric.value, metric.prefix, metric.suffix)}
                   </p>
                   <p className="mt-2 text-[11px] tracking-widest text-muted-foreground uppercase">
-                    {metric.label}
+                    {translatePerformanceLabel(metric.label)}
                   </p>
                 </CardContent>
               </Card>
@@ -121,15 +228,20 @@ export function ExecutiveProjectionsSection() {
                 <div className="flex items-center gap-2 text-primary">
                   <PlugZap className="size-4" />
                   <p className="text-xs font-semibold tracking-[0.12em] uppercase">
-                    Integrations
+                    {copy("Integrations", "Tích hợp")}
                   </p>
                 </div>
                 <CardTitle className="font-heading text-2xl">
-                  Connect your stack in minutes
+                  {copy(
+                    "Connect your stack in minutes",
+                    "Kết nối stack trong vài phút",
+                  )}
                 </CardTitle>
                 <CardDescription>
-                  Activate cross-platform workflows with prebuilt connectors for
-                  channels, CRM, payments, and collaboration.
+                  {copy(
+                    "Activate cross-platform workflows with prebuilt connectors for channels, CRM, payments, and collaboration.",
+                    "Kích hoạt quy trình đa nền tảng bằng connector dựng sẵn cho kênh, CRM, thanh toán và cộng tác.",
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -143,7 +255,7 @@ export function ExecutiveProjectionsSection() {
                         {integration.name}
                       </span>
                       <span className="text-muted-foreground">
-                        {integration.category}
+                        {translateIntegrationCategory(integration.category)}
                       </span>
                     </span>
                   ))}
@@ -163,15 +275,20 @@ export function ExecutiveProjectionsSection() {
                 <div className="flex items-center gap-2 text-primary">
                   <Shield className="size-4" />
                   <p className="text-xs font-semibold tracking-[0.12em] uppercase">
-                    Security
+                    {copy("Security", "Bảo mật")}
                   </p>
                 </div>
                 <CardTitle className="font-heading text-2xl">
-                  Enterprise-ready by default
+                  {copy(
+                    "Enterprise-ready by default",
+                    "Sẵn sàng cho doanh nghiệp theo mặc định",
+                  )}
                 </CardTitle>
                 <CardDescription>
-                  Built-in governance controls for creator, partner, and
-                  campaign data across global teams.
+                  {copy(
+                    "Built-in governance controls for creator, partner, and campaign data across global teams.",
+                    "Tích hợp kiểm soát quản trị cho dữ liệu creator, đối tác và chiến dịch trên các đội ngũ toàn cầu.",
+                  )}
                 </CardDescription>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {SECURITY_BADGES.map((badge) => (
@@ -188,6 +305,10 @@ export function ExecutiveProjectionsSection() {
               <CardContent className="space-y-3">
                 {SECURITY_FEATURES.map((feature) => {
                   const Icon = feature.icon;
+                  const translated = translateSecurityFeature(
+                    feature.title,
+                    feature.description,
+                  );
                   return (
                     <div
                       key={feature.title}
@@ -195,10 +316,12 @@ export function ExecutiveProjectionsSection() {
                     >
                       <div className="flex items-center gap-2 text-foreground">
                         <Icon className="size-4 text-primary" />
-                        <p className="text-sm font-semibold">{feature.title}</p>
+                        <p className="text-sm font-semibold">
+                          {translated.title}
+                        </p>
                       </div>
                       <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-                        {feature.description}
+                        {translated.description}
                       </p>
                     </div>
                   );

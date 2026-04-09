@@ -17,14 +17,65 @@ import {
   APP_AGENT_ITEMS,
   APP_NAV_ITEMS,
 } from "@/layouts/components/app-layout-data";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 export function MobileSidebarSheet() {
+  const copy = useBilingual();
+
+  const getNavLabel = (path: string, fallbackLabel: string) => {
+    if (path === "/app/dashboard") {
+      return copy("Dashboard", "Tổng quan");
+    }
+
+    if (path === "/app/audience") {
+      return copy("Audience", "Khán giả");
+    }
+
+    if (path === "/app/strategy") {
+      return copy("Strategy", "Chiến lược");
+    }
+
+    if (path === "/app/finance") {
+      return copy("Finance", "Tài chính");
+    }
+
+    if (path === "/app/automation") {
+      return copy("Automation", "Tự động hóa");
+    }
+
+    return fallbackLabel;
+  };
+
+  const getAgentLabel = (label: string) => {
+    if (label === "Guardian") {
+      return copy("Guardian", "Vệ binh");
+    }
+
+    if (label === "Architect") {
+      return copy("Architect", "Kiến trúc sư");
+    }
+
+    if (label === "Scout") {
+      return copy("Scout", "Trinh sát");
+    }
+
+    return label;
+  };
+
+  const getAgentStatus = (status: "Active" | "Idle") => {
+    return status === "Active"
+      ? copy("Active", "Đang hoạt động")
+      : copy("Idle", "Tạm nghỉ");
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon-sm" className="md:hidden">
           <Menu />
-          <span className="sr-only">Open navigation</span>
+          <span className="sr-only">
+            {copy("Open navigation", "Mở điều hướng")}
+          </span>
         </Button>
       </SheetTrigger>
       <SheetContent
@@ -36,7 +87,10 @@ export function MobileSidebarSheet() {
             Insight<span className="text-chart-1">Forge</span>
           </SheetTitle>
           <SheetDescription>
-            Navigate your operating dashboard and live agent systems.
+            {copy(
+              "Navigate your operating dashboard and live agent systems.",
+              "Di chuyển giữa bảng điều khiển vận hành và hệ thống tác vụ viên trực tuyến.",
+            )}
           </SheetDescription>
         </SheetHeader>
 
@@ -45,7 +99,7 @@ export function MobileSidebarSheet() {
             <AppNavLink
               key={item.path}
               to={item.path}
-              label={item.label}
+              label={getNavLabel(item.path, item.label)}
               icon={item.icon}
               mobile
             />
@@ -56,7 +110,7 @@ export function MobileSidebarSheet() {
 
         <div className="flex flex-col gap-2">
           <p className="px-1 text-[11px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-            Core Guards
+            {copy("Core Guards", "Bảo vệ cốt lõi")}
           </p>
           {APP_AGENT_ITEMS.map((agent) => {
             const Icon = agent.icon;
@@ -67,13 +121,13 @@ export function MobileSidebarSheet() {
               >
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <Icon className="size-4" />
-                  <span>{agent.label}</span>
+                  <span>{getAgentLabel(agent.label)}</span>
                 </div>
                 <Badge
                   variant="outline"
                   className="rounded-full border-primary/20 text-primary"
                 >
-                  {agent.status}
+                  {getAgentStatus(agent.status)}
                 </Badge>
               </div>
             );
@@ -85,10 +139,13 @@ export function MobileSidebarSheet() {
             InsightForge <span className="text-chart-1">Control</span>
           </p>
           <p className="mt-1">
-            Realtime orchestration across all active agent lanes.
+            {copy(
+              "Realtime orchestration across all active agent lanes.",
+              "Điều phối thời gian thực trên tất cả luồng tác vụ viên đang hoạt động.",
+            )}
           </p>
           <Link to="/app/finance" className="mt-3 inline-block text-primary">
-            Open Finance
+            {copy("Open Finance", "Mở tài chính")}
           </Link>
         </div>
       </SheetContent>

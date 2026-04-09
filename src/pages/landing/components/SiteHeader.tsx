@@ -1,14 +1,38 @@
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { cn } from "@/lib/utils";
+import { useBilingual } from "@/hooks/use-bilingual";
 import { NAV_ITEMS } from "../data";
 import { NavLink } from "react-router";
 import { Menu, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export function SiteHeader() {
+  const copy = useBilingual();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const getNavLabel = (href: string, fallbackLabel: string) => {
+    if (href === "#capabilities") {
+      return copy("Capabilities", "Năng lực");
+    }
+
+    if (href === "#workflow") {
+      return copy("Workflow", "Quy trình");
+    }
+
+    if (href === "#infrastructure") {
+      return copy("Infrastructure", "Hạ tầng");
+    }
+
+    if (href === "#pricing") {
+      return copy("Pricing", "Bảng giá");
+    }
+
+    return fallbackLabel;
+  };
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 20);
@@ -65,27 +89,31 @@ export function SiteHeader() {
                 href={item.href}
                 className="group relative text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
-                {item.label}
+                {getNavLabel(item.href, item.label)}
                 <span className="absolute -bottom-1 left-0 h-px w-0 bg-foreground transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
+            <LanguageSwitcher triggerVariant="ghost" />
+            <ModeToggle />
             <NavLink to="/login">
               <Button variant="ghost" className="rounded-full px-5">
-                Sign in
+                {copy("Sign in", "Đăng nhập")}
               </Button>
             </NavLink>
             <NavLink to="/register">
-              <Button className="rounded-full px-6">Start creating</Button>
+              <Button className="rounded-full px-6">
+                {copy("Start creating", "Bắt đầu tạo")}
+              </Button>
             </NavLink>
           </div>
 
           <button
             type="button"
             className="rounded-md p-2 md:hidden"
-            aria-label="Toggle mobile menu"
+            aria-label={copy("Toggle mobile menu", "Mở menu di động")}
             onClick={() => setIsMobileMenuOpen((prev) => !prev)}
           >
             {isMobileMenuOpen ? (
@@ -122,7 +150,7 @@ export function SiteHeader() {
                   transitionDelay: isMobileMenuOpen ? `${index * 70}ms` : "0ms",
                 }}
               >
-                {item.label}
+                {getNavLabel(item.href, item.label)}
               </a>
             ))}
           </div>
@@ -136,13 +164,14 @@ export function SiteHeader() {
             )}
             style={{ transitionDelay: isMobileMenuOpen ? "260ms" : "0ms" }}
           >
+            <LanguageSwitcher className="h-12" />
             <NavLink
               to="/login"
               className="flex-1"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <Button variant="outline" className="h-12 w-full rounded-full">
-                Sign in
+                {copy("Sign in", "Đăng nhập")}
               </Button>
             </NavLink>
             <NavLink
@@ -151,7 +180,7 @@ export function SiteHeader() {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <Button className="h-12 w-full rounded-full">
-                Start creating
+                {copy("Start creating", "Bắt đầu tạo")}
               </Button>
             </NavLink>
           </div>

@@ -5,6 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Brain, Eye, EyeOff } from "lucide-react";
 import { motion } from "motion/react";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 import {
@@ -57,6 +58,7 @@ const formItemVariants = {
 };
 
 export function LoginPage() {
+  const copy = useBilingual();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const form = useForm<LoginValues>({
@@ -100,7 +102,10 @@ export function LoginPage() {
         <motion.section className="relative hidden overflow-hidden md:flex">
           <motion.img
             src={FOREST_IMAGE_URL}
-            alt="Sunlight filtering through a lush green forest canopy"
+            alt={copy(
+              "Sunlight filtering through a lush green forest canopy",
+              "Ánh nắng xuyên qua tán rừng xanh mướt",
+            )}
             className="absolute inset-0 size-full object-cover"
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -132,7 +137,10 @@ export function LoginPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.6 }}
             >
-              Cultivating clarity in a complex world.
+              {copy(
+                "Cultivating clarity in a complex world.",
+                "Ươm mầm sự rõ ràng trong một thế giới phức tạp.",
+              )}
             </motion.h2>
             <motion.p
               className="max-w-md text-base text-primary-foreground/90"
@@ -140,7 +148,10 @@ export function LoginPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.6 }}
             >
-              Rooted in intelligence, designed for growth.
+              {copy(
+                "Rooted in intelligence, designed for growth.",
+                "Bắt nguồn từ trí tuệ, được thiết kế để tăng trưởng.",
+              )}
             </motion.p>
           </motion.div>
         </motion.section>
@@ -159,10 +170,13 @@ export function LoginPage() {
               transition={{ duration: 0.6 }}
             >
               <h1 className="font-heading text-4xl text-foreground sm:text-[2.5rem]">
-                Welcome Back
+                {copy("Welcome Back", "Chào mừng quay lại")}
               </h1>
               <p className="text-muted-foreground">
-                Please enter your details to access your dashboard.
+                {copy(
+                  "Please enter your details to access your dashboard.",
+                  "Vui lòng nhập thông tin để truy cập bảng điều khiển.",
+                )}
               </p>
             </motion.div>
 
@@ -177,12 +191,17 @@ export function LoginPage() {
               <FieldGroup>
                 <motion.div variants={formItemVariants}>
                   <Field data-invalid={!!form.formState.errors.email}>
-                    <FieldLabel htmlFor="email">Email Address</FieldLabel>
+                    <FieldLabel htmlFor="email">
+                      {copy("Email Address", "Địa chỉ email")}
+                    </FieldLabel>
                     <InputGroup>
                       <InputGroupInput
                         id="email"
                         type="email"
-                        placeholder="name@example.com"
+                        placeholder={copy(
+                          "name@example.com",
+                          "ten@example.com",
+                        )}
                         autoComplete="email"
                         aria-invalid={!!form.formState.errors.email}
                         {...form.register("email")}
@@ -195,14 +214,16 @@ export function LoginPage() {
                 <motion.div variants={formItemVariants}>
                   <Field data-invalid={!!form.formState.errors.password}>
                     <div className="flex items-center justify-between gap-2">
-                      <FieldLabel htmlFor="password">Password</FieldLabel>
+                      <FieldLabel htmlFor="password">
+                        {copy("Password", "Mật khẩu")}
+                      </FieldLabel>
                       <Button
                         variant="link"
                         size="sm"
                         type="button"
                         className="h-auto px-0 text-xs font-semibold"
                       >
-                        Forgot Password?
+                        {copy("Forgot Password?", "Quên mật khẩu?")}
                       </Button>
                     </div>
                     <InputGroup>
@@ -220,8 +241,8 @@ export function LoginPage() {
                           variant="ghost"
                           aria-label={
                             isPasswordVisible
-                              ? "Hide password"
-                              : "Show password"
+                              ? copy("Hide password", "Ẩn mật khẩu")
+                              : copy("Show password", "Hiện mật khẩu")
                           }
                           onClick={() => setIsPasswordVisible((prev) => !prev)}
                         >
@@ -248,7 +269,10 @@ export function LoginPage() {
                         />
                         <FieldDescription className="text-sm">
                           <label htmlFor="remember" className="cursor-pointer">
-                            Remember me for 30 days
+                            {copy(
+                              "Remember me for 30 days",
+                              "Ghi nhớ đăng nhập trong 30 ngày",
+                            )}
                           </label>
                         </FieldDescription>
                       </Field>
@@ -268,13 +292,20 @@ export function LoginPage() {
                   className="h-12 w-full rounded-xl text-base font-semibold"
                   disabled={form.formState.isSubmitting}
                 >
-                  {form.formState.isSubmitting ? "Signing In..." : "Sign In"}
+                  {copy(
+                    form.formState.isSubmitting ? "Signing In..." : "Sign In",
+                    form.formState.isSubmitting
+                      ? "Đang đăng nhập..."
+                      : "Đăng nhập",
+                  )}
                   <ArrowRight data-icon="inline-end" />
                 </Button>
               </motion.div>
 
               <motion.div variants={formItemVariants}>
-                <FieldSeparator>Or continue with</FieldSeparator>
+                <FieldSeparator>
+                  {copy("Or continue with", "Hoặc tiếp tục với")}
+                </FieldSeparator>
               </motion.div>
 
               <motion.div
@@ -288,7 +319,7 @@ export function LoginPage() {
                     className="h-11 w-full rounded-xl"
                   >
                     <GoogleIcon />
-                    Google
+                    {copy("Google", "Google")}
                   </Button>
                 </motion.div>
                 <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
@@ -298,7 +329,7 @@ export function LoginPage() {
                     className="h-11 w-full rounded-xl"
                   >
                     <AppleIcon />
-                    Apple
+                    {copy("Apple", "Apple")}
                   </Button>
                 </motion.div>
               </motion.div>
@@ -310,13 +341,13 @@ export function LoginPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.6 }}
             >
-              Don&apos;t have an account?{" "}
+              {copy("Don't have an account?", "Chưa có tài khoản?")}{" "}
               <Link
                 to="/register"
                 className="font-semibold text-primary underline underline-offset-4"
               >
                 <motion.span whileHover={{ x: 2 }} className="inline-block">
-                  Create an Account
+                  {copy("Create an Account", "Tạo tài khoản")}
                 </motion.span>
               </Link>
             </motion.div>
@@ -331,18 +362,18 @@ export function LoginPage() {
           </p>
           <div className="flex items-center gap-5 text-xs sm:text-sm">
             <Link to="#" className="hover:text-foreground">
-              Privacy Policy
+              {copy("Privacy Policy", "Chính sách riêng tư")}
             </Link>
             <Link to="#" className="hover:text-foreground">
-              Terms of Service
+              {copy("Terms of Service", "Điều khoản dịch vụ")}
             </Link>
             <Link to="#" className="hover:text-foreground">
-              Help Center
+              {copy("Help Center", "Trung tâm trợ giúp")}
             </Link>
           </div>
           <p className="text-xs sm:text-sm">
-            &copy; 2024 InsightForge <span className="text-chart-1">AI</span>.
-            Rooted in Intelligence.
+            &copy; 2024 InsightForge <span className="text-chart-1">AI</span>.{" "}
+            {copy("Rooted in Intelligence.", "Bắt nguồn từ trí tuệ.")}
           </p>
         </div>
       </footer>

@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { ArrowRight, Bot, Sprout, Video } from "lucide-react";
 import { motion } from "motion/react";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 import { Button } from "@/components/animate-ui/components/buttons/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +10,8 @@ import { RegisterFooter } from "@/pages/register/components/RegisterFooter";
 import { RegisterTopBar } from "@/pages/register/components/RegisterTopBar";
 
 export function RegisterSuccessPage() {
+  const copy = useBilingual();
+
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
       <motion.div
@@ -61,9 +64,9 @@ export function RegisterSuccessPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
               >
-                Welcome Home,
+                {copy("Welcome Home,", "Chào mừng trở về,")}
                 <br />
-                Creator
+                {copy("Creator", "Creator")}
               </motion.h1>
               <motion.p
                 className="mx-auto mt-4 max-w-xl text-2xl leading-relaxed text-muted-foreground"
@@ -71,8 +74,10 @@ export function RegisterSuccessPage() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
               >
-                Your InsightForge account is ready. Your agents are standing by
-                to analyze your channel.
+                {copy(
+                  "Your InsightForge account is ready. Your agents are standing by to analyze your channel.",
+                  "Tài khoản InsightForge của bạn đã sẵn sàng. Các tác vụ viên đang chờ để phân tích kênh của bạn.",
+                )}
               </motion.p>
 
               <motion.div
@@ -88,7 +93,7 @@ export function RegisterSuccessPage() {
                   className="mt-8 h-14 rounded-2xl px-8 text-xl font-semibold"
                 >
                   <Link to="/app/dashboard">
-                    Go to Dashboard
+                    {copy("Go to Dashboard", "Vào bảng điều khiển")}
                     <ArrowRight data-icon="inline-end" />
                   </Link>
                 </Button>
@@ -105,15 +110,21 @@ export function RegisterSuccessPage() {
                 {[
                   {
                     icon: Video,
-                    title: "Connect YouTube",
-                    desc: "Sync your latest videos",
+                    title: copy("Connect YouTube", "Kết nối YouTube"),
+                    desc: copy(
+                      "Sync your latest videos",
+                      "Đồng bộ video mới nhất",
+                    ),
                     bg: "bg-secondary/20",
                     color: "text-secondary",
                   },
                   {
                     icon: Bot,
-                    title: "Tune Your Persona",
-                    desc: "Define your AI's voice",
+                    title: copy("Tune Your Persona", "Tinh chỉnh persona"),
+                    desc: copy(
+                      "Define your AI's voice",
+                      "Định nghĩa giọng điệu AI",
+                    ),
                     bg: "bg-chart-1/20",
                     color: "text-chart-1",
                   },

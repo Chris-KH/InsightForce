@@ -2,16 +2,25 @@ import { SlidersHorizontal, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/app-section";
+import { useBilingual } from "@/hooks/use-bilingual";
 import { AgentStatusGrid } from "@/pages/automation/components/AgentStatusGrid";
 import { ModerationLogPanel } from "@/pages/automation/components/ModerationLogPanel";
 import { ReasoningTracePanel } from "@/pages/automation/components/ReasoningTracePanel";
 
 export function AutomationPage() {
+  const copy = useBilingual();
+
   return (
     <div className="grid gap-8">
       <SectionHeader
-        title="Agent Orchestration Hub"
-        description="War Room: 3 Agents Active • 14 Operations Today"
+        title={copy(
+          "Agent Orchestration Hub",
+          "Trung tâm điều phối tác vụ viên",
+        )}
+        description={copy(
+          "War Room: 3 Agents Active • 14 Operations Today",
+          "Phòng điều hành: 3 tác vụ viên đang hoạt động • 14 tác vụ hôm nay",
+        )}
         action={
           <div className="flex flex-wrap items-center gap-3">
             <Button
@@ -19,11 +28,11 @@ export function AutomationPage() {
               className="rounded-full border-border/70 bg-background"
             >
               <SlidersHorizontal data-icon="inline-start" />
-              Pause Global Hub
+              {copy("Pause Global Hub", "Tạm dừng trung tâm toàn cục")}
             </Button>
             <Button className="rounded-full bg-primary text-primary-foreground">
               <Sparkles data-icon="inline-start" />
-              Deploy Agent
+              {copy("Deploy Agent", "Triển khai tác vụ viên")}
             </Button>
           </div>
         }

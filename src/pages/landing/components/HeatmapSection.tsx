@@ -7,8 +7,55 @@ import { RadarSweep } from "./RadarSweep";
 import { SectionGridOverlay } from "./SectionGridOverlay";
 import { Globe2, Timer } from "lucide-react";
 import { motion } from "motion/react";
+import { useBilingual } from "@/hooks/use-bilingual";
 
 export function GuardianWatchSection() {
+  const copy = useBilingual();
+
+  const translateKpiLabel = (label: string) => {
+    if (label === "Creator data hubs") {
+      return copy("Creator data hubs", "Hub dữ liệu creator");
+    }
+
+    if (label === "Uptime SLA") {
+      return copy("Uptime SLA", "SLA thời gian hoạt động");
+    }
+
+    if (label === "Global response") {
+      return copy("Global response", "Phản hồi toàn cầu");
+    }
+
+    return label;
+  };
+
+  const translateRegion = (region: string) => {
+    if (region === "US West") {
+      return copy("US West", "Bờ Tây Mỹ");
+    }
+
+    if (region === "US East") {
+      return copy("US East", "Bờ Đông Mỹ");
+    }
+
+    if (region === "Europe") {
+      return copy("Europe", "Châu Âu");
+    }
+
+    if (region === "Asia") {
+      return copy("Asia", "Châu Á");
+    }
+
+    if (region === "Oceania") {
+      return copy("Oceania", "Châu Đại Dương");
+    }
+
+    if (region === "South America") {
+      return copy("South America", "Nam Mỹ");
+    }
+
+    return region;
+  };
+
   return (
     <section
       id="infrastructure"
@@ -59,15 +106,19 @@ export function GuardianWatchSection() {
           transition={{ duration: 0.6 }}
         >
           <Badge className="border border-primary/30 bg-primary/10 px-3.5 py-1 text-[11px] tracking-[0.13em] uppercase">
-            Global Infrastructure
+            {copy("Global Infrastructure", "Hạ tầng toàn cầu")}
           </Badge>
           <h2 className="mt-4 font-heading text-[2.05rem] leading-tight font-semibold tracking-tight sm:text-[2.8rem]">
-            Fast, reliable delivery for creator intelligence in every region
+            {copy(
+              "Fast, reliable delivery for creator intelligence in every region",
+              "Triển khai nhanh và ổn định cho trí tuệ creator ở mọi khu vực",
+            )}
           </h2>
           <p className="mt-4 text-[15px] leading-7 text-muted-foreground sm:text-base">
-            Route audience signals through distributed hubs with low-latency
-            responses, high availability, and operational visibility for every
-            live campaign.
+            {copy(
+              "Route audience signals through distributed hubs with low-latency responses, high availability, and operational visibility for every live campaign.",
+              "Định tuyến tín hiệu khán giả qua các hub phân tán với độ trễ thấp, độ sẵn sàng cao và khả năng quan sát vận hành cho mọi chiến dịch trực tiếp.",
+            )}
           </p>
         </motion.div>
 
@@ -81,7 +132,10 @@ export function GuardianWatchSection() {
             <Card className="relative overflow-hidden border-border/65 p-0 shadow-xl">
               <img
                 src={HEATMAP_IMAGE}
-                alt="Global infrastructure map"
+                alt={copy(
+                  "Global infrastructure map",
+                  "Bản đồ hạ tầng toàn cầu",
+                )}
                 className="h-120 w-full object-cover"
                 loading="lazy"
               />
@@ -100,7 +154,7 @@ export function GuardianWatchSection() {
                       {kpi.value}
                     </p>
                     <p className="mt-1 text-[11px] tracking-widest text-muted-foreground uppercase">
-                      {kpi.label}
+                      {translateKpiLabel(kpi.label)}
                     </p>
                   </motion.div>
                 ))}
@@ -119,11 +173,11 @@ export function GuardianWatchSection() {
                 <div className="flex items-center gap-2 text-primary">
                   <Globe2 className="size-4" />
                   <p className="text-xs font-semibold tracking-[0.12em] uppercase">
-                    Regional Delivery Grid
+                    {copy("Regional Delivery Grid", "Lưới phân phối khu vực")}
                   </p>
                 </div>
                 <CardTitle className="font-heading text-2xl">
-                  Live network status
+                  {copy("Live network status", "Trạng thái mạng trực tiếp")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -135,7 +189,7 @@ export function GuardianWatchSection() {
                     <div>
                       <p className="text-sm font-semibold">{location.city}</p>
                       <p className="text-xs text-muted-foreground">
-                        {location.region}
+                        {translateRegion(location.region)}
                       </p>
                     </div>
                     <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
