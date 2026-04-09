@@ -54,66 +54,58 @@
 }
 
 :root {
-  /* Light mode: Nền chuyển sang xám kem trầm hơn một chút, bớt chói */
-  --background: oklch(0.95 0.01 70);
-  --foreground: oklch(0.15 0.04 250); /* Chữ tối hơn để tăng độ tương phản */
-  --card: oklch(0.98 0 0);
+  --background: oklch(0.972 0.012 78);
+  --foreground: oklch(0.15 0.05 252);
+  --card: oklch(0.992 0.004 92);
   --card-foreground: oklch(0.15 0.04 250);
-  --popover: oklch(0.98 0 0);
+  --popover: oklch(0.992 0.004 92);
   --popover-foreground: oklch(0.15 0.04 250);
 
-  /* Primary: Deep Ocean Blue - Sậm màu và đậm đà hơn */
-  --primary: oklch(0.4 0.12 250);
+  --primary: oklch(0.5 0.165 248);
   --primary-foreground: oklch(0.98 0.01 70);
 
-  /* Secondary & Accent: Tối đi một chút để hài hòa với tổng thể */
-  --secondary: oklch(0.8 0.1 80);
-  --secondary-foreground: oklch(0.25 0.05 80);
+  --secondary: oklch(0.84 0.11 82);
+  --secondary-foreground: oklch(0.24 0.055 84);
 
-  --muted: oklch(0.9 0.02 250);
-  --muted-foreground: oklch(0.45 0.05 250);
+  --muted: oklch(0.93 0.022 252);
+  --muted-foreground: oklch(0.4 0.06 252);
 
-  --accent: oklch(0.7 0.08 160);
-  --accent-foreground: oklch(0.15 0.05 160);
+  --accent: oklch(0.76 0.1 168);
+  --accent-foreground: oklch(0.15 0.055 168);
 
   --destructive: oklch(0.55 0.18 25);
   --destructive-foreground: oklch(0.98 0.01 70);
 
-  /* Borders & Inputs: Đậm hơn để dễ nhìn ranh giới */
-  --border: oklch(0.84 0.02 250);
-  --input: oklch(0.84 0.02 250);
-  --ring: oklch(0.4 0.12 250);
+  --border: oklch(0.8 0.03 252);
+  --input: oklch(0.82 0.026 252);
+  --ring: oklch(0.5 0.165 248);
 
-  /* Charts: Đều được kéo tối xuống một nấc */
-  --chart-1: oklch(0.6 0.12 250);
-  --chart-2: oklch(0.7 0.12 180);
-  --chart-3: oklch(0.8 0.12 80);
-  --chart-4: oklch(0.6 0.12 30);
-  --chart-5: oklch(0.5 0.12 280);
+  --chart-1: oklch(0.63 0.17 248);
+  --chart-2: oklch(0.72 0.14 190);
+  --chart-3: oklch(0.84 0.14 84);
+  --chart-4: oklch(0.66 0.14 30);
+  --chart-5: oklch(0.58 0.145 286);
 
-  /* Sidebar */
-  --sidebar: oklch(0.92 0.01 250);
+  --sidebar: oklch(0.935 0.014 252);
   --sidebar-foreground: oklch(0.15 0.04 250);
-  --sidebar-primary: oklch(0.4 0.12 250);
+  --sidebar-primary: oklch(0.5 0.165 248);
   --sidebar-primary-foreground: oklch(0.98 0.01 70);
-  --sidebar-accent: oklch(0.9 0.02 250);
+  --sidebar-accent: oklch(0.91 0.025 252);
   --sidebar-accent-foreground: oklch(0.15 0.04 250);
-  --sidebar-border: oklch(0.84 0.02 250);
-  --sidebar-ring: oklch(0.4 0.12 250);
+  --sidebar-border: oklch(0.81 0.03 252);
+  --sidebar-ring: oklch(0.5 0.165 248);
 
   --radius: 0.75rem;
 }
 
 .dark {
-  /* Dark mode: Đẩy nền xuống sâu hơn, tạo cảm giác "Dark" thực sự */
   --background: oklch(0.14 0.03 250);
-  --foreground: oklch(0.95 0.02 250); /* Giữ nguyên chữ sáng để dễ đọc */
+  --foreground: oklch(0.95 0.02 250);
   --card: oklch(0.18 0.03 250);
   --card-foreground: oklch(0.95 0.02 250);
   --popover: oklch(0.18 0.03 250);
   --popover-foreground: oklch(0.95 0.02 250);
 
-  /* Primary: Xanh bớt rực rỡ một chút để không bị chói mắt trên nền tối */
   --primary: oklch(0.7 0.1 230);
   --primary-foreground: oklch(0.1 0.03 250);
 
@@ -129,19 +121,16 @@
   --destructive: oklch(0.45 0.15 25);
   --destructive-foreground: oklch(0.98 0.01 70);
 
-  /* Borders & Inputs */
   --border: oklch(0.25 0.04 250);
   --input: oklch(0.25 0.04 250);
   --ring: oklch(0.7 0.1 230);
 
-  /* Charts */
   --chart-1: oklch(0.6 0.15 250);
   --chart-2: oklch(0.8 0.1 180);
   --chart-3: oklch(0.85 0.15 80);
   --chart-4: oklch(0.7 0.15 30);
   --chart-5: oklch(0.65 0.15 280);
 
-  /* Sidebar */
   --sidebar: oklch(0.15 0.03 250);
   --sidebar-foreground: oklch(0.95 0.02 250);
   --sidebar-primary: oklch(0.7 0.1 230);

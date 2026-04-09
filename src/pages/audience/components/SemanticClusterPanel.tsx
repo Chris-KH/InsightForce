@@ -3,6 +3,7 @@ import { ScanSearch } from "lucide-react";
 
 import {
   FloatingOrb,
+  PanelOrbital3D,
   RevealBlock,
   SurfaceGrid,
 } from "@/components/app-futuristic";
@@ -110,6 +111,7 @@ export function SemanticClusterPanel() {
           delay={0.4}
           duration={10}
         />
+        <PanelOrbital3D className="-top-14 -right-16 bottom-auto left-auto hidden h-56 w-56 opacity-70 md:block" />
 
         <RevealBlock className="relative z-10 mb-4 flex flex-wrap items-center gap-2">
           <Badge

@@ -1,7 +1,11 @@
 import { motion } from "motion/react";
 import { Clock3, MoreVertical, PlayCircle, Shield, Wand2 } from "lucide-react";
 
-import { RevealBlock, SurfaceGrid } from "@/components/app-futuristic";
+import {
+  PanelOrbital3D,
+  RevealBlock,
+  SurfaceGrid,
+} from "@/components/app-futuristic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/app-section";
@@ -81,6 +85,9 @@ export function AgentStatusGrid() {
                   <SurfaceGrid
                     className={isIdle ? "opacity-18" : "opacity-26"}
                   />
+                  {!isIdle ? (
+                    <PanelOrbital3D className="-top-14 -right-14 bottom-auto left-auto hidden h-44 w-44 opacity-55 md:block" />
+                  ) : null}
                 </div>
 
                 <CardHeader className="relative pb-4">

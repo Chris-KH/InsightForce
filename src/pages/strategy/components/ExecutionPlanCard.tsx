@@ -10,6 +10,7 @@ import {
 
 import {
   FloatingOrb,
+  PanelOrbital3D,
   RevealBlock,
   SurfaceGrid,
 } from "@/components/app-futuristic";
@@ -57,6 +58,7 @@ export function ExecutionPlanCard() {
           duration={10}
           delay={0.35}
         />
+        <PanelOrbital3D className="-top-20 -right-24 bottom-auto left-auto hidden h-64 w-64 opacity-70 lg:block" />
       </div>
 
       <CardHeader className="relative border-b border-border/50 bg-muted/18">

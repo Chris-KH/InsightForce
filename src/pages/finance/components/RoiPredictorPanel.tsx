@@ -1,6 +1,10 @@
 import { motion } from "motion/react";
 
-import { RevealBlock, SurfaceGrid } from "@/components/app-futuristic";
+import {
+  PanelOrbital3D,
+  RevealBlock,
+  SurfaceGrid,
+} from "@/components/app-futuristic";
 import { PanelCard } from "@/components/app-section";
 import { useBilingual } from "@/hooks/use-bilingual";
 
@@ -31,6 +35,7 @@ export function RoiPredictorPanel() {
     >
       <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-background/70 p-4">
         <SurfaceGrid className="opacity-26" />
+        <PanelOrbital3D className="top-auto -right-10 -bottom-12 left-auto hidden h-52 w-52 opacity-72 lg:block" />
 
         <div className="relative flex flex-wrap items-center gap-4 text-xs font-semibold text-muted-foreground">
           <span className="inline-flex items-center gap-2">

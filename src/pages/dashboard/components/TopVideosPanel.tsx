@@ -1,5 +1,7 @@
+import { motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
 
+import { RevealBlock, SurfaceGrid } from "@/components/app-futuristic";
 import { Button } from "@/components/ui/button";
 import { PanelCard } from "@/components/app-section";
 import { useBilingual } from "@/hooks/use-bilingual";
@@ -39,71 +41,86 @@ export function TopVideosPanel() {
         "Những nội dung hiệu quả nhất thúc đẩy giữ chân và doanh thu.",
       )}
     >
-      <div className="overflow-hidden rounded-2xl border border-border/50 bg-background">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-muted/30 text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-            <tr>
-              <th className="px-4 py-4">{copy("Title", "Tiêu đề")}</th>
-              <th className="px-4 py-4">{copy("Views", "Lượt xem")}</th>
-              <th className="px-4 py-4">{copy("Reactions", "Phản hồi")}</th>
-              <th className="px-4 py-4">
-                {copy("Sentiment Score", "Điểm cảm xúc")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {videoRows.map((row, index) => (
-              <tr
-                key={row.title}
-                className={
-                  index !== videoRows.length - 1
-                    ? "border-b border-border/50"
-                    : ""
-                }
-              >
-                <td className="px-4 py-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="size-12 rounded-lg"
-                      style={{
-                        backgroundImage:
-                          "linear-gradient(135deg, rgba(74,124,89,0.9), rgba(196,166,106,0.8), rgba(112,92,48,0.7))",
-                      }}
-                    />
-                    <div className="flex flex-col gap-1">
-                      <span className="font-medium text-foreground">
-                        {row.title}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {copy(
-                          "Short-form + long-form multi-channel lift",
-                          "Tăng trưởng đa kênh từ nội dung ngắn + dài",
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-4 text-muted-foreground">{row.views}</td>
-                <td className="px-4 py-4 text-muted-foreground">
-                  {row.reactions}
-                </td>
-                <td className="px-4 py-4">
-                  <span className="inline-flex items-center gap-2 font-medium text-foreground">
-                    <span
-                      className={
-                        row.tone === "primary"
-                          ? "size-2 rounded-full bg-primary"
-                          : "size-2 rounded-full bg-secondary"
-                      }
-                    />
-                    {row.sentiment}
-                  </span>
-                </td>
+      <RevealBlock>
+        <div className="relative overflow-hidden rounded-2xl border border-border/65 bg-background/85">
+          <SurfaceGrid className="opacity-22" />
+
+          <table className="relative w-full text-left text-sm">
+            <thead className="bg-muted/35 text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+              <tr>
+                <th className="px-4 py-4">{copy("Title", "Tiêu đề")}</th>
+                <th className="px-4 py-4">{copy("Views", "Lượt xem")}</th>
+                <th className="px-4 py-4">{copy("Reactions", "Phản hồi")}</th>
+                <th className="px-4 py-4">
+                  {copy("Sentiment Score", "Điểm cảm xúc")}
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {videoRows.map((row, index) => (
+                <motion.tr
+                  key={row.title}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{
+                    duration: 0.28,
+                    delay: index * 0.05,
+                    ease: "easeOut",
+                  }}
+                  className={
+                    index !== videoRows.length - 1
+                      ? "border-b border-border/50 transition-colors hover:bg-muted/18"
+                      : "transition-colors hover:bg-muted/18"
+                  }
+                >
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="size-12 rounded-lg border border-primary/20 shadow-[0_6px_16px_rgba(59,130,246,0.22)]"
+                        style={{
+                          backgroundImage:
+                            "linear-gradient(135deg, rgba(59,130,246,0.88), rgba(14,165,233,0.72), rgba(245,158,11,0.62))",
+                        }}
+                      />
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium text-foreground">
+                          {row.title}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {copy(
+                            "Short-form + long-form multi-channel lift",
+                            "Tăng trưởng đa kênh từ nội dung ngắn + dài",
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-muted-foreground">
+                    {row.views}
+                  </td>
+                  <td className="px-4 py-4 text-muted-foreground">
+                    {row.reactions}
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="inline-flex items-center gap-2 font-medium text-foreground">
+                      <span
+                        className={
+                          row.tone === "primary"
+                            ? "size-2 rounded-full bg-primary"
+                            : "size-2 rounded-full bg-secondary"
+                        }
+                      />
+                      {row.sentiment}
+                    </span>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </RevealBlock>
+
       <div className="flex justify-end pt-5">
         <Button variant="link" className="h-auto px-0 text-primary">
           {copy("View All Content", "Xem toàn bộ nội dung")}

@@ -1,4 +1,6 @@
+import { PulseDot } from "@/components/app-futuristic";
 import { SectionHeader } from "@/components/app-section";
+import { Badge } from "@/components/ui/badge";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { ChannelHealthPanel } from "@/pages/dashboard/components/ChannelHealthPanel";
 import { DashboardInsightsColumn } from "@/pages/dashboard/components/DashboardInsightsColumn";
@@ -18,6 +20,15 @@ export function DashboardPage() {
             "Deep insights into your content ecosystem.",
             "Thông tin chuyên sâu về hệ sinh thái nội dung của bạn.",
           )}
+          action={
+            <Badge
+              variant="outline"
+              className="rounded-full border-primary/25 bg-background/80 px-3 py-1.5 text-primary"
+            >
+              <PulseDot className="mr-2" />
+              {copy("Neural Sync Active", "Đồng bộ neural đang chạy")}
+            </Badge>
+          }
         />
         <DashboardMetrics />
         <ChannelHealthPanel />

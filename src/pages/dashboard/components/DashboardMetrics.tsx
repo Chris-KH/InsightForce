@@ -1,5 +1,7 @@
+import { motion } from "motion/react";
 import { Eye, MessageCircleMore, Wallet } from "lucide-react";
 
+import { RevealBlock } from "@/components/app-futuristic";
 import { MetricCard } from "@/components/app-section";
 import { useBilingual } from "@/hooks/use-bilingual";
 
@@ -32,8 +34,20 @@ export function DashboardMetrics() {
 
   return (
     <div className="grid gap-6 md:grid-cols-3">
-      {metrics.map((metric) => (
-        <MetricCard key={metric.label} {...metric} />
+      {metrics.map((metric, index) => (
+        <RevealBlock key={metric.label} delay={index * 0.05}>
+          <motion.div
+            whileHover={{
+              y: -4,
+              rotateX: 2.5,
+              rotateY: index % 2 === 0 ? -2 : 2,
+            }}
+            transition={{ duration: 0.24, ease: "easeOut" }}
+            className="perspective-distant"
+          >
+            <MetricCard {...metric} />
+          </motion.div>
+        </RevealBlock>
       ))}
     </div>
   );
