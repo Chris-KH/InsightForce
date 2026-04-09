@@ -1,14 +1,56 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { FOOTER_LINK_GROUPS, SOCIAL_LINKS, TRUSTED_COMPANIES } from "../data";
+import { CometTrails } from "./CometTrails";
+import { FloatingShards } from "./FloatingShards";
+import { OrbitRings } from "./OrbitRings";
+import { SectionGridOverlay } from "./SectionGridOverlay";
 import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import { NavLink } from "react-router";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border/60 bg-card/45 px-4 pt-10 pb-8 sm:px-6 sm:pt-12 lg:px-8 lg:pt-14">
-      <div className="mx-auto w-full max-w-7xl">
+    <footer className="relative isolate overflow-hidden border-t border-border/60 bg-card/45 px-4 pt-10 pb-8 sm:px-6 sm:pt-12 lg:px-8 lg:pt-14">
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+        aria-hidden
+      >
+        <SectionGridOverlay
+          className="absolute inset-x-0 top-0 h-64"
+          cellSize={130}
+          strength="soft"
+          fade="left-to-right"
+          drift={false}
+        />
+
+        <CometTrails
+          className="absolute inset-0 opacity-60"
+          density="low"
+          direction="diagonal"
+          tone="mixed"
+        />
+
+        <FloatingShards
+          className="absolute inset-0"
+          density="low"
+          tone="mixed"
+        />
+
+        <OrbitRings
+          className="absolute -bottom-12 left-[8%] hidden h-72 w-72 opacity-60 md:block"
+          tone="chart"
+          spin="slow"
+        />
+
+        <motion.div
+          className="absolute top-0 right-[14%] h-52 w-52 rounded-full bg-primary/8 blur-[100px]"
+          animate={{ opacity: [0.1, 0.24, 0.1], scale: [1, 1.1, 1] }}
+          transition={{ duration: 10.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto w-full max-w-7xl">
         <motion.div
           className="overflow-hidden rounded-2xl border border-border/65 bg-background/80 p-6 sm:p-8"
           initial={{ opacity: 0, y: 18 }}

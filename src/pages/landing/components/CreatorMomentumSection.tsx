@@ -1,6 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CAPABILITY_ITEMS, TRUSTED_COMPANIES } from "../data";
+import { CometTrails } from "./CometTrails";
+import { FloatingShards } from "./FloatingShards";
+import { OrbitRings } from "./OrbitRings";
+import { SectionGridOverlay } from "./SectionGridOverlay";
 import { motion } from "motion/react";
 
 export function CreatorMomentumSection() {
@@ -13,6 +17,32 @@ export function CreatorMomentumSection() {
         className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
         aria-hidden
       >
+        <SectionGridOverlay
+          className="absolute inset-x-0 top-0 h-[74%]"
+          cellSize={112}
+          strength="soft"
+          fade="diagonal"
+        />
+
+        <CometTrails
+          className="absolute inset-0 opacity-90"
+          density="medium"
+          direction="diagonal"
+          tone="mixed"
+        />
+
+        <FloatingShards
+          className="absolute inset-0"
+          density="high"
+          tone="mixed"
+        />
+
+        <OrbitRings
+          className="absolute top-2 right-[8%] hidden h-72 w-72 lg:block"
+          tone="mixed"
+          spin="slow"
+        />
+
         <motion.div
           className="absolute top-10 -left-20 h-72 w-72 rounded-full bg-primary/12 blur-[110px]"
           animate={{ opacity: [0.24, 0.42, 0.24], scale: [1, 1.06, 1] }}

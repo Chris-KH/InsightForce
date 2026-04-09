@@ -12,6 +12,10 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { PRICING_TIERS, TESTIMONIALS } from "../data";
+import { CometTrails } from "./CometTrails";
+import { FloatingShards } from "./FloatingShards";
+import { OrbitRings } from "./OrbitRings";
+import { SectionGridOverlay } from "./SectionGridOverlay";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 
@@ -50,8 +54,46 @@ export function PricingSection() {
   return (
     <section
       id="pricing"
-      className="bg-background/72 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+      className="relative isolate overflow-hidden bg-background/72 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+        aria-hidden
+      >
+        <SectionGridOverlay
+          className="absolute inset-x-0 top-0 h-80"
+          cellSize={124}
+          strength="soft"
+          fade="top-to-bottom"
+          drift={false}
+        />
+
+        <CometTrails
+          className="absolute inset-0 opacity-75"
+          density="medium"
+          direction="right-to-left"
+          tone="mixed"
+        />
+
+        <FloatingShards
+          className="absolute inset-0"
+          density="medium"
+          tone="primary"
+        />
+
+        <OrbitRings
+          className="absolute top-12 right-[8%] hidden h-64 w-64 opacity-75 lg:block"
+          tone="primary"
+          spin="medium"
+        />
+
+        <motion.div
+          className="absolute -top-14 left-[8%] h-64 w-64 rounded-full bg-primary/10 blur-[120px]"
+          animate={{ opacity: [0.14, 0.3, 0.14], scale: [1, 1.08, 1] }}
+          transition={{ duration: 9.8, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
       <div className="mx-auto w-full max-w-7xl">
         <motion.div
           className="mx-auto max-w-3xl text-center"
@@ -114,7 +156,7 @@ export function PricingSection() {
               >
                 <Card
                   className={cn(
-                    "relative h-full border-border/70 bg-card/70",
+                    "relative h-full overflow-visible border-border/70 bg-card/70",
                     tier.highlighted &&
                       "scale-[1.01] border-primary shadow-2xl",
                   )}

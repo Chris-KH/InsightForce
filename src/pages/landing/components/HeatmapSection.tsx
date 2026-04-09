@@ -1,6 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HEATMAP_IMAGE, INFRASTRUCTURE_KPIS, NETWORK_LOCATIONS } from "../data";
+import { CometTrails } from "./CometTrails";
+import { FloatingShards } from "./FloatingShards";
+import { RadarSweep } from "./RadarSweep";
+import { SectionGridOverlay } from "./SectionGridOverlay";
 import { Globe2, Timer } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -8,8 +12,44 @@ export function GuardianWatchSection() {
   return (
     <section
       id="infrastructure"
-      className="bg-background/72 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+      className="relative isolate overflow-hidden bg-background/72 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+        aria-hidden
+      >
+        <SectionGridOverlay
+          className="absolute inset-x-0 top-0 h-72"
+          cellSize={116}
+          strength="soft"
+          fade="left-to-right"
+        />
+
+        <CometTrails
+          className="absolute inset-0 opacity-80"
+          density="low"
+          direction="right-to-left"
+          tone="chart"
+        />
+
+        <FloatingShards
+          className="absolute inset-0"
+          density="low"
+          tone="chart"
+        />
+
+        <RadarSweep
+          className="absolute top-10 right-[6%] hidden h-64 w-64 opacity-80 lg:block"
+          intensity="strong"
+        />
+
+        <motion.div
+          className="absolute -bottom-12 left-[10%] h-56 w-56 rounded-full bg-primary/10 blur-[110px]"
+          animate={{ opacity: [0.16, 0.3, 0.16], scale: [1, 1.07, 1] }}
+          transition={{ duration: 9.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
       <div className="mx-auto w-full max-w-7xl">
         <motion.div
           className="mx-auto max-w-3xl text-center"

@@ -12,6 +12,10 @@ import {
   SECURITY_BADGES,
   SECURITY_FEATURES,
 } from "../data";
+import { CometTrails } from "./CometTrails";
+import { FloatingShards } from "./FloatingShards";
+import { OrbitRings } from "./OrbitRings";
+import { SectionGridOverlay } from "./SectionGridOverlay";
 import { PlugZap, Shield } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -23,10 +27,42 @@ export function ExecutiveProjectionsSection() {
   return (
     <section className="relative isolate overflow-hidden bg-muted/35 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+        <SectionGridOverlay
+          className="absolute inset-x-0 top-0 h-[72%]"
+          cellSize={106}
+          strength="medium"
+          fade="diagonal"
+        />
+
+        <CometTrails
+          className="absolute inset-0 opacity-85"
+          density="medium"
+          direction="left-to-right"
+          tone="primary"
+        />
+
+        <FloatingShards
+          className="absolute inset-0"
+          density="medium"
+          tone="mixed"
+        />
+
+        <OrbitRings
+          className="absolute top-6 -left-8 hidden h-72 w-72 opacity-70 lg:block"
+          tone="mixed"
+          spin="slow"
+        />
+
         <motion.div
           className="absolute -top-20 right-0 h-72 w-72 rounded-full bg-primary/10 blur-[120px]"
           animate={{ opacity: [0.18, 0.34, 0.18], scale: [1, 1.1, 1] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        <motion.div
+          className="absolute right-[18%] bottom-2 h-48 w-48 rounded-full bg-chart-1/10 blur-[90px]"
+          animate={{ opacity: [0.14, 0.26, 0.14], scale: [1, 1.14, 1] }}
+          transition={{ duration: 11.5, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
