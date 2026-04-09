@@ -50,7 +50,7 @@ export function PricingSection() {
   return (
     <section
       id="pricing"
-      className="bg-background px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+      className="bg-background/72 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
       <div className="mx-auto w-full max-w-7xl">
         <motion.div

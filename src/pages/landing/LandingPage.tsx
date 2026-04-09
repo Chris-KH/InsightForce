@@ -3,6 +3,7 @@ import {
   CreatorMomentumSection,
   GuardianWatchSection,
   HeroSection,
+  LandingAtmosphere,
   PricingSection,
   ExecutiveProjectionsSection,
   SiteFooter,
@@ -18,6 +19,7 @@ export function LandingPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
+      <LandingAtmosphere />
       <SiteHeader />
       <main className="relative z-10">
         <motion.div
