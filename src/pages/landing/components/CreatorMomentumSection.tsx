@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CAPABILITY_ITEMS, TRUSTED_COMPANIES } from "../data";
 import { CometTrails } from "./CometTrails";
 import { FloatingShards } from "./FloatingShards";
@@ -12,6 +11,16 @@ type CapabilityVisual = {
   score: number;
   trend: number[];
   kpi: string;
+  velocity: string;
+};
+
+type CapabilityTheme = {
+  surface: string;
+  chip: string;
+  glow: string;
+  ring: string;
+  sparkFrom: string;
+  sparkTo: string;
 };
 
 const CAPABILITY_VISUALS: Record<string, CapabilityVisual> = {
@@ -19,39 +28,97 @@ const CAPABILITY_VISUALS: Record<string, CapabilityVisual> = {
     score: 93,
     trend: [48, 58, 66, 75, 84, 93],
     kpi: "Opportunity windows surfaced",
+    velocity: "Signal velocity +19%",
   },
   "Narrative Blueprinting": {
     score: 89,
     trend: [44, 56, 64, 73, 81, 89],
     kpi: "Average hook lift",
+    velocity: "Hook resonance +14%",
   },
   "KOL Match Intelligence": {
     score: 95,
     trend: [52, 61, 70, 79, 88, 95],
     kpi: "Creator fit precision",
+    velocity: "Match quality +22%",
   },
   "Brand Safety Guardian": {
     score: 97,
     trend: [58, 66, 74, 82, 90, 97],
     kpi: "Tone-risk incidents prevented",
+    velocity: "Risk suppression +27%",
   },
 };
+
+const CAPABILITY_LAYOUTS = [
+  "lg:col-span-7 lg:row-span-2",
+  "lg:col-span-5",
+  "lg:col-span-4",
+  "lg:col-span-8",
+] as const;
+
+const CAPABILITY_THEMES: CapabilityTheme[] = [
+  {
+    surface:
+      "bg-linear-to-br from-sky-500/20 via-cyan-500/10 to-transparent dark:from-sky-400/24 dark:via-cyan-400/10",
+    chip: "border-sky-400/35 bg-sky-500/10 text-sky-700 dark:text-sky-200",
+    glow: "bg-sky-400/30",
+    ring: "#0ea5e9",
+    sparkFrom: "#38bdf8",
+    sparkTo: "#22d3ee",
+  },
+  {
+    surface:
+      "bg-linear-to-br from-indigo-500/20 via-violet-500/12 to-transparent dark:from-indigo-400/22 dark:via-violet-400/10",
+    chip: "border-indigo-400/35 bg-indigo-500/10 text-indigo-700 dark:text-indigo-200",
+    glow: "bg-indigo-400/28",
+    ring: "#6366f1",
+    sparkFrom: "#818cf8",
+    sparkTo: "#a78bfa",
+  },
+  {
+    surface:
+      "bg-linear-to-br from-emerald-500/20 via-teal-500/10 to-transparent dark:from-emerald-400/24 dark:via-teal-400/10",
+    chip: "border-emerald-400/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200",
+    glow: "bg-emerald-400/28",
+    ring: "#10b981",
+    sparkFrom: "#34d399",
+    sparkTo: "#2dd4bf",
+  },
+  {
+    surface:
+      "bg-linear-to-br from-rose-500/20 via-orange-500/11 to-transparent dark:from-rose-400/24 dark:via-orange-400/11",
+    chip: "border-rose-400/35 bg-rose-500/10 text-rose-700 dark:text-rose-200",
+    glow: "bg-rose-400/28",
+    ring: "#f43f5e",
+    sparkFrom: "#fb7185",
+    sparkTo: "#fb923c",
+  },
+];
+
+function sparkPoints(trend: number[]) {
+  return trend
+    .map((value, index) => `${index * 24},${46 - Math.round(value * 0.31)}`)
+    .join(" ");
+}
 
 export function CreatorMomentumSection() {
   const copy = useBilingual();
 
-  const creatorTracks = [
+  const creatorSignals = [
     {
       name: copy("KOL Discovery", "Khám phá KOL"),
       value: "1.9K",
       detail: copy("Profiles scored weekly", "Hồ sơ được chấm điểm mỗi tuần"),
-      score: 92,
+      tag: copy("Live scoring", "Chấm điểm trực tiếp"),
+      color: "bg-sky-400",
     },
     {
       name: copy("Content Studio", "Studio nội dung"),
       value: "340",
       detail: copy("Briefs generated per month", "Brief tạo mới mỗi tháng"),
-      score: 88,
+      tag: copy("Adaptive briefs", "Brief thích ứng"),
+      color: "bg-indigo-400",
     },
     {
       name: copy("Campaign Ops", "Vận hành chiến dịch"),
@@ -60,8 +127,18 @@ export function CreatorMomentumSection() {
         "On-time creator deliverables",
         "Nội dung creator giao đúng hạn",
       ),
-      score: 96,
+      tag: copy("Global launch SLA", "SLA ra mắt toàn cầu"),
+      color: "bg-emerald-400",
     },
+  ];
+
+  const commandBullets = [
+    copy("Audience demand maps in one board", "Bản đồ nhu cầu trên một bảng"),
+    copy("Creative sequencing across channels", "Chuỗi sáng tạo đa kênh"),
+    copy(
+      "Creator matching with conversion score",
+      "Ghép creator theo điểm chuyển đổi",
+    ),
   ];
 
   const translateCapabilityTitle = (title: string) => {
@@ -157,6 +234,26 @@ export function CreatorMomentumSection() {
     return kpi;
   };
 
+  const translateVelocity = (velocity: string) => {
+    if (velocity === "Signal velocity +19%") {
+      return copy("Signal velocity +19%", "Tốc độ tín hiệu +19%");
+    }
+
+    if (velocity === "Hook resonance +14%") {
+      return copy("Hook resonance +14%", "Độ cộng hưởng hook +14%");
+    }
+
+    if (velocity === "Match quality +22%") {
+      return copy("Match quality +22%", "Chất lượng ghép +22%");
+    }
+
+    if (velocity === "Risk suppression +27%") {
+      return copy("Risk suppression +27%", "Khả năng giảm rủi ro +27%");
+    }
+
+    return velocity;
+  };
+
   return (
     <section
       id="capabilities"
@@ -234,129 +331,219 @@ export function CreatorMomentumSection() {
           </p>
         </motion.div>
 
-        <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          {creatorTracks.map((track, index) => (
-            <motion.div
-              key={track.name}
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.35 }}
-              transition={{ duration: 0.45, delay: index * 0.06 }}
-            >
-              <Card className="h-full border-border/65 bg-card/65 shadow-sm backdrop-blur-sm">
-                <CardContent className="px-4 py-4">
-                  <p className="text-[11px] font-semibold tracking-[0.11em] text-muted-foreground uppercase">
-                    {track.name}
-                  </p>
-                  <p className="mt-1 font-heading text-2xl leading-none font-semibold tracking-tight text-foreground">
-                    {track.value}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {track.detail}
-                  </p>
+        <div className="mt-8 grid gap-4 lg:grid-cols-12">
+          <motion.div
+            className="relative overflow-hidden rounded-3xl border border-border/65 bg-card/65 p-5 shadow-sm backdrop-blur-sm lg:col-span-7 lg:p-6"
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.55 }}
+          >
+            <div className="pointer-events-none absolute -top-8 -right-6 h-34 w-34 rounded-full bg-chart-1/18 blur-[30px]" />
+            <div className="pointer-events-none absolute -bottom-12 left-[12%] h-34 w-34 rounded-full bg-chart-2/18 blur-[34px]" />
 
-                  <div className="mt-2 h-1.5 rounded-full bg-muted/60">
-                    <motion.div
-                      className="h-full rounded-full bg-linear-to-r from-chart-1 via-chart-2 to-primary"
-                      initial={{ width: 0 }}
-                      whileInView={{ width: `${track.score}%` }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.55 }}
-                    />
+            <p className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
+              {copy("Campaign Reactor", "Lõi phản ứng chiến dịch")}
+            </p>
+            <h3 className="mt-2 font-heading text-[1.7rem] leading-tight font-semibold tracking-tight sm:text-[2rem]">
+              {copy(
+                "Asymmetric insight board for creator teams",
+                "Bảng insight bất đối xứng cho đội creator",
+              )}
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              {copy(
+                "A mixed visual system that keeps discovery, narrative, and execution signals visible without repeating the same UI pattern.",
+                "Một hệ trực quan hỗn hợp giúp nhóm luôn thấy tín hiệu khám phá, narrative và thực thi mà không lặp lại cùng một mẫu giao diện.",
+              )}
+            </p>
+
+            <div className="mt-4 space-y-2">
+              {commandBullets.map((bullet, index) => (
+                <motion.div
+                  key={bullet}
+                  className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/72 px-3 py-1 text-xs font-medium text-foreground"
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.35, delay: index * 0.08 }}
+                >
+                  <span
+                    className="inline-block size-1.5 rounded-full"
+                    style={{
+                      backgroundColor:
+                        index % 3 === 0
+                          ? "#38bdf8"
+                          : index % 3 === 1
+                            ? "#818cf8"
+                            : "#34d399",
+                    }}
+                  />
+                  {bullet}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="relative overflow-hidden rounded-3xl border border-border/65 bg-card/62 p-5 shadow-sm backdrop-blur-sm lg:col-span-5"
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.55, delay: 0.08 }}
+          >
+            <div className="pointer-events-none absolute top-0 right-0 h-28 w-28 rounded-full bg-primary/16 blur-[30px]" />
+
+            <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+              {copy("Live Command Snapshot", "Ảnh chụp điều phối trực tiếp")}
+            </p>
+
+            <div className="mt-3 grid gap-2">
+              {creatorSignals.map((signal, index) => (
+                <motion.div
+                  key={signal.name}
+                  className="rounded-xl border border-border/70 bg-background/74 px-3.5 py-3"
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.35, delay: 0.12 + index * 0.06 }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-semibold tracking-[0.11em] text-muted-foreground uppercase">
+                        {signal.name}
+                      </p>
+                      <p className="mt-1 font-heading text-3xl leading-none font-semibold tracking-tight text-foreground">
+                        {signal.value}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {signal.detail}
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[10px] font-semibold text-foreground uppercase">
+                      <span
+                        className={`inline-block size-1.5 rounded-full ${signal.color}`}
+                      />
+                      {signal.tag}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:mt-12">
+        <div className="mt-6 grid gap-5 lg:auto-rows-[minmax(210px,auto)] lg:grid-cols-12">
           {CAPABILITY_ITEMS.map((item, index) => {
             const Icon = item.icon;
+            const visual = CAPABILITY_VISUALS[item.title] ?? {
+              score: 86,
+              trend: [52, 61, 67, 74, 79, 86],
+              kpi: "Opportunity windows surfaced",
+              velocity: "Signal velocity +19%",
+            };
+            const theme = CAPABILITY_THEMES[index % CAPABILITY_THEMES.length];
+            const layout =
+              CAPABILITY_LAYOUTS[index % CAPABILITY_LAYOUTS.length];
+            const sparklineId = `spark-${item.number}`;
+
             return (
-              <motion.div
+              <motion.article
                 key={item.title}
+                className={`${layout} relative overflow-hidden rounded-3xl border border-border/65 bg-card/66 shadow-sm backdrop-blur-sm`}
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.25 }}
-                transition={{ duration: 0.55, delay: index * 0.08 }}
+                transition={{ duration: 0.55, delay: index * 0.07 }}
                 whileHover={{ y: -4 }}
               >
-                <Card className="h-full border-border/65 bg-card/65 shadow-sm backdrop-blur-sm">
-                  <CardHeader className="flex flex-row items-start justify-between gap-5 pb-3">
+                <div
+                  className={`pointer-events-none absolute inset-0 ${theme.surface}`}
+                />
+                <div
+                  className={`pointer-events-none absolute -top-12 -right-6 h-28 w-28 rounded-full blur-[36px] ${theme.glow}`}
+                />
+
+                <div className="relative flex h-full flex-col p-5 sm:p-6">
+                  <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-[11px] font-semibold tracking-[0.12em] text-primary uppercase">
                         {item.number}
                       </p>
-                      <h3 className="mt-2 font-heading text-2xl leading-tight font-semibold tracking-tight">
+                      <h3 className="mt-2 font-heading text-[1.9rem] leading-tight font-semibold tracking-tight">
                         {translateCapabilityTitle(item.title)}
                       </h3>
                     </div>
-                    <div className="rounded-xl border border-border/70 bg-background/80 p-3 text-primary">
+                    <div className="rounded-2xl border border-border/70 bg-background/78 p-3 text-primary shadow-sm">
                       <Icon className="size-5" />
                     </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="text-sm leading-6 text-muted-foreground">
-                      {translateCapabilityDescription(item.description)}
+                  </div>
+
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                    {translateCapabilityDescription(item.description)}
+                  </p>
+
+                  <div className="mt-auto pt-4">
+                    <div className="flex items-end justify-between gap-4">
+                      <div>
+                        <p className="text-[11px] font-semibold tracking-[0.11em] text-muted-foreground uppercase">
+                          {copy("Confidence vector", "Vector độ tin cậy")}
+                        </p>
+                        <p className="mt-1 font-heading text-[1.85rem] leading-none font-semibold tracking-tight">
+                          {visual.score}%
+                        </p>
+                        <p className="mt-1 text-xs font-medium text-muted-foreground">
+                          {translateVelocity(visual.velocity)}
+                        </p>
+                      </div>
+
+                      <div
+                        className="relative grid size-17 place-items-center rounded-full p-[3px]"
+                        style={{
+                          background: `conic-gradient(${theme.ring} ${visual.score * 3.6}deg, rgba(148,163,184,0.25) 0deg)`,
+                        }}
+                      >
+                        <div className="grid size-full place-items-center rounded-full bg-background/88">
+                          <span className="text-[10px] font-semibold text-foreground">
+                            {visual.score}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 rounded-xl border border-border/65 bg-background/64 px-2.5 py-2">
+                      <svg viewBox="0 0 120 48" className="h-10 w-full">
+                        <defs>
+                          <linearGradient
+                            id={sparklineId}
+                            x1="0"
+                            y1="0"
+                            x2="1"
+                            y2="0"
+                          >
+                            <stop offset="0%" stopColor={theme.sparkFrom} />
+                            <stop offset="100%" stopColor={theme.sparkTo} />
+                          </linearGradient>
+                        </defs>
+                        <polyline
+                          fill="none"
+                          stroke={`url(#${sparklineId})`}
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          points={sparkPoints(visual.trend)}
+                        />
+                      </svg>
+                    </div>
+
+                    <p
+                      className={`mt-3 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${theme.chip}`}
+                    >
+                      {translateCapabilityKpi(visual.kpi)}
                     </p>
-
-                    {(() => {
-                      const visual = CAPABILITY_VISUALS[item.title];
-                      const score = visual?.score ?? 86;
-                      const trend = visual?.trend ?? [52, 61, 67, 74, 79, 86];
-                      const kpi = visual?.kpi ?? "Opportunity windows surfaced";
-
-                      return (
-                        <>
-                          <div className="mt-4 flex items-center justify-between text-[11px] font-semibold tracking-[0.11em] text-muted-foreground uppercase">
-                            <span>
-                              {copy(
-                                "Execution confidence",
-                                "Độ tin cậy triển khai",
-                              )}
-                            </span>
-                            <span className="text-primary">{score}%</span>
-                          </div>
-
-                          <div className="mt-2 h-2 rounded-full bg-muted/60">
-                            <motion.div
-                              className="h-full rounded-full bg-linear-to-r from-chart-1 via-chart-2 to-primary"
-                              initial={{ width: 0 }}
-                              whileInView={{ width: `${score}%` }}
-                              viewport={{ once: true }}
-                              transition={{
-                                duration: 0.6,
-                                delay: 0.1 + index * 0.06,
-                              }}
-                            />
-                          </div>
-
-                          <div className="mt-3 flex h-8 items-end gap-1.5">
-                            {trend.map((value, trendIndex) => (
-                              <span
-                                key={`${item.title}-${value}-${trendIndex}`}
-                                className="w-full rounded-sm"
-                                style={{
-                                  height: `${Math.max(20, value * 0.32)}px`,
-                                  backgroundColor:
-                                    trendIndex % 2 === 0
-                                      ? "hsl(var(--chart-1) / 0.72)"
-                                      : "hsl(var(--chart-2) / 0.72)",
-                                }}
-                              />
-                            ))}
-                          </div>
-
-                          <p className="mt-3 inline-flex rounded-full border border-border/70 bg-background/75 px-2.5 py-1 text-[11px] font-medium text-foreground">
-                            {translateCapabilityKpi(kpi)}
-                          </p>
-                        </>
-                      );
-                    })()}
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  </div>
+                </div>
+              </motion.article>
             );
           })}
         </div>

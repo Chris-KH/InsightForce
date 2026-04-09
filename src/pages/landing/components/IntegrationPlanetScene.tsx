@@ -2,7 +2,13 @@ import { Icon } from "@iconify-icon/react";
 import { Float, Html, OrbitControls, Sparkles, Stars } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
-import { Color, type Group, type Mesh, type ShaderMaterial } from "three";
+import {
+  CanvasTexture,
+  MathUtils,
+  RepeatWrapping,
+  type Group,
+  type Mesh,
+} from "three";
 
 export type IntegrationPlanetNode = {
   name: string;
@@ -24,40 +30,109 @@ type OrbitingBadgeProps = {
   speed: number;
   phase: number;
   wobble: number;
+  altitude: number;
+  tilt: number;
 };
 
-const PLANET_VERTEX_SHADER = `
-  varying vec3 vNormal;
-  varying vec3 vPosition;
+type OrbitConfig = {
+  node: IntegrationPlanetNode;
+  radius: number;
+  speed: number;
+  phase: number;
+  wobble: number;
+  altitude: number;
+  tilt: number;
+};
 
-  void main() {
-    vNormal = normalize(normalMatrix * normal);
-    vPosition = position;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+function createPlanetTextures() {
+  const size = 1024;
+
+  const colorCanvas = document.createElement("canvas");
+  colorCanvas.width = size;
+  colorCanvas.height = size;
+  const colorCtx = colorCanvas.getContext("2d");
+
+  const bumpCanvas = document.createElement("canvas");
+  bumpCanvas.width = size;
+  bumpCanvas.height = size;
+  const bumpCtx = bumpCanvas.getContext("2d");
+
+  if (!colorCtx || !bumpCtx) {
+    const fallback = new CanvasTexture(colorCanvas);
+    return { colorMap: fallback, bumpMap: fallback };
   }
-`;
 
-const PLANET_FRAGMENT_SHADER = `
-  uniform float uTime;
-  uniform vec3 uColorA;
-  uniform vec3 uColorB;
-  uniform vec3 uColorC;
+  const baseGradient = colorCtx.createLinearGradient(0, 0, size, size);
+  baseGradient.addColorStop(0, "#3b82f6");
+  baseGradient.addColorStop(0.28, "#22d3ee");
+  baseGradient.addColorStop(0.58, "#7c3aed");
+  baseGradient.addColorStop(1, "#f43f5e");
 
-  varying vec3 vNormal;
-  varying vec3 vPosition;
+  colorCtx.fillStyle = baseGradient;
+  colorCtx.fillRect(0, 0, size, size);
 
-  void main() {
-    float fresnel = pow(1.0 - max(dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0), 2.2);
-    float latWave = sin(vPosition.y * 4.8 + uTime * 0.7) * 0.5 + 0.5;
-    float swirl = sin((vPosition.x + vPosition.z) * 6.2 - uTime * 0.52) * 0.5 + 0.5;
-
-    vec3 base = mix(uColorA, uColorB, latWave);
-    vec3 accent = mix(base, uColorC, swirl * 0.34);
-    vec3 finalColor = accent + fresnel * 0.28;
-
-    gl_FragColor = vec4(finalColor, 1.0);
+  for (let i = 0; i < 34; i += 1) {
+    const y = (size / 34) * i + Math.random() * 12;
+    const height = 24 + Math.random() * 42;
+    colorCtx.globalAlpha = 0.1 + Math.random() * 0.22;
+    colorCtx.fillStyle =
+      i % 3 === 0 ? "#bfdbfe" : i % 3 === 1 ? "#67e8f9" : "#fda4af";
+    colorCtx.beginPath();
+    colorCtx.ellipse(
+      size * 0.5,
+      y,
+      size * 0.72,
+      height,
+      Math.random() * 0.4,
+      0,
+      Math.PI * 2,
+    );
+    colorCtx.fill();
   }
-`;
+
+  colorCtx.globalAlpha = 0.32;
+  for (let i = 0; i < 2200; i += 1) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const r = Math.random() * 1.6;
+    colorCtx.fillStyle = i % 2 === 0 ? "#ffffff" : "#c4b5fd";
+    colorCtx.beginPath();
+    colorCtx.arc(x, y, r, 0, Math.PI * 2);
+    colorCtx.fill();
+  }
+  colorCtx.globalAlpha = 1;
+
+  const bumpGradient = bumpCtx.createLinearGradient(0, 0, size, size);
+  bumpGradient.addColorStop(0, "#6b7280");
+  bumpGradient.addColorStop(0.5, "#f8fafc");
+  bumpGradient.addColorStop(1, "#334155");
+  bumpCtx.fillStyle = bumpGradient;
+  bumpCtx.fillRect(0, 0, size, size);
+
+  for (let i = 0; i < 2600; i += 1) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const shade = Math.floor(120 + Math.random() * 120);
+    const alpha = 0.08 + Math.random() * 0.2;
+    const dot = 0.8 + Math.random() * 2;
+    bumpCtx.fillStyle = `rgba(${shade}, ${shade}, ${shade}, ${alpha})`;
+    bumpCtx.beginPath();
+    bumpCtx.arc(x, y, dot, 0, Math.PI * 2);
+    bumpCtx.fill();
+  }
+
+  const colorMap = new CanvasTexture(colorCanvas);
+  colorMap.wrapS = RepeatWrapping;
+  colorMap.wrapT = RepeatWrapping;
+  colorMap.repeat.set(1.2, 1.2);
+
+  const bumpMap = new CanvasTexture(bumpCanvas);
+  bumpMap.wrapS = RepeatWrapping;
+  bumpMap.wrapT = RepeatWrapping;
+  bumpMap.repeat.set(1.3, 1.3);
+
+  return { colorMap, bumpMap };
+}
 
 function OrbitingBadge({
   node,
@@ -65,59 +140,66 @@ function OrbitingBadge({
   speed,
   phase,
   wobble,
+  altitude,
+  tilt,
 }: OrbitingBadgeProps) {
-  const ref = useRef<Group>(null);
+  const planeRef = useRef<Group>(null);
+  const bodyRef = useRef<Group>(null);
 
   useFrame(({ clock }) => {
-    if (!ref.current) return;
+    if (!bodyRef.current || !planeRef.current) return;
 
     const t = clock.getElapsedTime() * speed + phase;
     const x = Math.cos(t) * radius;
-    const z = Math.sin(t) * radius * 0.68;
-    const y = Math.sin(t * 1.42 + phase) * wobble;
-    const pulse = 1 + Math.sin(t * 2.1) * 0.08;
+    const z = Math.sin(t) * radius * 0.74;
+    const y = Math.sin(t * 1.37 + phase) * wobble + altitude;
+    const depthScale = MathUtils.mapLinear(z, -radius, radius, 0.82, 1.05);
+    const pulse = 1 + Math.sin(t * 1.75) * 0.04;
 
-    ref.current.position.set(x, y, z);
-    ref.current.rotation.y = -t;
-    ref.current.scale.set(pulse, pulse, pulse);
+    bodyRef.current.position.set(x, y, z);
+    bodyRef.current.rotation.y = -t;
+    bodyRef.current.scale.setScalar(depthScale * pulse);
+    planeRef.current.rotation.z = tilt;
   });
 
   return (
-    <group ref={ref}>
-      <mesh castShadow>
-        <sphereGeometry args={[0.19, 24, 24]} />
-        <meshStandardMaterial
-          color={node.color}
-          emissive={node.color}
-          emissiveIntensity={0.6}
-          metalness={0.22}
-          roughness={0.2}
-        />
-      </mesh>
+    <group ref={planeRef}>
+      <group ref={bodyRef}>
+        <mesh castShadow>
+          <sphereGeometry args={[0.165, 24, 24]} />
+          <meshStandardMaterial
+            color={node.color}
+            emissive={node.color}
+            emissiveIntensity={0.5}
+            metalness={0.2}
+            roughness={0.24}
+          />
+        </mesh>
 
-      <Html center transform sprite distanceFactor={12}>
-        <span
-          className="inline-grid size-7 place-items-center rounded-full border bg-white/92 shadow-[0_8px_24px_rgba(15,23,42,0.42)]"
-          style={{ borderColor: `${node.color}99` }}
-        >
-          {node.icon ? (
-            <Icon
-              icon={node.icon}
-              width="15"
-              height="15"
-              style={{ color: node.color }}
-              title={`${node.name} - ${node.category}`}
-            />
-          ) : (
-            <span
-              className="text-[10px] font-semibold"
-              style={{ color: node.color }}
-            >
-              {node.fallback}
-            </span>
-          )}
-        </span>
-      </Html>
+        <Html center transform sprite distanceFactor={12}>
+          <span
+            className="inline-grid size-7 place-items-center rounded-full border bg-white/94 shadow-[0_8px_22px_rgba(15,23,42,0.42)]"
+            style={{ borderColor: `${node.color}bb` }}
+          >
+            {node.icon ? (
+              <Icon
+                icon={node.icon}
+                width="15"
+                height="15"
+                style={{ color: node.color }}
+                title={`${node.name} - ${node.category}`}
+              />
+            ) : (
+              <span
+                className="text-[10px] font-semibold"
+                style={{ color: node.color }}
+              >
+                {node.fallback}
+              </span>
+            )}
+          </span>
+        </Html>
+      </group>
     </group>
   );
 }
@@ -131,78 +213,68 @@ function PlanetCore({
 }) {
   const planetRef = useRef<Mesh>(null);
   const ringRef = useRef<Mesh>(null);
-  const shaderRef = useRef<ShaderMaterial>(null);
 
-  const shaderUniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uColorA: { value: new Color("#6366f1") },
-      uColorB: { value: new Color("#22d3ee") },
-      uColorC: { value: new Color("#f43f5e") },
-    }),
-    [],
-  );
+  const { colorMap, bumpMap } = useMemo(() => createPlanetTextures(), []);
 
   useFrame((state, delta) => {
     if (planetRef.current) {
-      planetRef.current.rotation.y += delta * 0.14;
+      planetRef.current.rotation.y += delta * 0.1;
       planetRef.current.rotation.x =
-        Math.sin(state.clock.elapsedTime * 0.22) * 0.08;
+        Math.sin(state.clock.elapsedTime * 0.17) * 0.055;
     }
 
     if (ringRef.current) {
-      ringRef.current.rotation.z += delta * 0.09;
-    }
-
-    if (shaderRef.current) {
-      shaderRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+      ringRef.current.rotation.z += delta * 0.085;
     }
   });
 
   return (
     <group>
       <mesh ref={planetRef} castShadow receiveShadow>
-        <sphereGeometry args={[1.85, 96, 96]} />
-        <shaderMaterial
-          ref={shaderRef}
-          uniforms={shaderUniforms}
-          vertexShader={PLANET_VERTEX_SHADER}
-          fragmentShader={PLANET_FRAGMENT_SHADER}
+        <sphereGeometry args={[1.68, 96, 96]} />
+        <meshStandardMaterial
+          map={colorMap}
+          bumpMap={bumpMap}
+          bumpScale={0.17}
+          roughness={0.52}
+          metalness={0.16}
+          emissive="#1d4ed8"
+          emissiveIntensity={0.2}
         />
       </mesh>
 
-      <mesh scale={1.09}>
-        <sphereGeometry args={[1.85, 72, 72]} />
+      <mesh scale={1.08}>
+        <sphereGeometry args={[1.68, 72, 72]} />
         <meshStandardMaterial
-          color="#67e8f9"
+          color="#7dd3fc"
           emissive="#67e8f9"
-          emissiveIntensity={0.24}
+          emissiveIntensity={0.18}
           transparent
-          opacity={0.17}
-          roughness={0.9}
-          metalness={0.02}
+          opacity={0.14}
+          roughness={0.95}
+          metalness={0.04}
         />
       </mesh>
 
       <mesh
         ref={ringRef}
-        rotation={[Math.PI / 2.55, 0.2, 0]}
-        scale={[1.24, 0.78, 1.24]}
+        rotation={[Math.PI / 2.6, 0.26, 0]}
+        scale={[1.22, 0.79, 1.22]}
       >
-        <torusGeometry args={[2.1, 0.058, 36, 260]} />
+        <torusGeometry args={[1.96, 0.052, 30, 260]} />
         <meshStandardMaterial
           color="#93c5fd"
           emissive="#60a5fa"
-          emissiveIntensity={0.32}
+          emissiveIntensity={0.28}
           transparent
           opacity={0.72}
-          roughness={0.24}
-          metalness={0.34}
+          roughness={0.28}
+          metalness={0.3}
         />
       </mesh>
 
-      <Html center transform distanceFactor={8.2}>
-        <div className="pointer-events-none rounded-full border border-white/25 bg-slate-900/28 px-6 py-3 text-center shadow-[0_10px_30px_rgba(15,23,42,0.38)] backdrop-blur-sm">
+      <Html center transform distanceFactor={8.5}>
+        <div className="pointer-events-none rounded-full border border-white/25 bg-slate-900/30 px-6 py-3 text-center shadow-[0_10px_30px_rgba(15,23,42,0.4)] backdrop-blur-sm">
           <p className="text-[10px] font-semibold tracking-widest text-slate-100/90 uppercase">
             {coreTagline}
           </p>
@@ -220,101 +292,103 @@ function PlanetSceneContent({
   coreTagline,
   coreName,
 }: IntegrationPlanetSceneProps) {
-  const innerNodes = useMemo(
-    () => nodes.filter((_, index) => index % 2 === 0),
-    [nodes],
-  );
-  const outerNodes = useMemo(
-    () => nodes.filter((_, index) => index % 2 === 1),
+  const orbitConfigs = useMemo<OrbitConfig[]>(
+    () =>
+      nodes.map((node, index) => {
+        const tier = index % 3;
+        const radius = 3.55 + tier * 0.92 + (index % 2 === 0 ? 0.18 : -0.08);
+        const speedBase = tier === 1 ? -0.26 : tier === 2 ? 0.2 : 0.3;
+
+        return {
+          node,
+          radius,
+          speed: speedBase + (index % 5) * 0.014,
+          phase: index * 2.399963 + tier * 0.63,
+          wobble: 0.2 + tier * 0.08,
+          altitude: (index % 4) * 0.08 - 0.16,
+          tilt: (tier - 1) * 0.22 + (index % 3) * 0.04 - 0.06,
+        };
+      }),
     [nodes],
   );
 
   return (
     <>
-      <ambientLight intensity={0.82} />
+      <ambientLight intensity={0.86} />
       <directionalLight
         castShadow
-        position={[7.4, 8.8, 6.4]}
-        intensity={1.34}
+        position={[8, 8.5, 6.2]}
+        intensity={1.28}
         color="#dbeafe"
       />
       <pointLight
-        position={[-5.4, -3.4, -3.8]}
-        intensity={0.95}
+        position={[-6.2, -3.6, -4.2]}
+        intensity={0.86}
         color="#22d3ee"
       />
-      <pointLight position={[0.4, 0.3, 2.1]} intensity={1.95} color="#818cf8" />
+      <pointLight position={[0.2, 0.4, 2.8]} intensity={1.72} color="#818cf8" />
 
       <Stars
-        radius={24}
-        depth={32}
-        count={900}
-        factor={2.8}
+        radius={27}
+        depth={34}
+        count={980}
+        factor={2.9}
         saturation={0}
         fade
-        speed={1.2}
+        speed={0.85}
       />
 
       <Sparkles
-        count={78}
-        speed={0.45}
-        size={2.8}
-        scale={[10, 5, 10]}
+        count={96}
+        speed={0.38}
+        size={2.4}
+        scale={[11, 6, 11]}
         color="#a5f3fc"
       />
 
-      <group rotation={[Math.PI / 5.5, 0.28, 0.04]}>
-        <mesh rotation={[Math.PI / 2, 0, 0]} scale={[1.4, 0.81, 1]}>
-          <torusGeometry args={[3.05, 0.018, 16, 300]} />
+      <group rotation={[Math.PI / 5.7, 0.18, 0.03]}>
+        <mesh rotation={[Math.PI / 2, 0, 0]} scale={[1.32, 0.8, 1]}>
+          <torusGeometry args={[3.55, 0.015, 16, 320]} />
           <meshStandardMaterial
             color="#94a3b8"
             emissive="#60a5fa"
-            emissiveIntensity={0.22}
+            emissiveIntensity={0.18}
             transparent
-            opacity={0.58}
+            opacity={0.54}
           />
         </mesh>
 
-        <mesh rotation={[Math.PI / 2, 0, 0]} scale={[1.7, 0.85, 1]}>
-          <torusGeometry args={[3.78, 0.016, 16, 300]} />
+        <mesh rotation={[Math.PI / 2, 0, 0]} scale={[1.58, 0.84, 1]}>
+          <torusGeometry args={[4.32, 0.013, 16, 320]} />
           <meshStandardMaterial
             color="#cbd5e1"
             emissive="#93c5fd"
-            emissiveIntensity={0.18}
+            emissiveIntensity={0.14}
             transparent
-            opacity={0.46}
+            opacity={0.42}
           />
         </mesh>
 
-        <mesh rotation={[Math.PI / 2, 0, 0]} scale={[1.95, 0.91, 1]}>
-          <torusGeometry args={[4.26, 0.012, 16, 300]} />
-          <meshBasicMaterial color="#94a3b8" transparent opacity={0.26} />
+        <mesh rotation={[Math.PI / 2, 0, 0]} scale={[1.82, 0.89, 1]}>
+          <torusGeometry args={[5.02, 0.011, 16, 320]} />
+          <meshBasicMaterial color="#94a3b8" transparent opacity={0.24} />
         </mesh>
 
-        {innerNodes.map((node, index) => (
+        {orbitConfigs.map((config) => (
           <OrbitingBadge
-            key={`inner-${node.name}`}
-            node={node}
-            radius={3.05}
-            speed={0.48 + index * 0.03}
-            phase={(index / Math.max(1, innerNodes.length)) * Math.PI * 2}
-            wobble={0.28}
-          />
-        ))}
-
-        {outerNodes.map((node, index) => (
-          <OrbitingBadge
-            key={`outer-${node.name}`}
-            node={node}
-            radius={3.78}
-            speed={-0.34 - index * 0.024}
-            phase={(index / Math.max(1, outerNodes.length)) * Math.PI * 2}
-            wobble={0.34}
+            key={config.node.name}
+            node={config.node}
+            radius={config.radius}
+            speed={config.speed}
+            phase={config.phase}
+            wobble={config.wobble}
+            altitude={config.altitude}
+            tilt={config.tilt}
           />
         ))}
       </group>
 
-      <Float speed={1.1} rotationIntensity={0.16} floatIntensity={0.46}>
+      <Float speed={0.95} rotationIntensity={0.12} floatIntensity={0.38}>
         <PlanetCore coreTagline={coreTagline} coreName={coreName} />
       </Float>
 
@@ -323,19 +397,19 @@ function PlanetSceneContent({
         position={[0, -2.5, 0]}
         receiveShadow
       >
-        <circleGeometry args={[5.5, 80]} />
-        <shadowMaterial transparent opacity={0.25} />
+        <circleGeometry args={[6.25, 88]} />
+        <shadowMaterial transparent opacity={0.24} />
       </mesh>
 
       <OrbitControls
         enablePan={false}
         enableZoom={false}
         autoRotate
-        autoRotateSpeed={0.26}
+        autoRotateSpeed={0.2}
         enableDamping
         dampingFactor={0.05}
-        minPolarAngle={Math.PI / 2.25}
-        maxPolarAngle={Math.PI / 1.86}
+        minPolarAngle={Math.PI / 2.3}
+        maxPolarAngle={Math.PI / 1.9}
       />
     </>
   );
@@ -343,14 +417,14 @@ function PlanetSceneContent({
 
 export function IntegrationPlanetScene(props: IntegrationPlanetSceneProps) {
   return (
-    <div className="relative mx-auto h-[29rem] w-full max-w-[44rem] overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_52%_43%,hsl(var(--primary)/0.24),hsl(var(--background))_68%)] shadow-[0_42px_140px_-56px_hsl(var(--primary)/0.95)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(125,211,252,0.22),transparent_40%),radial-gradient(circle_at_80%_18%,rgba(129,140,248,0.2),transparent_35%)]" />
+    <div className="relative mx-auto h-[30rem] w-full max-w-[46rem] overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_52%_43%,hsl(var(--primary)/0.22),hsl(var(--background))_70%)] shadow-[0_44px_150px_-62px_hsl(var(--primary)/0.95)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(125,211,252,0.2),transparent_40%),radial-gradient(circle_at_80%_18%,rgba(129,140,248,0.2),transparent_35%)]" />
 
       <Canvas
         shadows
-        dpr={[1, 1.6]}
+        dpr={[1, 1.55]}
         gl={{ antialias: true, alpha: true }}
-        camera={{ position: [0, 2.45, 8.8], fov: 41 }}
+        camera={{ position: [0, 2.8, 10.2], fov: 38 }}
       >
         <PlanetSceneContent {...props} />
       </Canvas>

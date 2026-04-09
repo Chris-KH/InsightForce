@@ -98,14 +98,14 @@ const INTEGRATION_VISUALS: Record<string, IntegrationVisual> = {
 };
 
 const LazyIntegrationPlanetScene = lazy(() =>
-  import("./IntegrationPlanetScene").then((module) => ({
+  import("./IntegrationPlanetScene.tsx").then((module) => ({
     default: module.IntegrationPlanetScene,
   })),
 );
 
 function PlanetSceneFallback() {
   return (
-    <div className="relative mx-auto h-[27rem] w-full max-w-[42rem] overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_52%_45%,hsl(var(--primary)/0.24),hsl(var(--background))_62%)] shadow-[0_34px_110px_-46px_hsl(var(--primary)/0.85)]">
+    <div className="relative mx-auto h-120 w-full max-w-184 overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_52%_45%,hsl(var(--primary)/0.24),hsl(var(--background))_64%)] shadow-[0_44px_150px_-62px_hsl(var(--primary)/0.95)]">
       <motion.div
         className="absolute inset-[16%] rounded-full border border-primary/35"
         animate={{ scale: [1, 1.06, 1], opacity: [0.45, 0.85, 0.45] }}
@@ -117,7 +117,7 @@ function PlanetSceneFallback() {
         transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
       />
       <motion.div
-        className="absolute top-1/2 left-1/2 h-42 w-42 -translate-x-1/2 -translate-y-1/2 rounded-full bg-linear-to-br from-indigo-400 via-sky-400 to-cyan-300 shadow-[0_26px_95px_-35px_hsl(var(--primary)/0.95)]"
+        className="absolute top-1/2 left-1/2 h-46 w-46 -translate-x-1/2 -translate-y-1/2 rounded-full bg-linear-to-br from-indigo-400 via-sky-400 to-cyan-300 shadow-[0_30px_100px_-30px_hsl(var(--primary)/0.95)]"
         animate={{ scale: [1, 1.05, 1], y: [0, -6, 0] }}
         transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
       />
