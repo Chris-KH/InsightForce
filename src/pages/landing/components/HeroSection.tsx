@@ -4,17 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
-  HERO_IMAGE,
   HERO_IMPACT_STATS,
   HERO_ROTATING_WORDS,
   TRUSTED_AVATARS,
 } from "../data";
 import { AsciiSphereCanvas } from "./AsciiSphereCanvas";
-import { AsciiWaveCanvas } from "./AsciiWaveCanvas";
 import { SectionGridOverlay } from "./SectionGridOverlay";
 import { motion } from "motion/react";
 import { NavLink } from "react-router";
 import { useEffect, useMemo, useState } from "react";
+import HERO_IMAGE from "@/assets/hero-section.png";
 
 export function HeroSection() {
   const [activeWordIndex, setActiveWordIndex] = useState(0);
@@ -68,14 +67,6 @@ export function HeroSection() {
           transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
         >
           <AsciiSphereCanvas />
-        </motion.div>
-
-        <motion.div
-          className="absolute bottom-8 left-4 hidden h-52 w-96 md:block"
-          animate={{ opacity: [0.16, 0.34, 0.16], x: [0, 12, 0] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <AsciiWaveCanvas />
         </motion.div>
       </div>
 
@@ -192,7 +183,7 @@ export function HeroSection() {
                   transition={{ delay: 0.36 + index * 0.08, duration: 0.45 }}
                 >
                   <Card className="border-border/70 bg-background/78 shadow-sm backdrop-blur-md">
-                    <CardContent className="px-4 py-3">
+                    <CardContent className="px-4">
                       <p className="font-heading text-[1.55rem] leading-none font-semibold text-foreground">
                         {item.value}
                       </p>
