@@ -9,6 +9,8 @@ import type {
   UploadPostGenerateJwtRequest,
   UploadPostGenerateJwtResponse,
   UploadPostHistoryEnvelope,
+  UploadPostPublishEnvelope,
+  UploadPostPublishRequest,
   UploadPostPostAnalyticsEnvelope,
   UploadPostProfileResponse,
   UploadPostProfilesResponse,
@@ -98,6 +100,66 @@ export function validateUploadPostJwt(payload: UploadPostValidateJwtRequest) {
   return httpClient.post<UploadPostValidateJwtResponse>(
     `${UPLOAD_POST_BASE_PATH}/jwt/validate`,
     payload,
+  );
+}
+
+export function publishUploadPostContent(payload: UploadPostPublishRequest) {
+  const formData = new FormData();
+
+  formData.append("user", payload.user.trim());
+  formData.append(
+    "platforms",
+    payload.platforms
+      .map((platform) => String(platform).trim())
+      .filter(Boolean)
+      .join(","),
+  );
+  formData.append("title", payload.title.trim());
+
+  const description = payload.description?.trim();
+  if (description) {
+    formData.append("description", description);
+  }
+
+  const tags = (payload.tags ?? []).map((tag) => tag.trim()).filter(Boolean);
+  if (tags.length > 0) {
+    formData.append("tags", tags.join(","));
+  }
+
+  const firstComment = payload.first_comment?.trim();
+  if (firstComment) {
+    formData.append("first_comment", firstComment);
+  }
+
+  const schedulePost = payload.schedule_post?.trim();
+  if (schedulePost) {
+    formData.append("schedule_post", schedulePost);
+  }
+
+  const linkUrl = payload.link_url?.trim();
+  if (linkUrl) {
+    formData.append("link_url", linkUrl);
+  }
+
+  const subreddit = payload.subreddit?.trim();
+  if (subreddit) {
+    formData.append("subreddit", subreddit);
+  }
+
+  const assetUrls = (payload.asset_urls ?? [])
+    .map((url) => url.trim())
+    .filter(Boolean);
+  if (assetUrls.length > 0) {
+    formData.append("asset_urls", assetUrls.join(","));
+  }
+
+  for (const file of payload.files ?? []) {
+    formData.append("files", file);
+  }
+
+  return httpClient.post<UploadPostPublishEnvelope>(
+    `${UPLOAD_POST_BASE_PATH}/publish`,
+    formData,
   );
 }
 

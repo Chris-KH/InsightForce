@@ -1,10 +1,15 @@
 import {
+  Activity,
+  Brain,
   CircleGauge,
   Compass,
   FolderKanban,
   LayoutDashboard,
   type LucideIcon,
+  MessageCircle,
   Shield,
+  ShieldCheck,
+  Send,
   Wallet,
   Bot,
   Users,
@@ -16,10 +21,11 @@ export type LocalizedLabel = {
 };
 
 export type NavItem = {
-  key: "dashboard" | "audience" | "strategy" | "finance" | "automation";
+  key: string;
   label: LocalizedLabel;
   path: string;
   icon: LucideIcon;
+  group: "primary" | "focus";
 };
 
 export type AgentItem = {
@@ -41,30 +47,73 @@ export const APP_NAV_ITEMS: NavItem[] = [
     label: { en: "Dashboard", vi: "Tổng quan" },
     path: "/app/dashboard",
     icon: LayoutDashboard,
+    group: "primary",
   },
   {
     key: "audience",
     label: { en: "Audience", vi: "Khách hàng" },
     path: "/app/audience",
     icon: Users,
+    group: "primary",
   },
   {
     key: "strategy",
     label: { en: "Strategy", vi: "Chiến lược" },
     path: "/app/strategy",
     icon: Compass,
+    group: "primary",
   },
   {
     key: "finance",
     label: { en: "Finance", vi: "Tài chính" },
     path: "/app/finance",
     icon: Wallet,
+    group: "primary",
   },
   {
     key: "automation",
     label: { en: "Automation", vi: "Tự động hóa" },
     path: "/app/automation",
     icon: Bot,
+    group: "primary",
+  },
+];
+
+export const APP_FOCUS_NAV_ITEMS: NavItem[] = [
+  {
+    key: "ops-control",
+    label: { en: "Ops Control", vi: "Điều phối vận hành" },
+    path: "/app/ops-control",
+    icon: Activity,
+    group: "focus",
+  },
+  {
+    key: "audience-signals",
+    label: { en: "Audience Signals", vi: "Tín hiệu khách hàng" },
+    path: "/app/audience-signals",
+    icon: MessageCircle,
+    group: "focus",
+  },
+  {
+    key: "strategy-lab",
+    label: { en: "Strategy Lab", vi: "Phòng lab chiến lược" },
+    path: "/app/strategy-lab",
+    icon: Brain,
+    group: "focus",
+  },
+  {
+    key: "finance-control",
+    label: { en: "Finance Control", vi: "Điều phối tài chính" },
+    path: "/app/finance-control",
+    icon: ShieldCheck,
+    group: "focus",
+  },
+  {
+    key: "publish-ops",
+    label: { en: "Publish Ops", vi: "Vận hành publish" },
+    path: "/app/publish-ops",
+    icon: Send,
+    group: "focus",
   },
 ];
 
@@ -106,24 +155,3 @@ export const APP_SIDEBAR_STATUS: SidebarStatusItem[] = [
     tone: "tertiary",
   },
 ];
-
-export const APP_HEADER_TABS = [
-  {
-    key: "reports",
-    label: { en: "Reports", vi: "Báo cáo" },
-    to: "/app/dashboard",
-    match: ["/app/dashboard", "/app/automation", "/app/audience"],
-  },
-  {
-    key: "finance",
-    label: { en: "Finance", vi: "Tài chính" },
-    to: "/app/finance",
-    match: ["/app/finance"],
-  },
-  {
-    key: "settings",
-    label: { en: "Settings", vi: "Cài đặt" },
-    to: "/app/strategy",
-    match: ["/app/strategy"],
-  },
-] as const;

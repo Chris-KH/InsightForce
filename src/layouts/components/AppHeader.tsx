@@ -1,26 +1,21 @@
-import { Link, NavLink, useLocation } from "react-router";
-import { Bell, Search, UserCircle2 } from "lucide-react";
+import { Link, NavLink } from "react-router";
+import { Bell, UserCircle2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { MobileSidebarSheet } from "@/layouts/components/MobileSidebarSheet";
-import { APP_HEADER_TABS } from "@/layouts/components/app-layout-data";
+import {
+  APP_FOCUS_NAV_ITEMS,
+  APP_NAV_ITEMS,
+} from "@/layouts/components/app-layout-data";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
 
 export function AppHeader() {
   const copy = useBilingual();
-  const location = useLocation();
-
-  const activeTopTab =
-    APP_HEADER_TABS.find((tab) =>
-      tab.match.some((routePrefix) =>
-        location.pathname.startsWith(routePrefix),
-      ),
-    )?.key ?? "reports";
+  const headerNavItems = [...APP_NAV_ITEMS, ...APP_FOCUS_NAV_ITEMS];
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-xl">
@@ -39,32 +34,28 @@ export function AppHeader() {
           </Link>
         </div>
 
-        <div className="relative hidden max-w-sm flex-1 md:block">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            aria-label={copy("Search workspace", "Tìm kiếm không gian")}
-            placeholder={copy(
-              "Search financials...",
-              "Tìm kiếm dữ liệu tài chính...",
-            )}
-            className="h-10 rounded-full border-border/70 bg-background/80 pl-10 shadow-none"
-          />
-        </div>
+        <nav className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto rounded-full border border-border/70 bg-muted/35 p-1 md:flex">
+          {headerNavItems.map((item) => {
+            const Icon = item.icon;
 
-        <nav className="ml-auto hidden items-center gap-1 rounded-full border border-border/70 bg-muted/35 p-1 md:flex">
-          {APP_HEADER_TABS.map((tab) => {
             return (
               <NavLink
-                key={tab.key}
-                to={tab.to}
-                className={cn(
-                  "rounded-full px-3.5 py-1.5 text-sm transition-all",
-                  activeTopTab === tab.key
-                    ? "bg-background text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  cn(
+                    "flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm transition-all",
+                    isActive
+                      ? "bg-background text-foreground shadow-xs"
+                      : "text-muted-foreground hover:text-foreground",
+                    item.group === "focus" &&
+                      !isActive &&
+                      "text-primary/85 hover:text-primary",
+                  )
+                }
               >
-                {copy(tab.label.en, tab.label.vi)}
+                <Icon className="size-3.5" />
+                {copy(item.label.en, item.label.vi)}
               </NavLink>
             );
           })}
@@ -78,7 +69,7 @@ export function AppHeader() {
           {copy("3 agents online", "3 bot đang hoạt động")}
         </Badge>
 
-        <div className="ml-auto flex items-center gap-1 md:ml-0 md:gap-2">
+        <div className="ml-auto flex items-center gap-1 md:gap-2">
           <Button variant="ghost" size="icon-sm">
             <Bell />
             <span className="sr-only">

@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { AppNavLink } from "@/layouts/components/AppNavLink";
 import {
   APP_AGENT_ITEMS,
+  APP_FOCUS_NAV_ITEMS,
   APP_NAV_ITEMS,
   APP_SIDEBAR_STATUS,
 } from "@/layouts/components/app-layout-data";
@@ -85,6 +86,21 @@ export function MobileSidebarSheet() {
 
         <div className="mt-6 flex flex-col gap-2">
           {APP_NAV_ITEMS.map((item) => (
+            <AppNavLink
+              key={item.path}
+              to={item.path}
+              label={copy(item.label.en, item.label.vi)}
+              icon={item.icon}
+              mobile
+            />
+          ))}
+        </div>
+
+        <div className="mt-4 flex flex-col gap-2">
+          <p className="px-1 text-[11px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+            {copy("Focus Pages", "Trang chuyên sâu")}
+          </p>
+          {APP_FOCUS_NAV_ITEMS.map((item) => (
             <AppNavLink
               key={item.path}
               to={item.path}

@@ -1,10 +1,9 @@
 import { Link } from "react-router";
 
-import { Badge } from "@/components/ui/badge";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { AppNavLink } from "@/layouts/components/AppNavLink";
 import {
-  APP_AGENT_ITEMS,
+  APP_FOCUS_NAV_ITEMS,
   APP_NAV_ITEMS,
   APP_SIDEBAR_STATUS,
 } from "@/layouts/components/app-layout-data";
@@ -84,50 +83,22 @@ export function AppSidebar() {
               ))}
             </nav>
           </section>
-        </div>
 
-        <div className="border-t border-border/60 p-4">
-          <p className="px-1 text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-            {copy("Core Guards", "Hệ thống phòng vệ cốt lõi")}
-          </p>
-          <div className="mt-3 flex flex-col gap-2">
-            {APP_AGENT_ITEMS.map((agent) => {
-              const Icon = agent.icon;
-              const isActive = agent.status === "Active";
-
-              return (
-                <div
-                  key={agent.label.en}
-                  className="rounded-xl border border-border/70 bg-background/70 px-3 py-2.5"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5 text-sm">
-                      <Icon className="size-4 text-primary" />
-                      <span className="font-medium text-foreground">
-                        {copy(agent.label.en, agent.label.vi)}
-                      </span>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "rounded-full",
-                        isActive
-                          ? "border-primary/25 text-primary"
-                          : "border-border/80 text-muted-foreground",
-                      )}
-                    >
-                      {isActive
-                        ? copy("Active", "Đang hoạt động")
-                        : copy("Idle", "Tạm nghỉ")}
-                    </Badge>
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {copy(agent.detail.en, agent.detail.vi)}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+          <section className="mt-6">
+            <p className="px-1 text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+              {copy("Focus Pages", "Trang chuyên sâu")}
+            </p>
+            <nav className="mt-2 flex flex-col gap-1">
+              {APP_FOCUS_NAV_ITEMS.map((item) => (
+                <AppNavLink
+                  key={item.path}
+                  to={item.path}
+                  label={copy(item.label.en, item.label.vi)}
+                  icon={item.icon}
+                />
+              ))}
+            </nav>
+          </section>
         </div>
       </div>
     </aside>

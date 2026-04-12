@@ -365,6 +365,52 @@ export type UploadPostValidateJwtResponse = {
   profile?: UploadPostProfile | null;
 };
 
+export type UploadPostPublishPlatform =
+  | ContentPlatform
+  | "instagram"
+  | "facebook"
+  | "x"
+  | "threads"
+  | "linkedin"
+  | "bluesky"
+  | "reddit"
+  | "pinterest"
+  | "google_business";
+
+export type UploadPostPublishRequest = {
+  user: string;
+  platforms: UploadPostPublishPlatform[];
+  title: string;
+  description?: string | null;
+  tags?: string[];
+  first_comment?: string | null;
+  schedule_post?: string | null;
+  link_url?: string | null;
+  subreddit?: string | null;
+  asset_urls?: string[];
+  files?: File[];
+};
+
+export type UploadPostPublishProviderPayload = {
+  success?: boolean;
+  message?: string;
+  request_id?: string;
+  total_platforms?: number;
+  job_id?: string;
+};
+
+export type UploadPostPublishPayload = {
+  success: boolean;
+  post_kind: string;
+  platforms: string[];
+  payload: UploadPostPublishProviderPayload;
+};
+
+export type UploadPostPublishEnvelope = {
+  source: string;
+  payload: UploadPostPublishPayload;
+};
+
 export type UploadPostHistoryItem = {
   user_email: string;
   profile_username: string;

@@ -22,6 +22,7 @@ export const queryKeys = {
   uploadPost: {
     account: ["upload-post", "account", "me"] as const,
     profiles: ["upload-post", "profiles"] as const,
+    publish: ["upload-post", "publish"] as const,
     profile: (profileUsername: string) =>
       ["upload-post", "profile", profileUsername] as const,
     history: (page: number, limit: number) =>

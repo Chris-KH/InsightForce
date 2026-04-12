@@ -101,6 +101,41 @@ export const router = createBrowserRouter([
                 .AutomationPage,
             }),
           },
+          {
+            path: "ops-control",
+            lazy: async () => ({
+              Component: (await import("@/pages/focus/OpsControlPage"))
+                .OpsControlPage,
+            }),
+          },
+          {
+            path: "audience-signals",
+            lazy: async () => ({
+              Component: (await import("@/pages/focus/AudienceSignalsPage"))
+                .AudienceSignalsPage,
+            }),
+          },
+          {
+            path: "strategy-lab",
+            lazy: async () => ({
+              Component: (await import("@/pages/focus/StrategyLabPage"))
+                .StrategyLabPage,
+            }),
+          },
+          {
+            path: "finance-control",
+            lazy: async () => ({
+              Component: (await import("@/pages/focus/FinanceControlPage"))
+                .FinanceControlPage,
+            }),
+          },
+          {
+            path: "publish-ops",
+            lazy: async () => ({
+              Component: (await import("@/pages/focus/PublishOpsPage"))
+                .PublishOpsPage,
+            }),
+          },
         ],
       },
     ],

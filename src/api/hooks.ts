@@ -29,6 +29,7 @@ import {
   getUploadPostProfileAnalytics,
   getUploadPostProfiles,
   getUploadPostTotalImpressions,
+  publishUploadPostContent,
   validateUploadPostJwt,
   type GetUploadPostHistoryParams,
 } from "@/api/upload-post.api";
@@ -493,6 +494,23 @@ export function useValidateUploadPostJwtMutation() {
   return useMutation({
     mutationKey: ["upload-post", "jwt", "validate"],
     mutationFn: validateUploadPostJwt,
+  });
+}
+
+export function useUploadPostPublishMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: queryKeys.uploadPost.publish,
+    mutationFn: publishUploadPostContent,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["upload-post", "history"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["upload-post", "post-analytics"],
+        }),
+      ]);
+    },
   });
 }
 
