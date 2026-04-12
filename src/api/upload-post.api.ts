@@ -2,10 +2,19 @@ import { httpClient } from "@/api/http-client";
 import type {
   ContentPlatform,
   UploadPostAnalyticsEnvelope,
+  UploadPostCreateProfileRequest,
   UploadPostCommentsEnvelope,
+  UploadPostCurrentUserResponse,
+  UploadPostDeleteProfileResponse,
+  UploadPostGenerateJwtRequest,
+  UploadPostGenerateJwtResponse,
   UploadPostHistoryEnvelope,
   UploadPostPostAnalyticsEnvelope,
+  UploadPostProfileResponse,
+  UploadPostProfilesResponse,
   UploadPostTotalImpressionsEnvelope,
+  UploadPostValidateJwtRequest,
+  UploadPostValidateJwtResponse,
 } from "@/api/types";
 
 const UPLOAD_POST_BASE_PATH = "/api/v1/upload-post";
@@ -44,6 +53,53 @@ export type GetUploadPostCommentsParams = {
   postId?: string;
   postUrl?: string;
 };
+
+export function getUploadPostAccount() {
+  return httpClient.get<UploadPostCurrentUserResponse>(
+    `${UPLOAD_POST_BASE_PATH}/account/me`,
+  );
+}
+
+export function createUploadPostProfile(
+  payload: UploadPostCreateProfileRequest,
+) {
+  return httpClient.post<UploadPostProfileResponse>(
+    `${UPLOAD_POST_BASE_PATH}/users`,
+    payload,
+  );
+}
+
+export function getUploadPostProfiles() {
+  return httpClient.get<UploadPostProfilesResponse>(
+    `${UPLOAD_POST_BASE_PATH}/users`,
+  );
+}
+
+export function getUploadPostProfile(profileUsername: string) {
+  return httpClient.get<UploadPostProfileResponse>(
+    `${UPLOAD_POST_BASE_PATH}/users/${encodeURIComponent(profileUsername)}`,
+  );
+}
+
+export function deleteUploadPostProfile(profileUsername: string) {
+  return httpClient.delete<UploadPostDeleteProfileResponse>(
+    `${UPLOAD_POST_BASE_PATH}/users/${encodeURIComponent(profileUsername)}`,
+  );
+}
+
+export function generateUploadPostJwt(payload: UploadPostGenerateJwtRequest) {
+  return httpClient.post<UploadPostGenerateJwtResponse>(
+    `${UPLOAD_POST_BASE_PATH}/jwt/generate`,
+    payload,
+  );
+}
+
+export function validateUploadPostJwt(payload: UploadPostValidateJwtRequest) {
+  return httpClient.post<UploadPostValidateJwtResponse>(
+    `${UPLOAD_POST_BASE_PATH}/jwt/validate`,
+    payload,
+  );
+}
 
 export function getUploadPostHistory(params: GetUploadPostHistoryParams = {}) {
   return httpClient.get<UploadPostHistoryEnvelope>(

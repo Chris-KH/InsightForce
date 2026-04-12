@@ -5,10 +5,10 @@ import {
   CometRailOverlay,
   FloatingShardField,
   OrbitHalo,
-  PanelOrbital3D,
   SignalWaveCanvas,
   SketchFlowLines,
 } from "@/components/app-futuristic";
+import { PanelOrbital3D } from "@/components/app-orbital-3d";
 
 export function AppBackdrop() {
   return (

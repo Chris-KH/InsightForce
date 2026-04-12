@@ -9,11 +9,18 @@ import {
   type UploadPostComment,
 } from "@/api";
 import {
+  BarTrendChart,
+  DoughnutTrendChart,
+  HeatMatrix,
+  RadarTrendChart,
+} from "@/components/app-data-viz";
+import {
   InlineQueryState,
   MetricCardsSkeleton,
   PanelRowsSkeleton,
   QueryStateCard,
 } from "@/components/app-query-state";
+import { PlatformBadge } from "@/components/platform-badge";
 import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
 import { useBilingual } from "@/hooks/use-bilingual";
@@ -22,7 +29,9 @@ import {
   formatDateTime,
   formatPercentFromRatio,
 } from "@/lib/insight-formatters";
+import { getPlatformSurfaceClassName } from "@/lib/platform-theme";
 import { getQueryErrorMessage } from "@/lib/query-error";
+import { cn } from "@/lib/utils";
 
 type UnifiedSegment = {
   platform: "tiktok" | "youtube";
@@ -57,14 +66,22 @@ export function AudiencePage() {
     platform: "tiktok",
     user: profileUsername,
     postId: latestTikTokPost?.platform_post_id,
-    enabled: Boolean(profileUsername && latestTikTokPost?.platform_post_id),
+    postUrl: latestTikTokPost?.post_url,
+    enabled: Boolean(
+      profileUsername &&
+      (latestTikTokPost?.platform_post_id || latestTikTokPost?.post_url),
+    ),
   });
 
   const youTubeCommentsQuery = useUploadPostCommentsQuery({
     platform: "youtube",
     user: profileUsername,
     postId: latestYouTubePost?.platform_post_id,
-    enabled: Boolean(profileUsername && latestYouTubePost?.platform_post_id),
+    postUrl: latestYouTubePost?.post_url,
+    enabled: Boolean(
+      profileUsername &&
+      (latestYouTubePost?.platform_post_id || latestYouTubePost?.post_url),
+    ),
   });
 
   const allQueries = [
@@ -163,6 +180,85 @@ export function AudiencePage() {
     .sort((left, right) => right.views - left.views)
     .slice(0, 6);
 
+  const segmentRadarData = useMemo(
+    () => ({
+      labels: audienceSegments
+        .slice(0, 6)
+        .map((segment) => segment.segment.replace(/\s+/g, " ")),
+      datasets: [
+        {
+          label: copy("Affinity", "Độ ái lực"),
+          data: audienceSegments
+            .slice(0, 6)
+            .map((segment) => segment.affinityScore * 100),
+          borderColor: "rgba(16, 185, 129, 0.95)",
+          backgroundColor: "rgba(16, 185, 129, 0.25)",
+          borderWidth: 2,
+          pointRadius: 2,
+        },
+      ],
+    }),
+    [audienceSegments, copy],
+  );
+
+  const topicGrowthBarData = useMemo(
+    () => ({
+      labels: topicSignals.slice(0, 8).map((topic) => topic.keyword),
+      datasets: [
+        {
+          label: copy("Growth %", "Tăng trưởng %"),
+          data: topicSignals
+            .slice(0, 8)
+            .map((topic) => topic.increase_percentage),
+          backgroundColor: "rgba(56, 189, 248, 0.75)",
+          borderRadius: 10,
+        },
+      ],
+    }),
+    [copy, topicSignals],
+  );
+
+  const commentsMixData = useMemo(() => {
+    const tikTokCount = latestComments.filter(
+      (item) => item.platform === "tiktok",
+    ).length;
+    const youTubeCount = latestComments.filter(
+      (item) => item.platform === "youtube",
+    ).length;
+
+    return {
+      labels: ["TikTok", "YouTube"],
+      datasets: [
+        {
+          data: [tikTokCount, youTubeCount],
+          backgroundColor: [
+            "rgba(16, 185, 129, 0.78)",
+            "rgba(59, 130, 246, 0.78)",
+          ],
+          borderWidth: 0,
+        },
+      ],
+    };
+  }, [latestComments]);
+
+  const trendVideoHeatMap = useMemo(() => {
+    const items = trendingVideos.slice(0, 6);
+    const maxViews = Math.max(...items.map((video) => video.views), 1);
+
+    return {
+      rows: items.map((video) =>
+        video.title.length > 28
+          ? `${video.title.slice(0, 28)}...`
+          : video.title,
+      ),
+      columns: [copy("Reach", "Độ phủ"), copy("Engagement", "Tương tác")],
+      values: items.map((video) => [
+        (video.views / maxViews) * 100,
+        video.engagementRate * 100,
+      ]),
+    };
+  }, [copy, trendingVideos]);
+
   return (
     <div className="grid gap-8">
       <SectionHeader
@@ -247,6 +343,48 @@ export function AudiencePage() {
         </div>
       )}
 
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <PanelCard
+          title={copy("Segment Affinity Radar", "Radar ái lực phân khúc")}
+          description={copy(
+            "Visual profile of top audience segments by affinity score.",
+            "Hồ sơ trực quan các phân khúc nổi bật theo điểm ái lực.",
+          )}
+        >
+          {audienceSegments.length > 0 ? (
+            <RadarTrendChart data={segmentRadarData} />
+          ) : (
+            <InlineQueryState
+              state="empty"
+              message={copy(
+                "No segment data available for radar chart.",
+                "Chưa có dữ liệu phân khúc để vẽ radar.",
+              )}
+            />
+          )}
+        </PanelCard>
+
+        <PanelCard
+          title={copy("Comment Source Mix", "Tỷ trọng nguồn bình luận")}
+          description={copy(
+            "Distribution of latest comments by platform.",
+            "Phân bổ bình luận mới nhất theo nền tảng.",
+          )}
+        >
+          {latestComments.length > 0 ? (
+            <DoughnutTrendChart data={commentsMixData} />
+          ) : (
+            <InlineQueryState
+              state="empty"
+              message={copy(
+                "No comment data available for charting.",
+                "Chưa có dữ liệu bình luận để dựng biểu đồ.",
+              )}
+            />
+          )}
+        </PanelCard>
+      </div>
+
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <PanelCard
           title={copy("High-Affinity Segments", "Phân khúc ái lực cao")}
@@ -262,18 +400,16 @@ export function AudiencePage() {
               audienceSegments.slice(0, 8).map((segment) => (
                 <div
                   key={`${segment.platform}-${segment.segment}`}
-                  className="rounded-2xl border border-border/55 bg-background/55 p-4"
+                  className={cn(
+                    "rounded-2xl border border-border/55 bg-background/55 p-4",
+                    getPlatformSurfaceClassName(segment.platform),
+                  )}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-medium text-foreground">
                       {segment.segment}
                     </p>
-                    <Badge
-                      variant="outline"
-                      className="rounded-full capitalize"
-                    >
-                      {segment.platform}
-                    </Badge>
+                    <PlatformBadge platform={segment.platform} />
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {copy("Affinity", "Độ ái lực")}:{" "}
@@ -313,15 +449,13 @@ export function AudiencePage() {
               latestComments.map(({ platform, comment }) => (
                 <div
                   key={`${platform}-${comment.id}`}
-                  className="rounded-2xl border border-border/55 bg-background/55 p-4"
+                  className={cn(
+                    "rounded-2xl border border-border/55 bg-background/55 p-4",
+                    getPlatformSurfaceClassName(platform),
+                  )}
                 >
                   <div className="mb-2 flex items-center justify-between gap-2">
-                    <Badge
-                      variant="outline"
-                      className="rounded-full capitalize"
-                    >
-                      {platform}
-                    </Badge>
+                    <PlatformBadge platform={platform} />
                     <p className="text-xs text-muted-foreground">
                       {formatDateTime(comment.timestamp)}
                     </p>
@@ -359,26 +493,31 @@ export function AudiencePage() {
             {isInitialLoading ? (
               <PanelRowsSkeleton rows={4} />
             ) : topicSignals.length > 0 ? (
-              topicSignals.map((topic) => (
-                <div
-                  key={topic.topic_id}
-                  className="grid gap-2 rounded-2xl border border-border/55 bg-background/55 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
-                >
-                  <div>
-                    <p className="font-medium text-foreground">{topic.topic}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {topic.keyword}
-                    </p>
+              <>
+                <BarTrendChart data={topicGrowthBarData} />
+                {topicSignals.slice(0, 5).map((topic) => (
+                  <div
+                    key={topic.topic_id}
+                    className="grid gap-2 rounded-2xl border border-border/55 bg-background/55 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+                  >
+                    <div>
+                      <p className="font-medium text-foreground">
+                        {topic.topic}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {topic.keyword}
+                      </p>
+                    </div>
+                    <div className="text-right text-xs text-muted-foreground">
+                      <p>
+                        +{topic.increase_percentage}%{" "}
+                        {copy("growth", "tăng trưởng")}
+                      </p>
+                      <p>{formatCompactNumber(topic.search_volume)} searches</p>
+                    </div>
                   </div>
-                  <div className="text-right text-xs text-muted-foreground">
-                    <p>
-                      +{topic.increase_percentage}%{" "}
-                      {copy("growth", "tăng trưởng")}
-                    </p>
-                    <p>{formatCompactNumber(topic.search_volume)} searches</p>
-                  </div>
-                </div>
-              ))
+                ))}
+              </>
             ) : (
               <InlineQueryState
                 state="empty"
@@ -402,34 +541,41 @@ export function AudiencePage() {
             {isInitialLoading ? (
               <PanelRowsSkeleton rows={4} />
             ) : trendingVideos.length > 0 ? (
-              trendingVideos.map((video) => (
-                <a
-                  key={`${video.platform}-${video.id}`}
-                  href={video.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block rounded-2xl border border-border/55 bg-background/55 p-4 transition-colors hover:border-primary/35"
-                >
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <Badge
-                      variant="outline"
-                      className="rounded-full capitalize"
-                    >
-                      {video.platform}
-                    </Badge>
-                    <p className="text-xs text-muted-foreground">
-                      {formatPercentFromRatio(video.engagementRate)} engagement
+              <>
+                <HeatMatrix
+                  rows={trendVideoHeatMap.rows}
+                  columns={trendVideoHeatMap.columns}
+                  values={trendVideoHeatMap.values}
+                  valueFormatter={(value) => `${Math.round(value)}%`}
+                />
+                {trendingVideos.slice(0, 4).map((video) => (
+                  <a
+                    key={`${video.platform}-${video.id}`}
+                    href={video.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={cn(
+                      "block rounded-2xl border border-border/55 bg-background/55 p-4 transition-colors hover:border-primary/35",
+                      getPlatformSurfaceClassName(video.platform),
+                    )}
+                  >
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <PlatformBadge platform={video.platform} />
+                      <p className="text-xs text-muted-foreground">
+                        {formatPercentFromRatio(video.engagementRate)}{" "}
+                        engagement
+                      </p>
+                    </div>
+                    <p className="text-sm font-medium text-foreground">
+                      {video.title}
                     </p>
-                  </div>
-                  <p className="text-sm font-medium text-foreground">
-                    {video.title}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Views", "Lượt xem")}:{" "}
-                    {formatCompactNumber(video.views)}
-                  </p>
-                </a>
-              ))
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {copy("Views", "Lượt xem")}:{" "}
+                      {formatCompactNumber(video.views)}
+                    </p>
+                  </a>
+                ))}
+              </>
             ) : (
               <InlineQueryState
                 state="empty"

@@ -37,6 +37,18 @@ export type HealthResponse = {
   service: string;
 };
 
+export type AgentProcessStatus = {
+  name: string;
+  url: string;
+  reachable: boolean;
+  detail: string;
+};
+
+export type AgentsStatusResponse = {
+  status: string;
+  processes: AgentProcessStatus[];
+};
+
 export type TikTokChannelStatus = {
   channel_id: string;
   handle: string;
@@ -288,6 +300,69 @@ export type YouTubeVideosResponse = {
   platform: string;
   averages: YouTubeVideoAverages;
   videos: YouTubeVideo[];
+};
+
+export type UploadPostProfile = {
+  username: string;
+  created_at?: string | null;
+  social_accounts: Record<string, unknown>;
+};
+
+export type UploadPostCurrentUserResponse = {
+  success: boolean;
+  message?: string | null;
+  email?: string | null;
+  plan?: string | null;
+};
+
+export type UploadPostCreateProfileRequest = {
+  username: string;
+};
+
+export type UploadPostProfileResponse = {
+  success: boolean;
+  profile: UploadPostProfile;
+};
+
+export type UploadPostProfilesResponse = {
+  success: boolean;
+  plan?: string | null;
+  limit?: number | null;
+  profiles: UploadPostProfile[];
+};
+
+export type UploadPostDeleteProfileResponse = {
+  success: boolean;
+  message?: string | null;
+};
+
+export type UploadPostGenerateJwtRequest = {
+  username: string;
+  redirect_url?: string | null;
+  logo_image?: string | null;
+  redirect_button_text?: string | null;
+  connect_title?: string | null;
+  connect_description?: string | null;
+  platforms?: string[];
+  show_calendar?: boolean | null;
+  readonly_calendar?: boolean | null;
+};
+
+export type UploadPostGenerateJwtResponse = {
+  success: boolean;
+  access_url: string;
+  duration?: string | null;
+};
+
+export type UploadPostValidateJwtRequest = {
+  jwt_token?: string | null;
+};
+
+export type UploadPostValidateJwtResponse = {
+  success?: boolean | null;
+  isValid?: boolean | null;
+  reason?: string | null;
+  profile?: UploadPostProfile | null;
 };
 
 export type UploadPostHistoryItem = {

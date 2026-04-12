@@ -7,11 +7,17 @@ import {
   useYouTubeTrendsQuery,
 } from "@/api";
 import {
+  BarTrendChart,
+  HeatMatrix,
+  LineTrendChart,
+} from "@/components/app-data-viz";
+import {
   InlineQueryState,
   MetricCardsSkeleton,
   PanelRowsSkeleton,
   QueryStateCard,
 } from "@/components/app-query-state";
+import { PlatformBadge } from "@/components/platform-badge";
 import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
 import { useBilingual } from "@/hooks/use-bilingual";
@@ -20,7 +26,9 @@ import {
   formatPercentFromRatio,
   formatPercentValue,
 } from "@/lib/insight-formatters";
+import { getPlatformSurfaceClassName } from "@/lib/platform-theme";
 import { getQueryErrorMessage } from "@/lib/query-error";
+import { cn } from "@/lib/utils";
 
 type UnifiedTopic = {
   platform: "tiktok" | "youtube";
@@ -123,6 +131,56 @@ export function StrategyPage() {
     (item) => item.confidenceScore >= 0.85,
   ).length;
 
+  const trendScoreBarData = {
+    labels: trendTopics.slice(0, 8).map((topic) => topic.keyword),
+    datasets: [
+      {
+        label: copy("Trend score", "Điểm xu hướng"),
+        data: trendTopics.slice(0, 8).map((topic) => topic.trendScore),
+        backgroundColor: "rgba(59, 130, 246, 0.75)",
+        borderRadius: 10,
+      },
+    ],
+  };
+
+  const recommendationConfidenceLineData = {
+    labels: recommendations.slice(0, 8).map((_, index) => `${index + 1}`),
+    datasets: [
+      {
+        label: copy("Confidence %", "Độ tin cậy %"),
+        data: recommendations
+          .slice(0, 8)
+          .map((item) => item.confidenceScore * 100),
+        borderColor: "rgba(16, 185, 129, 0.95)",
+        backgroundColor: "rgba(16, 185, 129, 0.18)",
+        tension: 0.35,
+        fill: true,
+        pointRadius: 3,
+      },
+    ],
+  };
+
+  const sourceTopicMatrix = (() => {
+    const topItems = recommendations.slice(0, 5);
+    const allSourceTopics = Array.from(
+      new Set(topItems.flatMap((item) => item.sourceTopics)),
+    ).slice(0, 5);
+
+    return {
+      rows: topItems.map((item) =>
+        item.contentIdea.length > 26
+          ? `${item.contentIdea.slice(0, 26)}...`
+          : item.contentIdea,
+      ),
+      columns: allSourceTopics,
+      values: topItems.map((item) =>
+        allSourceTopics.map((topic) =>
+          item.sourceTopics.includes(topic) ? item.confidenceScore * 100 : 0,
+        ),
+      ),
+    };
+  })();
+
   return (
     <div className="grid gap-8">
       <SectionHeader
@@ -206,6 +264,48 @@ export function StrategyPage() {
         </div>
       )}
 
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <PanelCard
+          title={copy("Trend Score Map", "Bản đồ điểm xu hướng")}
+          description={copy(
+            "Ranked trend score across top topic keywords.",
+            "Điểm xu hướng theo thứ hạng keyword chủ đề nổi bật.",
+          )}
+        >
+          {trendTopics.length > 0 ? (
+            <BarTrendChart data={trendScoreBarData} />
+          ) : (
+            <InlineQueryState
+              state="empty"
+              message={copy(
+                "No trend score data available.",
+                "Chưa có dữ liệu điểm xu hướng.",
+              )}
+            />
+          )}
+        </PanelCard>
+
+        <PanelCard
+          title={copy("Confidence Curve", "Đường độ tin cậy")}
+          description={copy(
+            "Confidence trajectory of top strategy recommendations.",
+            "Đường biến thiên độ tin cậy của các đề xuất chiến lược hàng đầu.",
+          )}
+        >
+          {recommendations.length > 0 ? (
+            <LineTrendChart data={recommendationConfidenceLineData} />
+          ) : (
+            <InlineQueryState
+              state="empty"
+              message={copy(
+                "No recommendation confidence data available.",
+                "Chưa có dữ liệu độ tin cậy đề xuất.",
+              )}
+            />
+          )}
+        </PanelCard>
+      </div>
+
       <div className="grid gap-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         <PanelCard
           title={copy("Priority Opportunities", "Cơ hội ưu tiên")}
@@ -221,16 +321,14 @@ export function StrategyPage() {
               trendTopics.slice(0, 8).map((topic) => (
                 <div
                   key={`${topic.platform}-${topic.topicId}`}
-                  className="rounded-2xl border border-border/55 bg-background/55 p-4"
+                  className={cn(
+                    "rounded-2xl border border-border/55 bg-background/55 p-4",
+                    getPlatformSurfaceClassName(topic.platform),
+                  )}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-medium text-foreground">{topic.topic}</p>
-                    <Badge
-                      variant="outline"
-                      className="rounded-full capitalize"
-                    >
-                      {topic.platform}
-                    </Badge>
+                    <PlatformBadge platform={topic.platform} />
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {topic.keyword}
@@ -279,15 +377,13 @@ export function StrategyPage() {
               recommendations.slice(0, 8).map((item) => (
                 <div
                   key={`${item.platform}-${item.id}`}
-                  className="rounded-2xl border border-border/55 bg-background/55 p-4"
+                  className={cn(
+                    "rounded-2xl border border-border/55 bg-background/55 p-4",
+                    getPlatformSurfaceClassName(item.platform),
+                  )}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <Badge
-                      variant="outline"
-                      className="rounded-full capitalize"
-                    >
-                      {item.platform}
-                    </Badge>
+                    <PlatformBadge platform={item.platform} />
                     <p className="text-xs text-muted-foreground">
                       {formatPercentFromRatio(item.confidenceScore)} confidence
                     </p>
@@ -339,10 +435,15 @@ export function StrategyPage() {
         )}
       >
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-border/55 bg-background/55 p-4">
-            <p className="mb-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-              TikTok
-            </p>
+          <div
+            className={cn(
+              "rounded-2xl border border-border/55 bg-background/55 p-4",
+              getPlatformSurfaceClassName("tiktok"),
+            )}
+          >
+            <div className="mb-3">
+              <PlatformBadge platform="tiktok" />
+            </div>
             {tikTokTrendsQuery.data?.overview_summary.strategist_note ? (
               <p className="text-sm leading-6 text-foreground">
                 {tikTokTrendsQuery.data.overview_summary.strategist_note}
@@ -358,10 +459,15 @@ export function StrategyPage() {
               />
             )}
           </div>
-          <div className="rounded-2xl border border-border/55 bg-background/55 p-4">
-            <p className="mb-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-              YouTube
-            </p>
+          <div
+            className={cn(
+              "rounded-2xl border border-border/55 bg-background/55 p-4",
+              getPlatformSurfaceClassName("youtube"),
+            )}
+          >
+            <div className="mb-3">
+              <PlatformBadge platform="youtube" />
+            </div>
             {youTubeTrendsQuery.data?.overview_summary.strategist_note ? (
               <p className="text-sm leading-6 text-foreground">
                 {youTubeTrendsQuery.data.overview_summary.strategist_note}
@@ -378,6 +484,32 @@ export function StrategyPage() {
             )}
           </div>
         </div>
+      </PanelCard>
+
+      <PanelCard
+        title={copy("Source Topic Matrix", "Ma trận chủ đề nguồn")}
+        description={copy(
+          "Relationship matrix between top recommendations and their source topics.",
+          "Ma trận tương quan giữa đề xuất hàng đầu và chủ đề nguồn tương ứng.",
+        )}
+      >
+        {sourceTopicMatrix.rows.length > 0 &&
+        sourceTopicMatrix.columns.length > 0 ? (
+          <HeatMatrix
+            rows={sourceTopicMatrix.rows}
+            columns={sourceTopicMatrix.columns}
+            values={sourceTopicMatrix.values}
+            valueFormatter={(value) => `${Math.round(value)}%`}
+          />
+        ) : (
+          <InlineQueryState
+            state="empty"
+            message={copy(
+              "No source-topic relationships available.",
+              "Chưa có dữ liệu quan hệ chủ đề nguồn.",
+            )}
+          />
+        )}
       </PanelCard>
     </div>
   );

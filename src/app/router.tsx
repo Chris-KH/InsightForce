@@ -1,19 +1,5 @@
 import { createBrowserRouter } from "react-router";
 import { RootLayout } from "@/layouts/RootLayout";
-import { AuthLayout } from "@/layouts/AuthLayout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-
-import AppLayout from "@/layouts/AppLayout";
-import { LoginPage } from "@/pages/login/LoginPage";
-import { LandingPage } from "@/pages/landing/LandingPage";
-import { RegisterPage } from "@/pages/register/RegisterPage";
-import { VerifyEmailPage } from "@/pages/register/VerifyEmailPage";
-import { RegisterSuccessPage } from "@/pages/register/RegisterSuccessPage";
-import { DashboardPage } from "@/pages/dashboard/DashboardPage";
-import { AudiencePage } from "@/pages/audience/AudiencePage";
-import { StrategyPage } from "@/pages/strategy/StrategyPage";
-import { FinancePage } from "@/pages/finance/FinancePage";
-import { AutomationPage } from "@/pages/automation/AutomationPage";
 
 export const router = createBrowserRouter([
   {
@@ -22,44 +8,99 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        Component: LandingPage,
+        lazy: async () => ({
+          Component: (await import("@/pages/landing/LandingPage")).LandingPage,
+        }),
       },
     ],
   },
   {
-    Component: AuthLayout,
+    lazy: async () => ({
+      Component: (await import("@/layouts/AuthLayout")).AuthLayout,
+    }),
     children: [
       {
         path: "/login",
-        Component: LoginPage,
+        lazy: async () => ({
+          Component: (await import("@/pages/login/LoginPage")).LoginPage,
+        }),
       },
       {
         path: "/register",
-        Component: RegisterPage,
+        lazy: async () => ({
+          Component: (await import("@/pages/register/RegisterPage"))
+            .RegisterPage,
+        }),
       },
       {
         path: "/register/verify",
-        Component: VerifyEmailPage,
+        lazy: async () => ({
+          Component: (await import("@/pages/register/VerifyEmailPage"))
+            .VerifyEmailPage,
+        }),
       },
       {
         path: "/register/success",
-        Component: RegisterSuccessPage,
+        lazy: async () => ({
+          Component: (await import("@/pages/register/RegisterSuccessPage"))
+            .RegisterSuccessPage,
+        }),
       },
     ],
   },
   {
     path: "/app",
-    Component: ProtectedRoute,
+    lazy: async () => ({
+      Component: (await import("@/components/ProtectedRoute")).ProtectedRoute,
+    }),
     children: [
       {
-        Component: AppLayout,
+        lazy: async () => ({
+          Component: (await import("@/layouts/AppLayout")).default,
+        }),
         children: [
-          { index: true, Component: DashboardPage },
-          { path: "dashboard", Component: DashboardPage },
-          { path: "audience", Component: AudiencePage },
-          { path: "strategy", Component: StrategyPage },
-          { path: "finance", Component: FinancePage },
-          { path: "automation", Component: AutomationPage },
+          {
+            index: true,
+            lazy: async () => ({
+              Component: (await import("@/pages/dashboard/DashboardPage"))
+                .DashboardPage,
+            }),
+          },
+          {
+            path: "dashboard",
+            lazy: async () => ({
+              Component: (await import("@/pages/dashboard/DashboardPage"))
+                .DashboardPage,
+            }),
+          },
+          {
+            path: "audience",
+            lazy: async () => ({
+              Component: (await import("@/pages/audience/AudiencePage"))
+                .AudiencePage,
+            }),
+          },
+          {
+            path: "strategy",
+            lazy: async () => ({
+              Component: (await import("@/pages/strategy/StrategyPage"))
+                .StrategyPage,
+            }),
+          },
+          {
+            path: "finance",
+            lazy: async () => ({
+              Component: (await import("@/pages/finance/FinancePage"))
+                .FinancePage,
+            }),
+          },
+          {
+            path: "automation",
+            lazy: async () => ({
+              Component: (await import("@/pages/automation/AutomationPage"))
+                .AutomationPage,
+            }),
+          },
         ],
       },
     ],

@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
+import { getAgentsStatus } from "@/api/agents.api";
 import { getHealthStatus } from "@/api/health.api";
 import { queryKeys } from "@/api/query-keys";
 import {
@@ -17,11 +18,18 @@ import {
 } from "@/api/tiktok.api";
 import type { ContentPlatform, UploadVideoRequest } from "@/api/types";
 import {
+  createUploadPostProfile,
+  deleteUploadPostProfile,
+  generateUploadPostJwt,
+  getUploadPostAccount,
   getUploadPostComments,
   getUploadPostHistory,
   getUploadPostPostAnalytics,
+  getUploadPostProfile,
   getUploadPostProfileAnalytics,
+  getUploadPostProfiles,
   getUploadPostTotalImpressions,
+  validateUploadPostJwt,
   type GetUploadPostHistoryParams,
 } from "@/api/upload-post.api";
 import {
@@ -38,6 +46,11 @@ export type UploadPostProfileAnalyticsQueryParams = {
   platforms: ContentPlatform[];
   pageId?: string;
   pageUrn?: string;
+  enabled?: boolean;
+};
+
+export type UploadPostProfileQueryParams = {
+  profileUsername?: string;
   enabled?: boolean;
 };
 
@@ -78,6 +91,19 @@ export function healthQueryOptions() {
 
 export function useHealthQuery() {
   return useQuery(healthQueryOptions());
+}
+
+export function agentsStatusQueryOptions() {
+  return queryOptions({
+    queryKey: queryKeys.agents.status,
+    queryFn: getAgentsStatus,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useAgentsStatusQuery() {
+  return useQuery(agentsStatusQueryOptions());
 }
 
 export function tikTokChannelStatusQueryOptions() {
@@ -203,6 +229,55 @@ export function useYouTubeVideoQuery(videoId?: string) {
   return useQuery({
     ...youTubeVideoQueryOptions(videoId ?? ""),
     enabled: Boolean(videoId),
+  });
+}
+
+export function uploadPostAccountQueryOptions() {
+  return queryOptions({
+    queryKey: queryKeys.uploadPost.account,
+    queryFn: getUploadPostAccount,
+    staleTime: 60_000,
+  });
+}
+
+export function useUploadPostAccountQuery(enabled = true) {
+  return useQuery({
+    ...uploadPostAccountQueryOptions(),
+    enabled,
+  });
+}
+
+export function uploadPostProfilesQueryOptions() {
+  return queryOptions({
+    queryKey: queryKeys.uploadPost.profiles,
+    queryFn: getUploadPostProfiles,
+    staleTime: 60_000,
+  });
+}
+
+export function useUploadPostProfilesQuery(enabled = true) {
+  return useQuery({
+    ...uploadPostProfilesQueryOptions(),
+    enabled,
+  });
+}
+
+export function uploadPostProfileQueryOptions(profileUsername: string) {
+  return queryOptions({
+    queryKey: queryKeys.uploadPost.profile(profileUsername),
+    queryFn: () => getUploadPostProfile(profileUsername),
+    staleTime: 60_000,
+  });
+}
+
+export function useUploadPostProfileQuery(
+  params: UploadPostProfileQueryParams,
+) {
+  const enabled = (params.enabled ?? true) && Boolean(params.profileUsername);
+
+  return useQuery({
+    ...uploadPostProfileQueryOptions(params.profileUsername ?? ""),
+    enabled,
   });
 }
 
@@ -363,6 +438,61 @@ export function useUploadPostCommentsQuery(
   return useQuery({
     ...uploadPostCommentsQueryOptions(params),
     enabled,
+  });
+}
+
+export function useCreateUploadPostProfileMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["upload-post", "create-profile"],
+    mutationFn: createUploadPostProfile,
+    onSuccess: async (result) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.uploadPost.account,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.uploadPost.profiles,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.uploadPost.profile(result.profile.username),
+        }),
+      ]);
+    },
+  });
+}
+
+export function useDeleteUploadPostProfileMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["upload-post", "delete-profile"],
+    mutationFn: deleteUploadPostProfile,
+    onSuccess: async (_result, profileUsername) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.uploadPost.profiles,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.uploadPost.profile(profileUsername),
+        }),
+      ]);
+    },
+  });
+}
+
+export function useGenerateUploadPostJwtMutation() {
+  return useMutation({
+    mutationKey: ["upload-post", "jwt", "generate"],
+    mutationFn: generateUploadPostJwt,
+  });
+}
+
+export function useValidateUploadPostJwtMutation() {
+  return useMutation({
+    mutationKey: ["upload-post", "jwt", "validate"],
+    mutationFn: validateUploadPostJwt,
   });
 }
 

@@ -1,3 +1,5 @@
+import axios, { AxiosError, type AxiosRequestConfig } from "axios";
+
 export type QueryPrimitive = string | number | boolean;
 export type QueryValue = QueryPrimitive | null | undefined;
 export type QueryParams = Record<string, QueryValue | QueryValue[]>;
@@ -15,9 +17,7 @@ export class ApiError extends Error {
 }
 
 type RequestOptions = {
-  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   query?: QueryParams;
-  body?: unknown;
   signal?: AbortSignal;
   headers?: HeadersInit;
 };
@@ -27,11 +27,25 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(
   "",
 );
 
-function appendQuery(path: string, query?: QueryParams): string {
-  if (!query) {
-    return path;
+function normalizeHeaders(
+  headers?: HeadersInit,
+): Record<string, string> | undefined {
+  if (!headers) {
+    return undefined;
   }
 
+  if (headers instanceof Headers) {
+    return Object.fromEntries(headers.entries());
+  }
+
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers);
+  }
+
+  return headers;
+}
+
+function serializeQuery(query: QueryParams = {}): string {
   const searchParams = new URLSearchParams();
 
   Object.entries(query).forEach(([key, rawValue]) => {
@@ -52,12 +66,7 @@ function appendQuery(path: string, query?: QueryParams): string {
     searchParams.append(key, String(rawValue));
   });
 
-  const queryString = searchParams.toString();
-  if (!queryString) {
-    return path;
-  }
-
-  return `${path}?${queryString}`;
+  return searchParams.toString();
 }
 
 function getErrorMessage(data: unknown, fallback: string): string {
@@ -84,80 +93,91 @@ function getErrorMessage(data: unknown, fallback: string): string {
   return fallback;
 }
 
-async function parseResponseBody(response: Response): Promise<unknown> {
-  const raw = await response.text();
-  if (!raw) {
-    return null;
+function toApiError(error: unknown): ApiError {
+  if (error instanceof ApiError) {
+    return error;
   }
 
-  try {
-    return JSON.parse(raw) as unknown;
-  } catch {
-    return raw;
-  }
-}
-
-async function request<T>(
-  path: string,
-  options: RequestOptions = {},
-): Promise<T> {
-  const method = options.method ?? "GET";
-  const requestPath = appendQuery(`${API_BASE_URL}${path}`, options.query);
-
-  const headers = new Headers(options.headers);
-  if (options.body !== undefined && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-
-  const response = await fetch(requestPath, {
-    method,
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    signal: options.signal,
-  });
-
-  const data = await parseResponseBody(response);
-
-  if (!response.ok) {
-    throw new ApiError(
-      getErrorMessage(data, `Request failed with status ${response.status}`),
-      response.status,
+  if (error instanceof AxiosError) {
+    const status = error.response?.status ?? 0;
+    const data = error.response?.data;
+    return new ApiError(
+      getErrorMessage(data, error.message || "Request failed"),
+      status,
       data,
     );
   }
 
-  return data as T;
+  if (error instanceof Error) {
+    return new ApiError(error.message, 0);
+  }
+
+  return new ApiError("Request failed", 0);
+}
+
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL || undefined,
+  paramsSerializer: {
+    serialize: (params) => serializeQuery(params as QueryParams),
+  },
+});
+
+async function request<T>(config: AxiosRequestConfig): Promise<T> {
+  try {
+    const response = await apiClient.request<T>(config);
+    return response.data;
+  } catch (error) {
+    throw toApiError(error);
+  }
 }
 
 export const httpClient = {
-  get<T>(path: string, options: Omit<RequestOptions, "method" | "body"> = {}) {
-    return request<T>(path, { ...options, method: "GET" });
+  get<T>(path: string, options: RequestOptions = {}) {
+    return request<T>({
+      url: path,
+      method: "GET",
+      params: options.query,
+      signal: options.signal,
+      headers: normalizeHeaders(options.headers),
+    });
   },
-  post<T>(
-    path: string,
-    body?: unknown,
-    options: Omit<RequestOptions, "method" | "body"> = {},
-  ) {
-    return request<T>(path, { ...options, method: "POST", body });
+  post<T>(path: string, body?: unknown, options: RequestOptions = {}) {
+    return request<T>({
+      url: path,
+      method: "POST",
+      data: body,
+      params: options.query,
+      signal: options.signal,
+      headers: normalizeHeaders(options.headers),
+    });
   },
-  put<T>(
-    path: string,
-    body?: unknown,
-    options: Omit<RequestOptions, "method" | "body"> = {},
-  ) {
-    return request<T>(path, { ...options, method: "PUT", body });
+  put<T>(path: string, body?: unknown, options: RequestOptions = {}) {
+    return request<T>({
+      url: path,
+      method: "PUT",
+      data: body,
+      params: options.query,
+      signal: options.signal,
+      headers: normalizeHeaders(options.headers),
+    });
   },
-  patch<T>(
-    path: string,
-    body?: unknown,
-    options: Omit<RequestOptions, "method" | "body"> = {},
-  ) {
-    return request<T>(path, { ...options, method: "PATCH", body });
+  patch<T>(path: string, body?: unknown, options: RequestOptions = {}) {
+    return request<T>({
+      url: path,
+      method: "PATCH",
+      data: body,
+      params: options.query,
+      signal: options.signal,
+      headers: normalizeHeaders(options.headers),
+    });
   },
-  delete<T>(
-    path: string,
-    options: Omit<RequestOptions, "method" | "body"> = {},
-  ) {
-    return request<T>(path, { ...options, method: "DELETE" });
+  delete<T>(path: string, options: RequestOptions = {}) {
+    return request<T>({
+      url: path,
+      method: "DELETE",
+      params: options.query,
+      signal: options.signal,
+      headers: normalizeHeaders(options.headers),
+    });
   },
 };

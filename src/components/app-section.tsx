@@ -25,9 +25,10 @@ export function SectionHeader({
   eyebrow,
 }: SectionHeaderProps) {
   return (
-    <div className="relative mb-6 overflow-hidden rounded-3xl border border-border/75 bg-linear-to-br from-card via-card/95 to-muted/35 px-5 py-5 shadow-[0_20px_45px_rgba(51,65,85,0.08)] sm:px-6 sm:py-6 dark:from-card dark:via-card/92 dark:to-card/82 dark:shadow-[0_22px_50px_rgba(2,6,23,0.34)]">
+    <div className="relative mb-6 overflow-hidden rounded-3xl border border-border/75 bg-linear-to-br from-card via-card/95 to-muted/35 px-5 py-5 shadow-[0_20px_45px_rgba(51,65,85,0.08)] backdrop-blur-[2px] sm:px-6 sm:py-6 dark:from-card dark:via-card/92 dark:to-card/82 dark:shadow-[0_22px_50px_rgba(2,6,23,0.34)]">
       <div className="pointer-events-none absolute inset-0">
         <SurfaceGrid className="opacity-24 dark:opacity-15" />
+        <div className="absolute inset-x-8 top-4 h-px bg-linear-to-r from-transparent via-primary/70 to-transparent" />
         <div className="absolute -top-20 -right-16 size-44 rounded-full bg-primary/16 blur-3xl dark:bg-primary/12" />
         <div className="absolute -bottom-24 -left-12 size-48 rounded-full bg-chart-2/14 blur-3xl dark:bg-chart-2/10" />
       </div>
@@ -75,14 +76,15 @@ export function MetricCard({
   detail,
 }: MetricCardProps) {
   return (
-    <Card className="relative overflow-hidden rounded-3xl border-border/75 bg-linear-to-br from-card via-card/96 to-muted/30 shadow-[0_18px_40px_rgba(51,65,85,0.08)] dark:from-card/95 dark:via-card/90 dark:to-card/80 dark:shadow-[0_18px_42px_rgba(2,6,23,0.34)]">
+    <Card className="relative overflow-hidden rounded-3xl border-border/75 bg-linear-to-br from-card via-card/96 to-muted/30 shadow-[0_18px_40px_rgba(51,65,85,0.08)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_24px_52px_rgba(51,65,85,0.14)] dark:from-card/95 dark:via-card/90 dark:to-card/80 dark:shadow-[0_18px_42px_rgba(2,6,23,0.34)] dark:hover:shadow-[0_26px_56px_rgba(2,6,23,0.45)]">
       <div className="pointer-events-none absolute inset-0 rounded-3xl">
         <SurfaceGrid className="opacity-18 dark:opacity-12" />
+        <div className="absolute inset-x-6 top-3 h-px bg-linear-to-r from-transparent via-primary/65 to-transparent" />
         <div className="absolute -top-20 -right-16 size-32 rounded-full bg-primary/14 blur-3xl dark:bg-primary/10" />
       </div>
       <CardContent className="flex flex-col gap-4 px-5 py-5 sm:px-6 sm:py-6">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex size-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+          <div className="flex size-11 items-center justify-center rounded-xl border border-primary/22 bg-linear-to-br from-primary/18 via-primary/12 to-chart-2/16 text-primary shadow-[0_0_0_1px_rgba(59,130,246,0.12)_inset] dark:from-primary/20 dark:via-primary/12 dark:to-chart-2/14">
             {icon}
           </div>
           {delta ? (
@@ -128,12 +130,13 @@ export function PanelCard({
   return (
     <Card
       className={cn(
-        "relative overflow-hidden rounded-3xl border-border/75 bg-linear-to-br from-card via-card/96 to-muted/28 shadow-[0_20px_46px_rgba(51,65,85,0.08)] dark:from-card/96 dark:via-card/90 dark:to-card/82 dark:shadow-[0_20px_48px_rgba(2,6,23,0.35)]",
+        "relative overflow-hidden rounded-3xl border-border/75 bg-linear-to-br from-card via-card/96 to-muted/28 shadow-[0_20px_46px_rgba(51,65,85,0.08)] transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_52px_rgba(51,65,85,0.14)] dark:from-card/96 dark:via-card/90 dark:to-card/82 dark:shadow-[0_20px_48px_rgba(2,6,23,0.35)] dark:hover:shadow-[0_26px_56px_rgba(2,6,23,0.45)]",
         className,
       )}
     >
       <div className="pointer-events-none absolute inset-0 rounded-3xl">
         <SurfaceGrid className="opacity-20 dark:opacity-12" />
+        <div className="absolute inset-x-8 top-4 h-px bg-linear-to-r from-transparent via-primary/70 to-transparent" />
         <div className="absolute -top-28 -right-24 size-44 rounded-full bg-primary/13 blur-3xl dark:bg-primary/10" />
       </div>
 

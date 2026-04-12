@@ -21,11 +21,17 @@ import {
 } from "@/api";
 import { PulseDot } from "@/components/app-futuristic";
 import {
+  BarTrendChart,
+  HeatMatrix,
+  LineTrendChart,
+} from "@/components/app-data-viz";
+import {
   InlineQueryState,
   MetricCardsSkeleton,
   PanelRowsSkeleton,
   QueryStateCard,
 } from "@/components/app-query-state";
+import { PlatformBadge } from "@/components/platform-badge";
 import {
   MetricCard,
   PanelCard,
@@ -42,7 +48,9 @@ import {
   formatPercentFromRatio,
   formatPercentValue,
 } from "@/lib/insight-formatters";
+import { getPlatformSurfaceClassName } from "@/lib/platform-theme";
 import { getQueryErrorMessage } from "@/lib/query-error";
+import { cn } from "@/lib/utils";
 
 type UnifiedVideo = {
   id: string;
@@ -152,6 +160,62 @@ export function DashboardPage() {
   ]
     .sort((left, right) => right.trend_score - left.trend_score)
     .slice(0, 8);
+
+  const topVideoViewChartData = useMemo(
+    () => ({
+      labels: topVideos.slice(0, 6).map((_, index) => `${index + 1}`),
+      datasets: [
+        {
+          label: copy("Views", "Lượt xem"),
+          data: topVideos.slice(0, 6).map((video) => video.views),
+          backgroundColor: "rgba(56, 189, 248, 0.75)",
+          borderRadius: 10,
+        },
+      ],
+    }),
+    [copy, topVideos],
+  );
+
+  const opportunityGrowthChartData = useMemo(
+    () => ({
+      labels: opportunityTopics.map((topic) => topic.keyword),
+      datasets: [
+        {
+          label: copy("Growth %", "Tăng trưởng %"),
+          data: opportunityTopics.map((topic) => topic.increase_percentage),
+          borderColor: "rgba(16, 185, 129, 0.95)",
+          backgroundColor: "rgba(16, 185, 129, 0.18)",
+          tension: 0.35,
+          fill: true,
+          pointRadius: 3,
+        },
+      ],
+    }),
+    [copy, opportunityTopics],
+  );
+
+  const topVideoHeatMap = useMemo(() => {
+    const items = topVideos.slice(0, 5);
+    const maxViews = Math.max(...items.map((video) => video.views), 1);
+
+    return {
+      rows: items.map((video) =>
+        video.title.length > 28
+          ? `${video.title.slice(0, 28)}...`
+          : video.title,
+      ),
+      columns: [
+        copy("Reach", "Độ phủ"),
+        copy("Engagement", "Tương tác"),
+        copy("Trend", "Xu hướng"),
+      ],
+      values: items.map((video) => [
+        (video.views / maxViews) * 100,
+        video.engagementRate * 100,
+        video.trendScore,
+      ]),
+    };
+  }, [copy, topVideos]);
 
   const handleRefresh = async () => {
     await Promise.all(allQueries.map((query) => query.refetch()));
@@ -367,6 +431,48 @@ export function DashboardPage() {
         </PanelCard>
       </div>
 
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <PanelCard
+          title={copy("Top Video Reach Chart", "Biểu đồ độ phủ video")}
+          description={copy(
+            "Visual ranking of top videos by view count.",
+            "Xếp hạng trực quan video nổi bật theo lượt xem.",
+          )}
+        >
+          {topVideos.length > 0 ? (
+            <BarTrendChart data={topVideoViewChartData} />
+          ) : (
+            <InlineQueryState
+              state="empty"
+              message={copy(
+                "No video data available for charting.",
+                "Chưa có dữ liệu video để dựng biểu đồ.",
+              )}
+            />
+          )}
+        </PanelCard>
+
+        <PanelCard
+          title={copy("Opportunity Growth Curve", "Đường tăng trưởng cơ hội")}
+          description={copy(
+            "Growth trajectory across ranked trend keywords.",
+            "Đường xu hướng tăng trưởng theo các keyword xếp hạng.",
+          )}
+        >
+          {opportunityTopics.length > 0 ? (
+            <LineTrendChart data={opportunityGrowthChartData} />
+          ) : (
+            <InlineQueryState
+              state="empty"
+              message={copy(
+                "No growth data available for charting.",
+                "Chưa có dữ liệu tăng trưởng để dựng biểu đồ.",
+              )}
+            />
+          )}
+        </PanelCard>
+      </div>
+
       <PanelCard
         title={copy("Top Videos Across Platforms", "Video nổi bật đa nền tảng")}
         description={copy(
@@ -384,12 +490,13 @@ export function DashboardPage() {
                 href={video.url}
                 target="_blank"
                 rel="noreferrer"
-                className="grid gap-2 rounded-2xl border border-border/55 bg-background/55 p-4 transition-colors hover:border-primary/35"
+                className={cn(
+                  "grid gap-2 rounded-2xl border border-border/55 bg-background/55 p-4 transition-colors hover:border-primary/35",
+                  getPlatformSurfaceClassName(video.platform),
+                )}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Badge variant="outline" className="rounded-full capitalize">
-                    {video.platform}
-                  </Badge>
+                  <PlatformBadge platform={video.platform} />
                   <p className="text-xs text-muted-foreground">
                     {formatDateTime(video.postedAt)}
                   </p>
@@ -437,10 +544,15 @@ export function DashboardPage() {
         )}
       >
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-border/55 bg-background/55 p-4">
-            <p className="mb-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-              TikTok
-            </p>
+          <div
+            className={cn(
+              "rounded-2xl border border-border/55 bg-background/55 p-4",
+              getPlatformSurfaceClassName("tiktok"),
+            )}
+          >
+            <div className="mb-3">
+              <PlatformBadge platform="tiktok" />
+            </div>
             <p className="text-sm leading-6 text-foreground">
               {tikTokTrendsQuery.data?.overview_summary.strategist_note ??
                 copy(
@@ -449,10 +561,15 @@ export function DashboardPage() {
                 )}
             </p>
           </div>
-          <div className="rounded-2xl border border-border/55 bg-background/55 p-4">
-            <p className="mb-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-              YouTube
-            </p>
+          <div
+            className={cn(
+              "rounded-2xl border border-border/55 bg-background/55 p-4",
+              getPlatformSurfaceClassName("youtube"),
+            )}
+          >
+            <div className="mb-3">
+              <PlatformBadge platform="youtube" />
+            </div>
             <p className="text-sm leading-6 text-foreground">
               {youTubeTrendsQuery.data?.overview_summary.strategist_note ??
                 copy(
@@ -471,27 +588,39 @@ export function DashboardPage() {
           "Chủ đề xu hướng đa nền tảng được xếp theo điểm xu hướng.",
         )}
       >
-        {isInitialLoading ? (
-          <PanelRowsSkeleton rows={4} />
-        ) : opportunityTopics.length > 0 ? (
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {opportunityTopics.map((topic) => (
-              <div
-                key={topic.topic_id}
-                className="rounded-2xl border border-border/55 bg-background/55 p-4"
-              >
-                <p className="text-xs text-muted-foreground">{topic.keyword}</p>
-                <p className="mt-1 font-medium text-foreground">
-                  {topic.topic}
-                </p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  <TrendingUp className="mr-1 inline-flex size-3" />+
-                  {topic.increase_percentage}%
-                </p>
-              </div>
-            ))}
+        {isInitialLoading ? <PanelRowsSkeleton rows={4} /> : null}
+
+        {!isInitialLoading && opportunityTopics.length > 0 ? (
+          <div className="space-y-4">
+            <HeatMatrix
+              rows={topVideoHeatMap.rows}
+              columns={topVideoHeatMap.columns}
+              values={topVideoHeatMap.values}
+              valueFormatter={(value) => `${Math.round(value)}%`}
+            />
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {opportunityTopics.slice(0, 4).map((topic) => (
+                <div
+                  key={topic.topic_id}
+                  className="rounded-2xl border border-border/55 bg-background/55 p-4"
+                >
+                  <p className="text-xs text-muted-foreground">
+                    {topic.keyword}
+                  </p>
+                  <p className="mt-1 font-medium text-foreground">
+                    {topic.topic}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    <TrendingUp className="mr-1 inline-flex size-3" />+
+                    {topic.increase_percentage}%
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
-        ) : (
+        ) : null}
+
+        {!isInitialLoading && opportunityTopics.length === 0 ? (
           <InlineQueryState
             state="empty"
             message={copy(
@@ -499,7 +628,7 @@ export function DashboardPage() {
               "Chưa có tín hiệu cơ hội khả dụng.",
             )}
           />
-        )}
+        ) : null}
       </PanelCard>
     </div>
   );
