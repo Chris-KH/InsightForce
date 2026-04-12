@@ -1,0 +1,455 @@
+export type ContentPlatform = "tiktok" | "youtube";
+
+export type MetricSeriesPoint = {
+  date: string;
+  value: number;
+};
+
+export type UploadVideoRequest = {
+  title: string;
+  description?: string;
+  file_path: string;
+  user?: string | null;
+  visibility?: "public" | "private" | "unlisted" | "friends" | "followers";
+  tags?: string[];
+  schedule_at?: string | null;
+  async_upload?: boolean;
+  thumbnail_url?: string | null;
+  category_id?: string | null;
+  disable_comment?: boolean | null;
+  disable_duet?: boolean | null;
+  disable_stitch?: boolean | null;
+  is_aigc?: boolean | null;
+  cover_timestamp?: number | null;
+};
+
+export type UploadVideoResponse = {
+  status: string;
+  platform: string;
+  upload_mode: string;
+  message: string;
+  external_post_id: string;
+  preview_url?: string | null;
+};
+
+export type HealthResponse = {
+  status: string;
+  service: string;
+};
+
+export type TikTokChannelStatus = {
+  channel_id: string;
+  handle: string;
+  display_name: string;
+  bio: string;
+  avatar_url: string;
+  profile_url: string;
+  followers: number;
+  following: number;
+  total_likes: number;
+  total_views: number;
+  total_videos: number;
+  average_views: number;
+  average_likes: number;
+  average_comments: number;
+  average_shares: number;
+  average_saves: number;
+  engagement_rate: number;
+  posting_frequency_per_week: number;
+  average_watch_time_seconds: number;
+  primary_regions: string[];
+  primary_categories: string[];
+};
+
+export type TikTokVideoStats = {
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+  engagement_rate: number;
+  trend_score: number;
+};
+
+export type TikTokVideo = {
+  video_id: string;
+  caption: string;
+  description: string;
+  hashtags: string[];
+  music_title: string;
+  duration_seconds: number;
+  posted_at: string;
+  thumbnail_url: string;
+  video_url: string;
+  stats: TikTokVideoStats;
+};
+
+export type TikTokTrendTopic = {
+  topic_id: string;
+  topic: string;
+  keyword: string;
+  search_volume: number;
+  increase_percentage: number;
+  potential_views: number;
+  trend_score: number;
+  related_hashtags: string[];
+  source: string;
+  sample_video_ids: string[];
+};
+
+export type TikTokWatcherSegment = {
+  segment: string;
+  affinity_score: number;
+  interests: string[];
+  rationale: string;
+};
+
+export type TikTokTrendOverviewSummary = {
+  trend_window: string;
+  hottest_topic: string;
+  average_potential_views: number;
+  rising_topic_count: number;
+  strategist_note: string;
+};
+
+export type TikTokRecommendation = {
+  recommendation_id: string;
+  content_idea: string;
+  hook: string;
+  thumbnail_idea: string;
+  voice_style: string;
+  background_music: string;
+  format: string;
+  confidence_score: number;
+  reasoning: string;
+  source_topics: string[];
+};
+
+export type TikTokVideoAverages = {
+  total_videos: number;
+  average_views: number;
+  average_likes: number;
+  average_comments: number;
+  average_shares: number;
+  average_saves: number;
+  average_engagement_rate: number;
+};
+
+export type TikTokChannelStatusResponse = {
+  platform: string;
+  channel: TikTokChannelStatus;
+};
+
+export type TikTokTrendsResponse = {
+  platform: string;
+  overview_summary: TikTokTrendOverviewSummary;
+  trend_topics: TikTokTrendTopic[];
+  trending_videos: TikTokVideo[];
+  watcher_segments: TikTokWatcherSegment[];
+};
+
+export type TikTokRecommendationsResponse = {
+  platform: string;
+  recommendations: TikTokRecommendation[];
+};
+
+export type TikTokVideoDetailResponse = {
+  platform: string;
+  video: TikTokVideo;
+};
+
+export type TikTokVideosResponse = {
+  platform: string;
+  averages: TikTokVideoAverages;
+  videos: TikTokVideo[];
+};
+
+export type YouTubeChannelStatus = {
+  channel_id: string;
+  handle: string;
+  display_name: string;
+  description: string;
+  avatar_url: string;
+  channel_url: string;
+  subscribers: number;
+  total_views: number;
+  total_watch_hours: number;
+  total_videos: number;
+  average_views: number;
+  average_likes: number;
+  average_comments: number;
+  engagement_rate: number;
+  average_view_duration_seconds: number;
+  click_through_rate: number;
+  upload_frequency_per_week: number;
+  top_regions: string[];
+  traffic_sources: string[];
+};
+
+export type YouTubeVideoStats = {
+  views: number;
+  likes: number;
+  comments: number;
+  impressions: number;
+  click_through_rate: number;
+  average_view_duration_seconds: number;
+  watch_hours: number;
+  engagement_rate: number;
+  trend_score: number;
+};
+
+export type YouTubeVideo = {
+  video_id: string;
+  title: string;
+  description: string;
+  thumbnail_url: string;
+  video_url: string;
+  duration_seconds: number;
+  published_at: string;
+  stats: YouTubeVideoStats;
+};
+
+export type YouTubeTrendTopic = {
+  topic_id: string;
+  topic: string;
+  keyword: string;
+  search_volume: number;
+  increase_percentage: number;
+  potential_views: number;
+  trend_score: number;
+  related_queries: string[];
+  source: string;
+  sample_video_ids: string[];
+};
+
+export type YouTubeWatcherSegment = {
+  segment: string;
+  affinity_score: number;
+  interests: string[];
+  rationale: string;
+};
+
+export type YouTubeTrendOverviewSummary = {
+  trend_window: string;
+  hottest_topic: string;
+  average_potential_views: number;
+  rising_topic_count: number;
+  strategist_note: string;
+};
+
+export type YouTubeRecommendation = {
+  recommendation_id: string;
+  content_idea: string;
+  title_idea: string;
+  thumbnail_idea: string;
+  voice_style: string;
+  background_music: string;
+  format: string;
+  confidence_score: number;
+  reasoning: string;
+  source_topics: string[];
+};
+
+export type YouTubeVideoAverages = {
+  total_videos: number;
+  average_views: number;
+  average_likes: number;
+  average_comments: number;
+  average_impressions: number;
+  average_click_through_rate: number;
+  average_watch_hours: number;
+  average_engagement_rate: number;
+};
+
+export type YouTubeChannelStatusResponse = {
+  platform: string;
+  channel: YouTubeChannelStatus;
+};
+
+export type YouTubeTrendsResponse = {
+  platform: string;
+  overview_summary: YouTubeTrendOverviewSummary;
+  trend_topics: YouTubeTrendTopic[];
+  trending_videos: YouTubeVideo[];
+  watcher_segments: YouTubeWatcherSegment[];
+};
+
+export type YouTubeRecommendationsResponse = {
+  platform: string;
+  recommendations: YouTubeRecommendation[];
+};
+
+export type YouTubeVideoDetailResponse = {
+  platform: string;
+  video: YouTubeVideo;
+};
+
+export type YouTubeVideosResponse = {
+  platform: string;
+  averages: YouTubeVideoAverages;
+  videos: YouTubeVideo[];
+};
+
+export type UploadPostHistoryItem = {
+  user_email: string;
+  profile_username: string;
+  platform: string;
+  media_type: string;
+  upload_timestamp: string;
+  success: boolean;
+  platform_post_id: string;
+  post_url: string;
+  media_size_bytes: number;
+  post_title: string;
+  post_caption: string;
+  is_async: boolean;
+  job_id: string;
+  dashboard: boolean;
+  request_id: string;
+  request_total_platforms: number;
+};
+
+export type UploadPostHistoryPayload = {
+  history: UploadPostHistoryItem[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+export type UploadPostHistoryEnvelope = {
+  source: string;
+  payload: UploadPostHistoryPayload;
+};
+
+export type UploadPostSummaryMetrics = {
+  followers: number;
+  reach: number;
+  views: number;
+  impressions: number;
+  profileViews: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+};
+
+export type UploadPostPlatformAnalytics = {
+  followers: number;
+  reach: number;
+  views: number;
+  impressions: number;
+  profileViews: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+  reach_timeseries: MetricSeriesPoint[];
+  impressions_timeseries: MetricSeriesPoint[];
+  views_timeseries: MetricSeriesPoint[];
+  likes_timeseries: MetricSeriesPoint[];
+  comments_timeseries: MetricSeriesPoint[];
+  shares_timeseries: MetricSeriesPoint[];
+  metric_type: string;
+};
+
+export type UploadPostProfileAnalyticsPayload = {
+  success: boolean;
+  profile_username: string;
+  start_date: string;
+  end_date: string;
+  platforms: Record<string, UploadPostPlatformAnalytics>;
+  summary: UploadPostSummaryMetrics;
+};
+
+export type UploadPostAnalyticsEnvelope = {
+  source: string;
+  profile_username: string;
+  payload: UploadPostProfileAnalyticsPayload;
+};
+
+export type UploadPostTotalImpressionsPayload = {
+  success: boolean;
+  profile_username: string;
+  start_date: string;
+  end_date: string;
+  metrics: Record<string, number>;
+  per_platform: Record<string, Record<string, number>>;
+  per_day: Record<string, Record<string, number>>;
+  breakdown?: Record<string, Record<string, number>>;
+};
+
+export type UploadPostTotalImpressionsEnvelope = {
+  source: string;
+  profile_username: string;
+  payload: UploadPostTotalImpressionsPayload;
+};
+
+export type UploadPostCommentUser = {
+  id: string;
+  username: string;
+};
+
+export type UploadPostComment = {
+  id: string;
+  text: string;
+  timestamp: string;
+  user: UploadPostCommentUser;
+};
+
+export type UploadPostCommentsPayload = {
+  success: boolean;
+  comments: UploadPostComment[];
+};
+
+export type UploadPostCommentsEnvelope = {
+  source: string;
+  payload: UploadPostCommentsPayload;
+};
+
+export type UploadPostPostMetrics = {
+  views: number;
+  likes: number;
+  comments: number;
+  favorites: number;
+  shares: number;
+};
+
+export type UploadPostProfileSnapshot = {
+  followers: number;
+  impressions: number;
+  likes: number;
+  comments: number;
+  shares: number;
+};
+
+export type UploadPostPlatformPostAnalytics = {
+  success: boolean;
+  job_id: string;
+  platform_post_id: string;
+  post_url: string;
+  post_metrics: UploadPostPostMetrics;
+  post_metrics_source: string;
+  profile_snapshot_at_post_date: UploadPostProfileSnapshot;
+  comments: UploadPostComment[];
+};
+
+export type UploadPostPostInfo = {
+  request_id: string;
+  profile_username: string;
+  post_title: string;
+  post_caption: string;
+  media_type: string;
+  upload_timestamp: string;
+};
+
+export type UploadPostPostAnalyticsPayload = {
+  success: boolean;
+  post: UploadPostPostInfo;
+  platforms: Record<string, UploadPostPlatformPostAnalytics>;
+};
+
+export type UploadPostPostAnalyticsEnvelope = {
+  source: string;
+  request_id: string;
+  payload: UploadPostPostAnalyticsPayload;
+};
