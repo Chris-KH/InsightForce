@@ -1,8 +1,16 @@
-import { Link, NavLink } from "react-router";
-import { Bell, UserCircle2 } from "lucide-react";
+import { Link, NavLink, useLocation } from "react-router";
+import { Bell, ChevronDown, UserCircle2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { MobileSidebarSheet } from "@/layouts/components/MobileSidebarSheet";
 import {
@@ -15,7 +23,11 @@ import { ModeToggle } from "@/components/mode-toggle";
 
 export function AppHeader() {
   const copy = useBilingual();
-  const headerNavItems = [...APP_NAV_ITEMS, ...APP_FOCUS_NAV_ITEMS];
+  const location = useLocation();
+
+  const isFocusRouteActive = APP_FOCUS_NAV_ITEMS.some((item) =>
+    location.pathname.startsWith(item.path),
+  );
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-xl">
@@ -34,8 +46,8 @@ export function AppHeader() {
           </Link>
         </div>
 
-        <nav className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto rounded-full border border-border/70 bg-muted/35 p-1 md:flex">
-          {headerNavItems.map((item) => {
+        <nav className="hidden items-center gap-1 rounded-full border border-border/70 bg-muted/35 p-1 md:flex">
+          {APP_NAV_ITEMS.map((item) => {
             const Icon = item.icon;
 
             return (
@@ -59,17 +71,58 @@ export function AppHeader() {
               </NavLink>
             );
           })}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "ml-1 rounded-full border border-transparent px-3",
+                  isFocusRouteActive
+                    ? "border-primary/30 bg-background text-foreground shadow-xs"
+                    : "text-primary/90 hover:text-primary",
+                )}
+              >
+                {copy("Focus", "Chuyên sâu")}
+                <ChevronDown className="size-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                {copy("Focus Pages", "Trang chuyên sâu")}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {APP_FOCUS_NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const active = location.pathname.startsWith(item.path);
+
+                return (
+                  <DropdownMenuItem
+                    key={item.path}
+                    asChild
+                    className={cn(active && "bg-foreground/10 text-foreground")}
+                  >
+                    <Link to={item.path}>
+                      <Icon className="size-4" />
+                      {copy(item.label.en, item.label.vi)}
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
 
-        <Badge
-          variant="outline"
-          className="hidden rounded-full border-primary/20 text-primary xl:inline-flex"
-        >
-          <span className="size-1.5 rounded-full bg-primary" />
-          {copy("3 agents online", "3 bot đang hoạt động")}
-        </Badge>
-
         <div className="ml-auto flex items-center gap-1 md:gap-2">
+          <Badge
+            variant="outline"
+            className="hidden rounded-full border-primary/20 text-primary xl:inline-flex"
+          >
+            <span className="size-1.5 rounded-full bg-primary" />
+            {copy("3 agents online", "3 bot đang hoạt động")}
+          </Badge>
           <Button variant="ghost" size="icon-sm">
             <Bell />
             <span className="sr-only">

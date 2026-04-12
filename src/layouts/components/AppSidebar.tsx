@@ -1,5 +1,12 @@
 import { Link } from "react-router";
+import { ChevronDown } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { AppNavLink } from "@/layouts/components/AppNavLink";
 import {
@@ -68,11 +75,20 @@ export function AppSidebar() {
             </div>
           </section>
 
-          <section className="mt-6">
-            <p className="px-1 text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-              {copy("Navigation", "Điều hướng")}
-            </p>
-            <nav className="mt-2 flex flex-col gap-1">
+          <Collapsible
+            defaultOpen
+            className="mt-6 rounded-xl border border-border/55 bg-background/45 p-2"
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="group h-8 w-full justify-between px-2 text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase data-[state=open]:text-foreground"
+              >
+                {copy("Navigation", "Điều hướng")}
+                <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2 flex flex-col gap-1">
               {APP_NAV_ITEMS.map((item) => (
                 <AppNavLink
                   key={item.path}
@@ -81,14 +97,23 @@ export function AppSidebar() {
                   icon={item.icon}
                 />
               ))}
-            </nav>
-          </section>
+            </CollapsibleContent>
+          </Collapsible>
 
-          <section className="mt-6">
-            <p className="px-1 text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-              {copy("Focus Pages", "Trang chuyên sâu")}
-            </p>
-            <nav className="mt-2 flex flex-col gap-1">
+          <Collapsible
+            defaultOpen={false}
+            className="mt-4 rounded-xl border border-border/55 bg-background/45 p-2"
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="group h-8 w-full justify-between px-2 text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase data-[state=open]:text-foreground"
+              >
+                {copy("Focus Pages", "Trang chuyên sâu")}
+                <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2 flex flex-col gap-1">
               {APP_FOCUS_NAV_ITEMS.map((item) => (
                 <AppNavLink
                   key={item.path}
@@ -97,8 +122,8 @@ export function AppSidebar() {
                   icon={item.icon}
                 />
               ))}
-            </nav>
-          </section>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </div>
     </aside>
