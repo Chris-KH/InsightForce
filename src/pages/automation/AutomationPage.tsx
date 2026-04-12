@@ -227,7 +227,7 @@ export function AutomationPage() {
         data: recommendationQueue
           .slice(0, 8)
           .map((item) => item.confidence * 100),
-        backgroundColor: "rgba(56, 189, 248, 0.75)",
+        backgroundColor: "rgba(59, 130, 246, 0.78)",
         borderRadius: 10,
       },
     ],
@@ -241,10 +241,7 @@ export function AutomationPage() {
           successfulOperations,
           Math.max(historyItems.length - successfulOperations, 0),
         ],
-        backgroundColor: [
-          "rgba(16, 185, 129, 0.78)",
-          "rgba(244, 63, 94, 0.78)",
-        ],
+        backgroundColor: ["rgba(6, 182, 212, 0.8)", "rgba(249, 115, 22, 0.78)"],
         borderWidth: 0,
       },
     ],
@@ -268,12 +265,35 @@ export function AutomationPage() {
           operationsSuccessRate * 100,
           Math.min(historyItems.length * 8, 100),
         ],
-        borderColor: "rgba(16, 185, 129, 0.95)",
-        backgroundColor: "rgba(16, 185, 129, 0.22)",
+        borderColor: "rgba(59, 130, 246, 0.95)",
+        backgroundColor: "rgba(59, 130, 246, 0.22)",
         pointRadius: 2,
       },
     ],
   };
+
+  const pipelineStages = [
+    {
+      stage: copy("Ingest", "Nap"),
+      count: contentBacklog,
+      tone: "border-cyan-500/30 bg-cyan-500/10",
+    },
+    {
+      stage: copy("Queue", "Hang doi"),
+      count: recommendationQueue.length,
+      tone: "border-blue-500/30 bg-blue-500/10",
+    },
+    {
+      stage: copy("Execute", "Thuc thi"),
+      count: historyItems.length,
+      tone: "border-violet-500/30 bg-violet-500/10",
+    },
+    {
+      stage: copy("Validate", "Xac nhan"),
+      count: successfulOperations,
+      tone: "border-emerald-500/30 bg-emerald-500/10",
+    },
+  ];
 
   const telemetryHeatMap = (() => {
     const platformEntries = Object.entries(
@@ -379,6 +399,38 @@ export function AutomationPage() {
         </div>
       )}
 
+      <PanelCard
+        title={copy("Pipeline Stageboard", "Bang stage pipeline")}
+        description={copy(
+          "A stage-by-stage automation view from content intake to successful delivery.",
+          "Goc nhin theo tung stage tu nap noi dung den phan phoi thanh cong.",
+        )}
+        className="border-cyan-500/26 bg-linear-to-br from-cyan-100/55 via-card to-blue-100/45 dark:from-cyan-500/12 dark:via-card/92 dark:to-blue-500/10"
+      >
+        <div className="grid gap-3 md:grid-cols-4">
+          {pipelineStages.map((item, index) => (
+            <div
+              key={item.stage}
+              className={cn(
+                "relative rounded-2xl border p-4",
+                item.tone,
+                index === 1 || index === 2 ? "md:-translate-y-1" : "",
+              )}
+            >
+              <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                {item.stage}
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">
+                {item.count}
+              </p>
+              {index < pipelineStages.length - 1 ? (
+                <span className="pointer-events-none absolute top-1/2 -right-2 hidden h-0.5 w-4 -translate-y-1/2 rounded-full bg-primary/45 md:block" />
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </PanelCard>
+
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <PanelCard
           title={copy("Runtime Signal Radar", "Radar tín hiệu runtime")}
@@ -387,7 +439,10 @@ export function AutomationPage() {
             "Tín hiệu vận hành tổng hợp từ chỉ số dịch vụ và hàng đợi.",
           )}
         >
-          <RadarTrendChart data={serviceRadarData} />
+          <RadarTrendChart
+            data={serviceRadarData}
+            className="bg-linear-to-br from-cyan-100/60 via-card to-blue-100/45 dark:from-cyan-500/12 dark:via-card/90 dark:to-blue-500/10"
+          />
         </PanelCard>
 
         <PanelCard
@@ -398,7 +453,10 @@ export function AutomationPage() {
           )}
         >
           {historyItems.length > 0 ? (
-            <DoughnutTrendChart data={operationOutcomeData} />
+            <DoughnutTrendChart
+              data={operationOutcomeData}
+              className="bg-linear-to-br from-blue-100/60 via-card to-orange-100/45 dark:from-blue-500/12 dark:via-card/90 dark:to-orange-500/10"
+            />
           ) : (
             <InlineQueryState
               state="empty"
@@ -494,7 +552,10 @@ export function AutomationPage() {
               <PanelRowsSkeleton rows={4} />
             ) : recommendationQueue.length > 0 ? (
               <>
-                <BarTrendChart data={recommendationConfidenceBarData} />
+                <BarTrendChart
+                  data={recommendationConfidenceBarData}
+                  className="bg-linear-to-br from-blue-100/60 via-card to-violet-100/45 dark:from-blue-500/12 dark:via-card/90 dark:to-violet-500/10"
+                />
                 {recommendationQueue.slice(0, 6).map((item) => (
                   <div
                     key={`${item.platform}-${item.id}`}
@@ -550,6 +611,7 @@ export function AutomationPage() {
                     columns={telemetryHeatMap.columns}
                     values={telemetryHeatMap.values}
                     valueFormatter={(value) => formatCompactNumber(value)}
+                    className="bg-linear-to-br from-cyan-100/60 via-card to-indigo-100/45 dark:from-cyan-500/12 dark:via-card/90 dark:to-indigo-500/10"
                   />
                 ) : null}
                 <div className="rounded-2xl border border-border/55 bg-background/55 p-4 text-xs text-muted-foreground">

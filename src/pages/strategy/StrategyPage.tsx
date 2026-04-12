@@ -137,7 +137,7 @@ export function StrategyPage() {
       {
         label: copy("Trend score", "Điểm xu hướng"),
         data: trendTopics.slice(0, 8).map((topic) => topic.trendScore),
-        backgroundColor: "rgba(59, 130, 246, 0.75)",
+        backgroundColor: "rgba(249, 115, 22, 0.78)",
         borderRadius: 10,
       },
     ],
@@ -151,8 +151,8 @@ export function StrategyPage() {
         data: recommendations
           .slice(0, 8)
           .map((item) => item.confidenceScore * 100),
-        borderColor: "rgba(16, 185, 129, 0.95)",
-        backgroundColor: "rgba(16, 185, 129, 0.18)",
+        borderColor: "rgba(225, 29, 72, 0.92)",
+        backgroundColor: "rgba(251, 113, 133, 0.2)",
         tension: 0.35,
         fill: true,
         pointRadius: 3,
@@ -180,6 +180,36 @@ export function StrategyPage() {
       ),
     };
   })();
+
+  const playbookLanes = [
+    {
+      step: copy("Detect", "Phat hien"),
+      detail: copy(
+        "Track rising topics and momentum shifts.",
+        "Theo doi chu de dang tang va do doi dong luc.",
+      ),
+      value: risingTopicsCount,
+      tone: "border-orange-500/30 bg-orange-500/10",
+    },
+    {
+      step: copy("Prioritize", "Uu tien"),
+      detail: copy(
+        "Rank ideas by confidence and potential views.",
+        "Xep hang y tuong theo do tin cay va luot xem tiem nang.",
+      ),
+      value: highConfidenceIdeas,
+      tone: "border-rose-500/30 bg-rose-500/10",
+    },
+    {
+      step: copy("Ship", "Trien khai"),
+      detail: copy(
+        "Turn selected ideas into production plans.",
+        "Chuyen y tuong duoc chon thanh ke hoach san xuat.",
+      ),
+      value: recommendations.length,
+      tone: "border-amber-500/30 bg-amber-500/10",
+    },
+  ];
 
   return (
     <div className="grid gap-8">
@@ -264,6 +294,38 @@ export function StrategyPage() {
         </div>
       )}
 
+      <PanelCard
+        title={copy("Playbook Lanes", "Lan ke hoach")}
+        description={copy(
+          "A strategy pipeline view from signal detection to production-ready ideas.",
+          "Goc nhin dang pipeline tu phat hien tin hieu den y tuong san sang san xuat.",
+        )}
+        className="border-orange-500/28 bg-linear-to-br from-orange-100/55 via-card to-rose-100/45 dark:from-orange-500/12 dark:via-card/92 dark:to-rose-500/10"
+      >
+        <div className="grid gap-3 lg:grid-cols-3">
+          {playbookLanes.map((lane, index) => (
+            <div
+              key={lane.step}
+              className={cn(
+                "rounded-2xl border p-4",
+                lane.tone,
+                index === 1 ? "lg:-translate-y-1" : "",
+              )}
+            >
+              <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                {lane.step}
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">
+                {lane.value}
+              </p>
+              <p className="mt-2 text-xs leading-6 text-muted-foreground">
+                {lane.detail}
+              </p>
+            </div>
+          ))}
+        </div>
+      </PanelCard>
+
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <PanelCard
           title={copy("Trend Score Map", "Bản đồ điểm xu hướng")}
@@ -273,7 +335,10 @@ export function StrategyPage() {
           )}
         >
           {trendTopics.length > 0 ? (
-            <BarTrendChart data={trendScoreBarData} />
+            <BarTrendChart
+              data={trendScoreBarData}
+              className="bg-linear-to-br from-orange-100/60 via-card to-amber-100/45 dark:from-orange-500/12 dark:via-card/90 dark:to-amber-500/10"
+            />
           ) : (
             <InlineQueryState
               state="empty"
@@ -293,7 +358,10 @@ export function StrategyPage() {
           )}
         >
           {recommendations.length > 0 ? (
-            <LineTrendChart data={recommendationConfidenceLineData} />
+            <LineTrendChart
+              data={recommendationConfidenceLineData}
+              className="bg-linear-to-br from-rose-100/60 via-card to-orange-100/45 dark:from-rose-500/12 dark:via-card/90 dark:to-orange-500/10"
+            />
           ) : (
             <InlineQueryState
               state="empty"
@@ -500,6 +568,7 @@ export function StrategyPage() {
             columns={sourceTopicMatrix.columns}
             values={sourceTopicMatrix.values}
             valueFormatter={(value) => `${Math.round(value)}%`}
+            className="bg-linear-to-br from-amber-100/60 via-card to-rose-100/45 dark:from-amber-500/12 dark:via-card/90 dark:to-rose-500/10"
           />
         ) : (
           <InlineQueryState

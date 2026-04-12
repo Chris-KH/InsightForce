@@ -168,7 +168,7 @@ export function DashboardPage() {
         {
           label: copy("Views", "Lượt xem"),
           data: topVideos.slice(0, 6).map((video) => video.views),
-          backgroundColor: "rgba(56, 189, 248, 0.75)",
+          backgroundColor: "rgba(37, 99, 235, 0.8)",
           borderRadius: 10,
         },
       ],
@@ -183,8 +183,8 @@ export function DashboardPage() {
         {
           label: copy("Growth %", "Tăng trưởng %"),
           data: opportunityTopics.map((topic) => topic.increase_percentage),
-          borderColor: "rgba(16, 185, 129, 0.95)",
-          backgroundColor: "rgba(16, 185, 129, 0.18)",
+          borderColor: "rgba(234, 88, 12, 0.95)",
+          backgroundColor: "rgba(234, 88, 12, 0.2)",
           tension: 0.35,
           fill: true,
           pointRadius: 3,
@@ -220,6 +220,30 @@ export function DashboardPage() {
   const handleRefresh = async () => {
     await Promise.all(allQueries.map((query) => query.refetch()));
   };
+
+  const signalRunway = [
+    {
+      label: copy("Audience Velocity", "Van toc audience"),
+      value: audienceSize,
+      max: Math.max(audienceSize, totalViews, avgContentPerformance, 1),
+      trackClass:
+        "from-sky-500 via-blue-500 to-indigo-500 dark:from-sky-400 dark:via-blue-400 dark:to-indigo-400",
+    },
+    {
+      label: copy("View Pressure", "Ap luc view"),
+      value: totalViews,
+      max: Math.max(audienceSize, totalViews, avgContentPerformance, 1),
+      trackClass:
+        "from-indigo-500 via-violet-500 to-blue-500 dark:from-indigo-400 dark:via-violet-400 dark:to-blue-400",
+    },
+    {
+      label: copy("Reach Throughput", "Thong luong reach"),
+      value: avgContentPerformance,
+      max: Math.max(audienceSize, totalViews, avgContentPerformance, 1),
+      trackClass:
+        "from-blue-500 via-cyan-500 to-sky-400 dark:from-blue-400 dark:via-cyan-400 dark:to-sky-300",
+    },
+  ];
 
   return (
     <div className="grid gap-8">
@@ -312,6 +336,69 @@ export function DashboardPage() {
           />
         </div>
       )}
+
+      <PanelCard
+        title={copy("Signal Runway", "Duong bang tin hieu")}
+        description={copy(
+          "A runway-style overview that highlights momentum before deep-dive analytics.",
+          "Tong quan dang duong bang de nhin nhip tang truong truoc khi dao sau analytics.",
+        )}
+        className="border-blue-500/28 bg-linear-to-br from-sky-100/55 via-card to-indigo-100/45 dark:from-sky-500/12 dark:via-card/92 dark:to-indigo-500/10"
+      >
+        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-2xl border border-blue-500/24 bg-background/70 p-4">
+            <div className="space-y-3">
+              {signalRunway.map((lane) => {
+                const width = Math.min((lane.value / lane.max) * 100, 100);
+                return (
+                  <div key={lane.label}>
+                    <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{lane.label}</span>
+                      <span>{formatCompactNumber(lane.value)}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted/70">
+                      <div
+                        className={cn(
+                          "h-full rounded-full bg-linear-to-r transition-all",
+                          lane.trackClass,
+                        )}
+                        style={{ width: `${Math.max(width, 8)}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <div className="rounded-2xl border border-sky-500/24 bg-background/70 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Health", "Suc khoe")}
+              </p>
+              <p className="mt-2 text-xl font-semibold text-foreground">
+                {healthQuery.data?.status?.toUpperCase() ?? "UNKNOWN"}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-indigo-500/24 bg-background/70 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Trend Topics", "Chu de trend")}
+              </p>
+              <p className="mt-2 text-xl font-semibold text-foreground">
+                {opportunityTopics.length}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-cyan-500/24 bg-background/70 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Top Videos", "Video noi bat")}
+              </p>
+              <p className="mt-2 text-xl font-semibold text-foreground">
+                {topVideos.length}
+              </p>
+            </div>
+          </div>
+        </div>
+      </PanelCard>
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1.5fr)_minmax(340px,1fr)]">
         <PanelCard
@@ -440,7 +527,10 @@ export function DashboardPage() {
           )}
         >
           {topVideos.length > 0 ? (
-            <BarTrendChart data={topVideoViewChartData} />
+            <BarTrendChart
+              data={topVideoViewChartData}
+              className="bg-linear-to-br from-sky-100/60 via-card to-indigo-100/45 dark:from-sky-500/12 dark:via-card/90 dark:to-indigo-500/10"
+            />
           ) : (
             <InlineQueryState
               state="empty"
@@ -460,7 +550,10 @@ export function DashboardPage() {
           )}
         >
           {opportunityTopics.length > 0 ? (
-            <LineTrendChart data={opportunityGrowthChartData} />
+            <LineTrendChart
+              data={opportunityGrowthChartData}
+              className="bg-linear-to-br from-indigo-100/55 via-card to-orange-100/45 dark:from-indigo-500/12 dark:via-card/90 dark:to-orange-500/10"
+            />
           ) : (
             <InlineQueryState
               state="empty"
@@ -597,6 +690,7 @@ export function DashboardPage() {
               columns={topVideoHeatMap.columns}
               values={topVideoHeatMap.values}
               valueFormatter={(value) => `${Math.round(value)}%`}
+              className="bg-linear-to-br from-blue-100/60 via-card to-cyan-100/45 dark:from-blue-500/12 dark:via-card/90 dark:to-cyan-500/10"
             />
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {opportunityTopics.slice(0, 4).map((topic) => (

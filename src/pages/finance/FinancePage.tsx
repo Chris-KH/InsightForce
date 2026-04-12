@@ -122,6 +122,9 @@ export function FinancePage() {
     (query) => query.isLoading && !query.data,
   );
   const firstError = allQueries.find((query) => query.error)?.error;
+  const firstErrorMessage = firstError
+    ? getQueryErrorMessage(firstError, "Unable to load finance analytics.")
+    : null;
 
   const summary = profileAnalyticsQuery.data?.payload.summary;
   const totals = totalImpressionsQuery.data?.payload.metrics;
@@ -134,6 +137,19 @@ export function FinancePage() {
 
   const uploadPostProfiles = profilesQuery.data?.profiles ?? [];
   const accountStateError = accountQuery.error ?? profilesQuery.error;
+  const accountStateMessage = accountStateError
+    ? getQueryErrorMessage(
+        accountStateError,
+        copy(
+          "Real provider account endpoints are unstable right now. You can still submit control actions below.",
+          "Endpoint tai khoan provider dang chua on dinh. Ban van co the gui thao tac dieu khien ben duoi.",
+        ),
+      )
+    : null;
+  const isUploadPostApiKeyMissing =
+    accountStateMessage?.includes("UPLOAD_POST_API_KEY") ?? false;
+  const isUploadPostApiKeyMissingInAnalytics =
+    firstErrorMessage?.includes("UPLOAD_POST_API_KEY") ?? false;
 
   const mutationError =
     createProfileMutation.error ??
@@ -235,8 +251,8 @@ export function FinancePage() {
       {
         label: copy("Impressions", "Impressions"),
         data: impressionsTimeline.map(([, value]) => value),
-        borderColor: "rgba(59, 130, 246, 0.95)",
-        backgroundColor: "rgba(59, 130, 246, 0.18)",
+        borderColor: "rgba(5, 150, 105, 0.92)",
+        backgroundColor: "rgba(5, 150, 105, 0.2)",
         tension: 0.35,
         fill: true,
         pointRadius: 3,
@@ -253,8 +269,8 @@ export function FinancePage() {
           Math.max(historyItems.length - successfulUploads, 0),
         ],
         backgroundColor: [
-          "rgba(16, 185, 129, 0.78)",
-          "rgba(244, 63, 94, 0.78)",
+          "rgba(16, 185, 129, 0.82)",
+          "rgba(234, 179, 8, 0.75)",
         ],
         borderWidth: 0,
       },
@@ -269,7 +285,7 @@ export function FinancePage() {
         data: Object.values(
           profileAnalyticsQuery.data?.payload.platforms ?? {},
         ).map((metrics) => metrics.views),
-        backgroundColor: "rgba(56, 189, 248, 0.75)",
+        backgroundColor: "rgba(245, 158, 11, 0.78)",
         borderRadius: 10,
       },
       {
@@ -277,7 +293,7 @@ export function FinancePage() {
         data: Object.values(
           profileAnalyticsQuery.data?.payload.platforms ?? {},
         ).map((metrics) => metrics.impressions),
-        backgroundColor: "rgba(16, 185, 129, 0.75)",
+        backgroundColor: "rgba(6, 182, 212, 0.78)",
         borderRadius: 10,
       },
     ],
@@ -305,6 +321,8 @@ export function FinancePage() {
 
     return { rows, columns, values };
   })();
+
+  const financeRhythm = impressionsTimeline.slice(-7);
 
   return (
     <div className="grid gap-8">
@@ -335,16 +353,95 @@ export function FinancePage() {
         <QueryStateCard
           state="error"
           title={copy("Data Load Error", "Lỗi tải dữ liệu")}
-          description={getQueryErrorMessage(
-            firstError,
-            "Unable to load finance analytics.",
-          )}
+          description={
+            isUploadPostApiKeyMissingInAnalytics
+              ? copy(
+                  "Backend is missing UPLOAD_POST_API_KEY, so Upload-Post analytics cannot be loaded yet.",
+                  "Backend dang thieu UPLOAD_POST_API_KEY, nen du lieu Upload-Post analytics chua the tai.",
+                )
+              : (firstErrorMessage ?? "Unable to load finance analytics.")
+          }
           hint={copy(
             "Finance view requires /upload-post/history, /analytics/profiles, and /analytics/posts endpoints.",
             "Màn hình tài chính cần các endpoint /upload-post/history, /analytics/profiles và /analytics/posts.",
           )}
         />
       ) : null}
+
+      <PanelCard
+        title={copy("Revenue Rhythm", "Nhip dieu doanh thu")}
+        description={copy(
+          "A weekly visual stripe of impressions momentum and conversion quality.",
+          "Dai hien thi nhip impressions theo tuan va chat luong chuyen doi.",
+        )}
+        className="border-emerald-500/28 bg-linear-to-br from-emerald-100/45 via-card to-lime-100/40 dark:from-emerald-500/10 dark:via-card/92 dark:to-lime-500/10"
+      >
+        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-2xl border border-emerald-500/25 bg-background/70 p-4">
+            <p className="text-xs font-semibold tracking-[0.14em] text-emerald-700 uppercase dark:text-emerald-300">
+              {copy("7-Day Impression Pulse", "Xung impressions 7 ngay")}
+            </p>
+            {financeRhythm.length > 0 ? (
+              <div className="mt-4 flex items-end gap-2">
+                {financeRhythm.map(([day, value]) => {
+                  const maxValue = Math.max(
+                    ...financeRhythm.map(([, itemValue]) => itemValue),
+                    1,
+                  );
+                  const ratio = Math.max(value / maxValue, 0.08);
+
+                  return (
+                    <div key={day} className="flex-1">
+                      <div
+                        className="rounded-md bg-linear-to-t from-emerald-600 via-emerald-400 to-lime-300"
+                        style={{ height: `${Math.round(120 * ratio)}px` }}
+                      />
+                      <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                        {day.slice(5)}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <InlineQueryState
+                state="empty"
+                message={copy(
+                  "No 7-day impression rhythm yet.",
+                  "Chua co nhip impressions 7 ngay.",
+                )}
+              />
+            )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <div className="rounded-2xl border border-emerald-500/20 bg-background/70 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Weekly Impressions", "Impressions tuan")}
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">
+                {formatCompactNumber(totals?.impressions ?? 0)}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-lime-500/22 bg-background/70 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Engagement Yield", "Hieu suat tuong tac")}
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">
+                {formatPercentFromRatio(uploadSuccessRate)}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-amber-500/24 bg-background/70 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Active Profiles", "Profile dang hoat dong")}
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">
+                {uploadPostProfiles.length}
+              </p>
+            </div>
+          </div>
+        </div>
+      </PanelCard>
 
       <PanelCard
         title={copy("Account Control Plane", "Bảng điều khiển tài khoản")}
@@ -360,13 +457,18 @@ export function FinancePage() {
             {accountStateError ? (
               <InlineQueryState
                 state="error"
-                message={getQueryErrorMessage(
-                  accountStateError,
-                  copy(
-                    "Real provider account endpoints are unstable right now. You can still submit control actions below.",
-                    "Endpoint tài khoản provider đang chưa ổn định. Bạn vẫn có thể gửi thao tác điều khiển bên dưới.",
-                  ),
-                )}
+                message={
+                  isUploadPostApiKeyMissing
+                    ? copy(
+                        "Backend is missing UPLOAD_POST_API_KEY, so account controls and JWT actions are temporarily unavailable.",
+                        "Backend dang thieu UPLOAD_POST_API_KEY, nen cac thao tac account control va JWT tam thoi chua su dung duoc.",
+                      )
+                    : (accountStateMessage ??
+                      copy(
+                        "Real provider account endpoints are unstable right now. You can still submit control actions below.",
+                        "Endpoint tai khoan provider dang chua on dinh. Ban van co the gui thao tac dieu khien ben duoi.",
+                      ))
+                }
               />
             ) : null}
 
@@ -435,7 +537,9 @@ export function FinancePage() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={createProfileMutation.isPending}
+                  disabled={
+                    createProfileMutation.isPending || isUploadPostApiKeyMissing
+                  }
                 >
                   {createProfileMutation.isPending
                     ? copy("Creating...", "Đang tạo...")
@@ -468,7 +572,12 @@ export function FinancePage() {
                   }
                   placeholder="blhoang23"
                 />
-                <Button type="submit" className="w-full" variant="outline">
+                <Button
+                  type="submit"
+                  className="w-full"
+                  variant="outline"
+                  disabled={isUploadPostApiKeyMissing}
+                >
                   {copy("Get Profile Detail", "Lấy chi tiết profile")}
                 </Button>
                 {profileLookupQuery.isFetching ? (
@@ -515,8 +624,9 @@ export function FinancePage() {
                       size="xs"
                       variant="destructive"
                       disabled={
-                        deleteProfileMutation.isPending &&
-                        deletingProfile === profile.username
+                        isUploadPostApiKeyMissing ||
+                        (deleteProfileMutation.isPending &&
+                          deletingProfile === profile.username)
                       }
                       onClick={() => {
                         void handleDeleteProfile(profile.username);
@@ -591,7 +701,9 @@ export function FinancePage() {
                   type="submit"
                   className="w-full"
                   disabled={
-                    generateJwtMutation.isPending || jwtPlatforms.length === 0
+                    generateJwtMutation.isPending ||
+                    jwtPlatforms.length === 0 ||
+                    isUploadPostApiKeyMissing
                   }
                 >
                   {generateJwtMutation.isPending
@@ -631,7 +743,9 @@ export function FinancePage() {
                   type="submit"
                   className="w-full"
                   variant="outline"
-                  disabled={validateJwtMutation.isPending}
+                  disabled={
+                    validateJwtMutation.isPending || isUploadPostApiKeyMissing
+                  }
                 >
                   {validateJwtMutation.isPending
                     ? copy("Validating...", "Đang xác thực...")
@@ -731,7 +845,10 @@ export function FinancePage() {
           )}
         >
           {impressionsTimeline.length > 0 ? (
-            <LineTrendChart data={impressionsLineData} />
+            <LineTrendChart
+              data={impressionsLineData}
+              className="bg-linear-to-br from-emerald-100/60 via-card to-lime-100/45 dark:from-emerald-500/12 dark:via-card/90 dark:to-lime-500/10"
+            />
           ) : (
             <InlineQueryState
               state="empty"
@@ -751,7 +868,10 @@ export function FinancePage() {
           )}
         >
           {historyItems.length > 0 ? (
-            <DoughnutTrendChart data={successDonutData} />
+            <DoughnutTrendChart
+              data={successDonutData}
+              className="bg-linear-to-br from-lime-100/55 via-card to-amber-100/45 dark:from-lime-500/12 dark:via-card/90 dark:to-amber-500/10"
+            />
           ) : (
             <InlineQueryState
               state="empty"
@@ -779,7 +899,10 @@ export function FinancePage() {
                 profileAnalyticsQuery.data?.payload.platforms ?? {},
               ).length > 0 ? (
               <>
-                <BarTrendChart data={platformPerformanceBarData} />
+                <BarTrendChart
+                  data={platformPerformanceBarData}
+                  className="bg-linear-to-br from-amber-100/55 via-card to-cyan-100/45 dark:from-amber-500/12 dark:via-card/90 dark:to-cyan-500/10"
+                />
                 {Object.entries(
                   profileAnalyticsQuery.data?.payload.platforms ?? {},
                 ).map(([platform, metrics]) => {
@@ -889,6 +1012,7 @@ export function FinancePage() {
                     columns={latestRequestHeatMap.columns}
                     values={latestRequestHeatMap.values}
                     valueFormatter={(value) => formatCompactNumber(value)}
+                    className="bg-linear-to-br from-emerald-100/55 via-card to-teal-100/45 dark:from-emerald-500/12 dark:via-card/90 dark:to-teal-500/10"
                   />
                 ) : null}
                 <div className="rounded-2xl border border-border/55 bg-background/55 p-4">

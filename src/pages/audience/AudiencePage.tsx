@@ -191,8 +191,8 @@ export function AudiencePage() {
           data: audienceSegments
             .slice(0, 6)
             .map((segment) => segment.affinityScore * 100),
-          borderColor: "rgba(16, 185, 129, 0.95)",
-          backgroundColor: "rgba(16, 185, 129, 0.25)",
+          borderColor: "rgba(13, 148, 136, 0.95)",
+          backgroundColor: "rgba(13, 148, 136, 0.24)",
           borderWidth: 2,
           pointRadius: 2,
         },
@@ -210,7 +210,7 @@ export function AudiencePage() {
           data: topicSignals
             .slice(0, 8)
             .map((topic) => topic.increase_percentage),
-          backgroundColor: "rgba(56, 189, 248, 0.75)",
+          backgroundColor: "rgba(132, 204, 22, 0.78)",
           borderRadius: 10,
         },
       ],
@@ -232,14 +232,28 @@ export function AudiencePage() {
         {
           data: [tikTokCount, youTubeCount],
           backgroundColor: [
-            "rgba(16, 185, 129, 0.78)",
-            "rgba(59, 130, 246, 0.78)",
+            "rgba(20, 184, 166, 0.78)",
+            "rgba(249, 115, 22, 0.78)",
           ],
           borderWidth: 0,
         },
       ],
     };
   }, [latestComments]);
+
+  const interestCloud = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          audienceSegments
+            .slice(0, 8)
+            .flatMap((segment) => segment.interests)
+            .map((item) => item.trim())
+            .filter(Boolean),
+        ),
+      ).slice(0, 14),
+    [audienceSegments],
+  );
 
   const trendVideoHeatMap = useMemo(() => {
     const items = trendingVideos.slice(0, 6);
@@ -343,6 +357,78 @@ export function AudiencePage() {
         </div>
       )}
 
+      <PanelCard
+        title={copy("Persona Mosaic", "Khung tranh chan dung")}
+        description={copy(
+          "A collage view of dominant audience interests and conversation energy.",
+          "Goc nhin dang collage cho nhom so thich noi bat va nang luong hoi thoai.",
+        )}
+        className="border-teal-500/26 bg-linear-to-br from-teal-100/55 via-card to-lime-100/45 dark:from-teal-500/12 dark:via-card/92 dark:to-lime-500/10"
+      >
+        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-2xl border border-teal-500/24 bg-background/70 p-4">
+            <p className="text-xs font-semibold tracking-[0.14em] text-teal-700 uppercase dark:text-teal-300">
+              {copy("Interest Cloud", "May so thich")}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {interestCloud.length > 0 ? (
+                interestCloud.map((interest, index) => (
+                  <Badge
+                    key={`${interest}-${index}`}
+                    variant="outline"
+                    className={cn(
+                      "rounded-full border px-2.5 py-1 text-[11px]",
+                      index % 3 === 0
+                        ? "border-teal-500/40 bg-teal-500/10"
+                        : index % 3 === 1
+                          ? "border-lime-500/40 bg-lime-500/10"
+                          : "border-cyan-500/40 bg-cyan-500/10",
+                    )}
+                  >
+                    {interest}
+                  </Badge>
+                ))
+              ) : (
+                <InlineQueryState
+                  state="empty"
+                  message={copy(
+                    "No interest cloud data yet.",
+                    "Chua co du lieu interest cloud.",
+                  )}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <div className="rounded-2xl border border-lime-500/24 bg-background/70 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Top Segments", "Phan khuc top")}
+              </p>
+              <p className="mt-2 text-xl font-semibold text-foreground">
+                {audienceSegments.slice(0, 3).length}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-cyan-500/24 bg-background/70 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Comment Pulse", "Nhip binh luan")}
+              </p>
+              <p className="mt-2 text-xl font-semibold text-foreground">
+                {latestComments.length}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-teal-500/24 bg-background/70 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Trend Video Set", "Bo video trend")}
+              </p>
+              <p className="mt-2 text-xl font-semibold text-foreground">
+                {trendingVideos.length}
+              </p>
+            </div>
+          </div>
+        </div>
+      </PanelCard>
+
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <PanelCard
           title={copy("Segment Affinity Radar", "Radar ái lực phân khúc")}
@@ -352,7 +438,10 @@ export function AudiencePage() {
           )}
         >
           {audienceSegments.length > 0 ? (
-            <RadarTrendChart data={segmentRadarData} />
+            <RadarTrendChart
+              data={segmentRadarData}
+              className="bg-linear-to-br from-teal-100/60 via-card to-cyan-100/45 dark:from-teal-500/12 dark:via-card/90 dark:to-cyan-500/10"
+            />
           ) : (
             <InlineQueryState
               state="empty"
@@ -372,7 +461,10 @@ export function AudiencePage() {
           )}
         >
           {latestComments.length > 0 ? (
-            <DoughnutTrendChart data={commentsMixData} />
+            <DoughnutTrendChart
+              data={commentsMixData}
+              className="bg-linear-to-br from-lime-100/55 via-card to-orange-100/45 dark:from-lime-500/12 dark:via-card/90 dark:to-orange-500/10"
+            />
           ) : (
             <InlineQueryState
               state="empty"
@@ -494,7 +586,10 @@ export function AudiencePage() {
               <PanelRowsSkeleton rows={4} />
             ) : topicSignals.length > 0 ? (
               <>
-                <BarTrendChart data={topicGrowthBarData} />
+                <BarTrendChart
+                  data={topicGrowthBarData}
+                  className="bg-linear-to-br from-lime-100/60 via-card to-teal-100/45 dark:from-lime-500/12 dark:via-card/90 dark:to-teal-500/10"
+                />
                 {topicSignals.slice(0, 5).map((topic) => (
                   <div
                     key={topic.topic_id}
@@ -547,6 +642,7 @@ export function AudiencePage() {
                   columns={trendVideoHeatMap.columns}
                   values={trendVideoHeatMap.values}
                   valueFormatter={(value) => `${Math.round(value)}%`}
+                  className="bg-linear-to-br from-cyan-100/60 via-card to-emerald-100/45 dark:from-cyan-500/12 dark:via-card/90 dark:to-emerald-500/10"
                 />
                 {trendingVideos.slice(0, 4).map((video) => (
                   <a

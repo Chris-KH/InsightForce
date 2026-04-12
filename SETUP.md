@@ -37,6 +37,15 @@ cp .env.example .env.local
 
 _Note: Never commit `.env.local` or any file containing secrets to version control._
 
+### 3.1 Backend Environment (Required for Upload-Post Finance/Automation features)
+
+If Finance or Automation pages display an error like `Missing UPLOAD_POST_API_KEY in the backend environment`, configure backend env variables before testing those flows:
+
+- `UPLOAD_POST_API_KEY`: API key used by backend Upload-Post service calls.
+- `UPLOAD_POST_JWT`: optional default JWT token fallback for protected Upload-Post operations.
+
+See backend task list in `backend/TODO.md` for remaining integration items.
+
 ### 4. Start Development Server
 
 Launch the Vite development server with Hot Module Replacement (HMR):
