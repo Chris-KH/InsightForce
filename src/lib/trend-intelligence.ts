@@ -100,18 +100,21 @@ function hashKeyword(keyword: string) {
   return hash;
 }
 
+const TREND_NODE_HUES = [206, 246, 154, 34, 278, 348, 168, 22];
+
 function toNodePalette(score: number, keyword: string) {
   const normalized = clampScore(score) / 100;
-  const baseHue = 220 - normalized * 170;
-  const hueOffset = (hashKeyword(keyword) % 24) - 12;
-  const hue = Math.round((baseHue + hueOffset + 360) % 360);
-  const saturation = Math.round(74 + normalized * 14);
-  const lightness = Math.round(46 + normalized * 10);
+  const hash = hashKeyword(keyword);
+  const hueBase = TREND_NODE_HUES[hash % TREND_NODE_HUES.length] ?? 210;
+  const hueJitter = ((hash >>> 3) % 17) - 8;
+  const hue = Math.round((hueBase + hueJitter + 360) % 360);
+  const saturation = Math.round(56 + normalized * 10);
+  const lightness = Math.round(46 + normalized * 8);
 
   return {
     color: `hsl(${hue} ${saturation}% ${lightness}%)`,
-    strokeColor: `hsl(${hue} ${Math.min(96, saturation + 6)}% ${Math.max(30, lightness - 14)}%)`,
-    glowColor: `hsla(${hue} ${Math.min(96, saturation + 8)}% ${Math.min(72, lightness + 8)}% / 0.45)`,
+    strokeColor: `hsl(${hue} ${Math.min(88, saturation + 6)}% ${Math.max(30, lightness - 12)}%)`,
+    glowColor: `hsla(${hue} ${Math.min(90, saturation + 8)}% ${Math.min(72, lightness + 8)}% / 0.26)`,
   };
 }
 

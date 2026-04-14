@@ -1,12 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bot,
   Clock3,
   Compass,
+  ListChecks,
+  MousePointerClick,
   RefreshCw,
+  Rocket,
   SendHorizontal,
   Sparkles,
   Target,
+  WandSparkles,
 } from "lucide-react";
 
 import {
@@ -80,8 +84,34 @@ function computeAverageViewsPerHour(results: TrendAnalyzeResultItem[]) {
   );
 }
 
+function buildGeneralTrendPlans(result: TrendAnalyzeResultItem) {
+  const firstTag = result.top_hashtags[0] ?? "#trend";
+
+  return [
+    result.recommended_action,
+    `Triển khai 2 format cho ${result.main_keyword}: 1 video ngắn giải thích + 1 case study thực thi trong 24 giờ.`,
+    `A/B test hai mở bài dựa trên ${firstTag} và đo retention tại mốc 3s, 8s, 15s để chốt format hiệu quả.`,
+  ];
+}
+
+function buildGeneralTrendPrompts(result: TrendAnalyzeResultItem) {
+  const unique = new Set<string>();
+  const topTags = result.top_hashtags.slice(0, 3);
+
+  unique.add(`phân tích sâu hơn về ${result.main_keyword}`);
+  unique.add(`lập kế hoạch nội dung 7 ngày cho ${result.main_keyword}`);
+  unique.add(`tạo 5 hook video ngắn cho ${result.main_keyword}`);
+
+  for (const tag of topTags) {
+    unique.add(`xây dựng chiến dịch nội dung xoay quanh ${tag}`);
+  }
+
+  return [...unique].slice(0, 6);
+}
+
 export function StrategyPage() {
   const copy = useBilingual();
+  const promptStudioRef = useRef<HTMLDivElement | null>(null);
 
   const [nowTick, setNowTick] = useState(Date.now());
   const [promptInput, setPromptInput] = useState("");
@@ -132,8 +162,24 @@ export function StrategyPage() {
     () =>
       generalResults.find(
         (result) => result.main_keyword === selectedGeneralKeyword,
-      ) ?? strongestGeneralResult,
-    [generalResults, selectedGeneralKeyword, strongestGeneralResult],
+      ),
+    [generalResults, selectedGeneralKeyword],
+  );
+
+  const generalPlanSuggestions = useMemo(
+    () =>
+      generalSelectedResult
+        ? buildGeneralTrendPlans(generalSelectedResult)
+        : [],
+    [generalSelectedResult],
+  );
+
+  const generalPromptSuggestions = useMemo(
+    () =>
+      generalSelectedResult
+        ? buildGeneralTrendPrompts(generalSelectedResult)
+        : [],
+    [generalSelectedResult],
   );
 
   const promptSelectedResult = useMemo(
@@ -222,17 +268,16 @@ export function StrategyPage() {
   }, [trendAnalyzeMutation.isPending, reasoningStartedAt]);
 
   useEffect(() => {
-    if (generalResults.length === 0) {
+    if (!selectedGeneralKeyword) {
       return;
     }
 
     if (
-      !selectedGeneralKeyword ||
       !generalResults.some(
         (result) => result.main_keyword === selectedGeneralKeyword,
       )
     ) {
-      setSelectedGeneralKeyword(generalResults[0].main_keyword);
+      setSelectedGeneralKeyword(undefined);
     }
   }, [generalResults, selectedGeneralKeyword]);
 
@@ -251,14 +296,36 @@ export function StrategyPage() {
     }
   }, [promptResults, selectedPromptKeyword]);
 
-  const handleAnalyzeSubmit = async () => {
-    const normalizedPrompt = promptInput.trim();
+  const runTrendPromptAnalyze = async (
+    rawPrompt: string,
+    options: {
+      keepInput?: boolean;
+      scrollToPromptStudio?: boolean;
+    } = {},
+  ) => {
+    const normalizedPrompt = rawPrompt.trim();
     if (!normalizedPrompt) {
       return;
     }
 
-    const nextPrompts = [...sessionPrompts, normalizedPrompt].slice(-20);
-    setSessionPrompts(nextPrompts);
+    if (trendAnalyzeMutation.isPending) {
+      return;
+    }
+
+    if (options.scrollToPromptStudio) {
+      promptStudioRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+
+    setPromptInput(normalizedPrompt);
+
+    let nextPrompts: string[] = [];
+    setSessionPrompts((currentPrompts) => {
+      nextPrompts = [...currentPrompts, normalizedPrompt].slice(-20);
+      return nextPrompts;
+    });
 
     setReasoningStartedAt(Date.now());
     setReasoningElapsedMs(0);
@@ -271,13 +338,16 @@ export function StrategyPage() {
 
       const normalizedResults = sanitizeTrendResults(response.results);
       setPromptResponse(response);
-      setPromptInput("");
 
-      setSessionSuggestions(
+      if (!options.keepInput) {
+        setPromptInput("");
+      }
+
+      setSessionSuggestions((currentSuggestions) =>
         buildSessionSuggestions(
           nextPrompts,
           normalizedResults,
-          sessionSuggestions,
+          currentSuggestions,
         ),
       );
 
@@ -287,6 +357,17 @@ export function StrategyPage() {
     } finally {
       setReasoningStartedAt(null);
     }
+  };
+
+  const handleAnalyzeSubmit = async () => {
+    await runTrendPromptAnalyze(promptInput);
+  };
+
+  const handleGeneralPromptSuggestionClick = (suggestion: string) => {
+    void runTrendPromptAnalyze(suggestion, {
+      keepInput: true,
+      scrollToPromptStudio: true,
+    });
   };
 
   const handleSelectGeneralNode = (node: TrendGraphNode) => {
@@ -415,104 +496,234 @@ export function StrategyPage() {
         <PanelCard
           title={copy("General Trend Feed", "Danh sách trend tổng quát")}
           description={copy(
-            "Auto-refresh result list for generic trend discovery without a manual prompt.",
-            "Danh sách kết quả tự làm mới cho luồng trend chung không cần prompt thủ công.",
+            "Select one node on the graph to reveal full insight, action plans, and one-click prompts.",
+            "Hãy chọn một node trên đồ thị để mở phân tích chi tiết, kế hoạch gợi ý và prompt 1 chạm.",
           )}
         >
-          <TrendResultCards
-            results={generalResults}
-            selectedKeyword={generalSelectedResult?.main_keyword}
-            onSelect={(result) =>
-              setSelectedGeneralKeyword(result.main_keyword)
-            }
-          />
-
           {generalSelectedResult ? (
-            <Card className="mt-4 border-primary/20 bg-primary/6" size="sm">
-              <CardHeader>
-                <CardTitle>
-                  {copy("Selected Opportunity", "Cơ hội đang chọn")}
-                </CardTitle>
-                <CardDescription>
-                  {generalSelectedResult.main_keyword}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <p>{generalSelectedResult.why_the_trend_happens}</p>
-                <p>
-                  {copy("Recommended action", "Hành động gợi ý")}:{" "}
-                  {generalSelectedResult.recommended_action}
+            <div className="space-y-4">
+              <Card className="border-primary/22 bg-primary/7" size="sm">
+                <CardHeader>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <CardTitle>
+                        {copy("Selected Opportunity", "Cơ hội đang chọn")}
+                      </CardTitle>
+                      <CardDescription>
+                        {generalSelectedResult.main_keyword}
+                      </CardDescription>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="rounded-full border-primary/30 bg-background/80"
+                    >
+                      <Target className="mr-1.5 size-3.5" />
+                      {formatPercentValue(generalSelectedResult.trend_score)}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm text-muted-foreground">
+                  <p>{generalSelectedResult.why_the_trend_happens}</p>
+
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="rounded-xl border border-border/60 bg-background/65 p-3">
+                      <p className="text-[10px] font-semibold tracking-[0.14em] uppercase">
+                        {copy("Avg views / hour", "Trung bình views / giờ")}
+                      </p>
+                      <p className="mt-1 text-base font-semibold text-foreground">
+                        {formatCompactNumber(
+                          generalSelectedResult.avg_views_per_hour,
+                        )}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-border/60 bg-background/65 p-3">
+                      <p className="text-[10px] font-semibold tracking-[0.14em] uppercase">
+                        {copy("Recommended action", "Hành động chính")}
+                      </p>
+                      <p className="mt-1 text-sm text-foreground">
+                        {generalSelectedResult.recommended_action}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {generalSelectedResult.top_hashtags.map((hashtag) => (
+                      <Badge
+                        key={hashtag}
+                        variant="outline"
+                        className="rounded-full"
+                      >
+                        {hashtag}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/70 bg-background/55" size="sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <ListChecks className="size-4 text-primary" />
+                    {copy("Suggested Plan", "Kế hoạch gợi ý")}
+                  </CardTitle>
+                  <CardDescription>
+                    {copy(
+                      "Execution checklist generated from the selected trend signal.",
+                      "Checklist triển khai được tạo từ tín hiệu trend đang chọn.",
+                    )}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  {generalPlanSuggestions.map((plan, index) => (
+                    <div
+                      key={`${generalSelectedResult.main_keyword}-plan-${index}`}
+                      className="rounded-xl border border-border/60 bg-background/70 px-3 py-2 text-muted-foreground"
+                    >
+                      <span className="mr-2 text-primary">{index + 1}.</span>
+                      {plan}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <div className="space-y-2 rounded-2xl border border-border/65 bg-background/55 p-4">
+                <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  <WandSparkles className="size-3.5 text-primary" />
+                  {copy(
+                    "Prompt Suggestions For This Trend",
+                    "Prompt Gợi Ý Cho Trend Này",
+                  )}
                 </p>
-              </CardContent>
-            </Card>
-          ) : null}
+
+                <div className="flex flex-wrap gap-2">
+                  {generalPromptSuggestions.map((suggestion) => (
+                    <Button
+                      key={suggestion}
+                      variant="outline"
+                      size="sm"
+                      className="max-w-full truncate"
+                      disabled={trendAnalyzeMutation.isPending}
+                      onClick={() =>
+                        handleGeneralPromptSuggestionClick(suggestion)
+                      }
+                    >
+                      <Rocket data-icon="inline-start" />
+                      {suggestion}
+                    </Button>
+                  ))}
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  {copy(
+                    "Click one prompt to jump to Prompt Trend Studio and run analysis immediately.",
+                    "Bấm một prompt để nhảy xuống Prompt Trend Studio và chạy phân tích ngay.",
+                  )}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="relative overflow-hidden rounded-2xl border border-dashed border-border/70 bg-linear-to-br from-background/75 via-background/40 to-muted/28 px-5 py-7">
+              <div className="pointer-events-none absolute -top-16 -right-12 size-40 rounded-full bg-primary/10 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-16 -left-10 size-44 rounded-full bg-chart-2/10 blur-3xl" />
+
+              <div className="relative space-y-4">
+                <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+                  <MousePointerClick className="size-3.5" />
+                  {copy("Awaiting Node Selection", "Đang chờ bạn chọn node")}
+                </p>
+
+                <p className="max-w-xl text-sm text-muted-foreground">
+                  {copy(
+                    "General Trend Feed stays in preview mode until you click a node in the graph. Once selected, this panel will reveal detailed insight, action plans, and one-click prompts.",
+                    "General Trend Feed sẽ để chế độ trang trí cho tới khi bạn click vào một node trên đồ thị. Sau khi chọn, panel này sẽ hiện phân tích chi tiết, kế hoạch hành động và prompt 1 chạm.",
+                  )}
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                  {generalResults.slice(0, 4).map((item) => (
+                    <Badge
+                      key={`decor-${item.main_keyword}`}
+                      variant="outline"
+                      className="rounded-full border-border/65 bg-background/75 text-muted-foreground"
+                    >
+                      {item.main_keyword}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </PanelCard>
       </div>
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-        <Card className="rounded-3xl border-border/75 bg-linear-to-br from-card via-card/95 to-muted/28">
-          <CardHeader>
-            <CardTitle>
-              {copy("Prompt Trend Studio", "Prompt Trend Studio")}
-            </CardTitle>
-            <CardDescription>
-              {copy(
-                "Ask for trend ideas with context; suggestion chips evolve through your current session.",
-                "Yêu cầu xu hướng theo ngữ cảnh; các gợi ý sẽ thay đổi theo phiên hiện tại của bạn.",
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/60 p-2">
-              <Input
-                value={promptInput}
-                onChange={(event) => setPromptInput(event.target.value)}
-                placeholder={copy(
-                  "Example: trend content ideas for dental clinics in Vietnam",
-                  "Ví dụ: ý tưởng trend content cho nha khoa tại Việt Nam",
+        <div ref={promptStudioRef}>
+          <Card className="rounded-3xl border-border/75 bg-linear-to-br from-card via-card/95 to-muted/28">
+            <CardHeader>
+              <CardTitle>
+                {copy("Prompt Trend Studio", "Prompt Trend Studio")}
+              </CardTitle>
+              <CardDescription>
+                {copy(
+                  "Ask for trend ideas with context; suggestion chips evolve through your current session.",
+                  "Yêu cầu xu hướng theo ngữ cảnh; các gợi ý sẽ thay đổi theo phiên hiện tại của bạn.",
                 )}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    void handleAnalyzeSubmit();
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/60 p-2">
+                <Input
+                  value={promptInput}
+                  onChange={(event) => setPromptInput(event.target.value)}
+                  placeholder={copy(
+                    "Example: trend content ideas for dental clinics in Vietnam",
+                    "Ví dụ: ý tưởng trend content cho nha khoa tại Việt Nam",
+                  )}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void handleAnalyzeSubmit();
+                    }
+                  }}
+                />
+                <Button
+                  onClick={() => void handleAnalyzeSubmit()}
+                  disabled={
+                    trendAnalyzeMutation.isPending || !promptInput.trim()
                   }
-                }}
+                >
+                  <SendHorizontal data-icon="inline-start" />
+                  {copy("Analyze", "Phân tích")}
+                </Button>
+              </div>
+
+              <PromptSuggestionBar
+                suggestions={sessionSuggestions}
+                onSelect={setPromptInput}
               />
-              <Button
-                onClick={() => void handleAnalyzeSubmit()}
-                disabled={trendAnalyzeMutation.isPending || !promptInput.trim()}
-              >
-                <SendHorizontal data-icon="inline-start" />
-                {copy("Analyze", "Phân tích")}
-              </Button>
-            </div>
 
-            <PromptSuggestionBar
-              suggestions={sessionSuggestions}
-              onSelect={setPromptInput}
-            />
+              <div className="rounded-2xl border border-border/55 bg-background/45 p-3 text-xs text-muted-foreground">
+                <p>
+                  {copy("Session ID", "Session ID")}: {sessionId}
+                </p>
+                <p className="mt-1">
+                  {copy("Prompt turns", "Số lượt prompt")}:{" "}
+                  {sessionPrompts.length}
+                </p>
+              </div>
 
-            <div className="rounded-2xl border border-border/55 bg-background/45 p-3 text-xs text-muted-foreground">
-              <p>
-                {copy("Session ID", "Session ID")}: {sessionId}
-              </p>
-              <p className="mt-1">
-                {copy("Prompt turns", "Số lượt prompt")}:{" "}
-                {sessionPrompts.length}
-              </p>
-            </div>
-
-            {trendAnalyzeMutation.error ? (
-              <InlineQueryState
-                state="error"
-                message={getQueryErrorMessage(
-                  trendAnalyzeMutation.error,
-                  "Unable to analyze trend prompt.",
-                )}
-              />
-            ) : null}
-          </CardContent>
-        </Card>
+              {trendAnalyzeMutation.error ? (
+                <InlineQueryState
+                  state="error"
+                  message={getQueryErrorMessage(
+                    trendAnalyzeMutation.error,
+                    "Unable to analyze trend prompt.",
+                  )}
+                />
+              ) : null}
+            </CardContent>
+          </Card>
+        </div>
 
         <Card className="rounded-3xl border-border/75 bg-linear-to-br from-card via-card/95 to-muted/28">
           <CardHeader>

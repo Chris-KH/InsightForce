@@ -8,6 +8,7 @@ import {
   buildTrendGraphData,
   type TrendGraphNode,
 } from "@/lib/trend-intelligence";
+import { cn } from "@/lib/utils";
 
 type TrendForceGraphProps = {
   results: TrendAnalyzeResultItem[];
@@ -71,11 +72,13 @@ function drawLabelChip({
   node,
   globalScale,
   emphasize,
+  isDarkMode,
 }: {
   ctx: CanvasRenderingContext2D;
   node: TrendGraphNode;
   globalScale: number;
   emphasize: boolean;
+  isDarkMode: boolean;
 }) {
   const x = node.x ?? 0;
   const y = node.y ?? 0;
@@ -94,16 +97,26 @@ function drawLabelChip({
   const chipY = y + node.radius + 10 / globalScale;
 
   drawRoundedRect(ctx, chipX, chipY, chipWidth, chipHeight, chipHeight / 2);
-  ctx.fillStyle = emphasize ? "rgba(15,23,42,0.88)" : "rgba(15,23,42,0.7)";
+  ctx.fillStyle = isDarkMode
+    ? emphasize
+      ? "rgba(15,23,42,0.88)"
+      : "rgba(15,23,42,0.72)"
+    : emphasize
+      ? "rgba(248,250,252,0.92)"
+      : "rgba(248,250,252,0.8)";
   ctx.fill();
 
   ctx.lineWidth = emphasize ? 1.6 / globalScale : 1.1 / globalScale;
-  ctx.strokeStyle = emphasize
-    ? "rgba(251,146,60,0.85)"
-    : "rgba(148,163,184,0.45)";
+  ctx.strokeStyle = isDarkMode
+    ? emphasize
+      ? "rgba(251,146,60,0.85)"
+      : "rgba(148,163,184,0.45)"
+    : emphasize
+      ? "rgba(245,158,11,0.9)"
+      : "rgba(100,116,139,0.38)";
   ctx.stroke();
 
-  ctx.fillStyle = "rgba(241,245,249,0.97)";
+  ctx.fillStyle = isDarkMode ? "rgba(241,245,249,0.97)" : "rgba(15,23,42,0.9)";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(visibleLabel, x, chipY + chipHeight / 2);
@@ -119,6 +132,7 @@ export function TrendForceGraph({
   const [width, setWidth] = useState(920);
   const [zoom, setZoom] = useState(1);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const graphData = useMemo(() => buildTrendGraphData(results), [results]);
 
@@ -136,6 +150,24 @@ export function TrendForceGraph({
 
     const observer = new ResizeObserver(measure);
     observer.observe(container);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    const syncTheme = () => {
+      setIsDarkMode(root.classList.contains("dark"));
+    };
+
+    syncTheme();
+
+    const observer = new MutationObserver(syncTheme);
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
 
     return () => observer.disconnect();
   }, []);
@@ -228,10 +260,25 @@ export function TrendForceGraph({
 
       <div
         ref={containerRef}
-        className="relative overflow-hidden rounded-2xl border border-primary/25 bg-linear-to-b from-slate-950/95 via-slate-900/90 to-slate-950/95"
+        className={cn(
+          "relative overflow-hidden rounded-2xl border",
+          isDarkMode
+            ? "border-primary/25 bg-linear-to-b from-slate-950/95 via-slate-900/92 to-slate-950/96"
+            : "border-slate-300/75 bg-linear-to-b from-slate-100/95 via-slate-50/88 to-white",
+        )}
       >
-        <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-sky-400/20 blur-3xl" />
-        <div className="pointer-events-none absolute -right-16 -bottom-24 h-72 w-72 rounded-full bg-amber-400/18 blur-3xl" />
+        <div
+          className={cn(
+            "pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full blur-3xl",
+            isDarkMode ? "bg-sky-400/20" : "bg-sky-300/35",
+          )}
+        />
+        <div
+          className={cn(
+            "pointer-events-none absolute -right-16 -bottom-24 h-72 w-72 rounded-full blur-3xl",
+            isDarkMode ? "bg-amber-400/17" : "bg-orange-300/30",
+          )}
+        />
 
         <ForceGraph2D
           ref={graphRef}
@@ -271,8 +318,12 @@ export function TrendForceGraph({
           linkDirectionalParticleWidth={1.5}
           linkColor={(link) =>
             ((link as { sharedTags?: string[] }).sharedTags?.length ?? 0) > 0
-              ? "rgba(56,189,248,0.45)"
-              : "rgba(148,163,184,0.28)"
+              ? isDarkMode
+                ? "rgba(125,211,252,0.4)"
+                : "rgba(14,116,144,0.34)"
+              : isDarkMode
+                ? "rgba(148,163,184,0.24)"
+                : "rgba(100,116,139,0.26)"
           }
           nodeCanvasObject={(nodeObject, ctx, globalScale) => {
             const node = nodeObject as TrendGraphNode;
@@ -308,7 +359,10 @@ export function TrendForceGraph({
               y,
               radius * 1.05,
             );
-            fillGradient.addColorStop(0, "rgba(255,255,255,0.34)");
+            fillGradient.addColorStop(
+              0,
+              isDarkMode ? "rgba(255,255,255,0.26)" : "rgba(255,255,255,0.18)",
+            );
             fillGradient.addColorStop(0.24, node.color);
             fillGradient.addColorStop(1, node.strokeColor);
 
@@ -321,8 +375,12 @@ export function TrendForceGraph({
             ctx.strokeStyle = selected
               ? "rgba(251,146,60,0.98)"
               : hovered
-                ? "rgba(248,250,252,0.9)"
-                : "rgba(15,23,42,0.45)";
+                ? isDarkMode
+                  ? "rgba(248,250,252,0.9)"
+                  : "rgba(15,23,42,0.88)"
+                : isDarkMode
+                  ? "rgba(15,23,42,0.45)"
+                  : "rgba(71,85,105,0.55)";
             ctx.stroke();
 
             if (emphasize || globalScale >= 1.35) {
@@ -331,6 +389,7 @@ export function TrendForceGraph({
                 node,
                 globalScale,
                 emphasize,
+                isDarkMode,
               });
             }
           }}
