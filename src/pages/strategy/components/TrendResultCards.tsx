@@ -2,6 +2,7 @@ import { BarChart3, Hash, Sparkles, TrendingUp } from "lucide-react";
 
 import type { TrendAnalyzeResultItem } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
+import { extractInterestValues } from "@/lib/trend-intelligence";
 import { cn } from "@/lib/utils";
 
 type TrendResultCardsProps = {
@@ -9,6 +10,42 @@ type TrendResultCardsProps = {
   selectedKeyword?: string;
   onSelect: (result: TrendAnalyzeResultItem) => void;
 };
+
+function InterestSparkline({ values }: { values: number[] }) {
+  if (values.length < 2) {
+    return (
+      <div className="h-8 rounded-lg border border-dashed border-border/60 bg-background/50" />
+    );
+  }
+
+  const width = 170;
+  const height = 32;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const denominator = max - min || 1;
+
+  const points = values.map((value, index) => {
+    const x = (index / (values.length - 1)) * (width - 2) + 1;
+    const y = height - ((value - min) / denominator) * (height - 6) - 3;
+    return `${x},${y}`;
+  });
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="h-8 w-full rounded-lg border border-border/60 bg-background/45"
+      preserveAspectRatio="none"
+    >
+      <polyline
+        points={points.join(" ")}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="text-primary"
+      />
+    </svg>
+  );
+}
 
 export function TrendResultCards({
   results,
@@ -19,6 +56,7 @@ export function TrendResultCards({
     <div className="space-y-3">
       {results.map((result) => {
         const selected = selectedKeyword === result.main_keyword;
+        const interestValues = extractInterestValues(result);
 
         return (
           <button
@@ -59,6 +97,10 @@ export function TrendResultCards({
                   {hashtag}
                 </span>
               ))}
+            </div>
+
+            <div className="mt-3">
+              <InterestSparkline values={interestValues} />
             </div>
           </button>
         );

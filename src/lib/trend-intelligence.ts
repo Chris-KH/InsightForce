@@ -25,12 +25,17 @@ export type TrendGraphData = {
   links: TrendGraphLink[];
 };
 
+export type TrendFilterOptions = {
+  minScore?: number;
+  hashtagQuery?: string;
+};
+
 export const DEFAULT_TREND_PROMPT_SUGGESTIONS = [
-  "xu huong video ngan cho creator viet nam",
-  "chu de ai cho phong kham trong 7 ngay toi",
-  "y tuong content cho nha thuoc va suc khoe",
-  "trend social media cho nganh giao duc",
-  "chu de dang tang truong tren tiktok hom nay",
+  "xu hướng video ngắn cho creator Việt Nam",
+  "chủ đề AI cho phòng khám trong 7 ngày tới",
+  "ý tưởng content cho nhà thuốc và sức khỏe",
+  "trend social media cho ngành giáo dục",
+  "chủ đề đang tăng trưởng trên TikTok hôm nay",
 ];
 
 export function sanitizeTrendResults(
@@ -151,6 +156,33 @@ export function buildTrendGraphData(
   }
 
   return { nodes, links };
+}
+
+export function filterTrendResults(
+  results: TrendAnalyzeResultItem[],
+  options: TrendFilterOptions = {},
+) {
+  const minScore = options.minScore ?? 0;
+  const hashtagQuery = options.hashtagQuery?.trim().toLowerCase() ?? "";
+
+  return sanitizeTrendResults(results).filter((result) => {
+    if (result.trend_score < minScore) {
+      return false;
+    }
+
+    if (!hashtagQuery) {
+      return true;
+    }
+
+    const keywordMatches = result.main_keyword
+      .toLowerCase()
+      .includes(hashtagQuery);
+    const hashtagMatches = result.top_hashtags.some((hashtag) =>
+      hashtag.toLowerCase().includes(hashtagQuery),
+    );
+
+    return keywordMatches || hashtagMatches;
+  });
 }
 
 export function buildSessionSuggestions(

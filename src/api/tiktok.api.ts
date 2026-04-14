@@ -1,4 +1,12 @@
 import { httpClient } from "@/api/http-client";
+import {
+  getMockTikTokChannelStatus,
+  getMockTikTokRecommendations,
+  getMockTikTokTrends,
+  getMockTikTokVideo,
+  getMockTikTokVideos,
+  withApiMockFallback,
+} from "@/api/mock-fallback";
 import type {
   TikTokChannelStatusResponse,
   TikTokRecommendationsResponse,
@@ -12,28 +20,51 @@ import type {
 const TIKTOK_BASE_PATH = "/api/v1/tiktok";
 
 export function getTikTokChannelStatus() {
-  return httpClient.get<TikTokChannelStatusResponse>(
-    `${TIKTOK_BASE_PATH}/channel/status`,
+  return withApiMockFallback(
+    "tiktok.channel.status",
+    () =>
+      httpClient.get<TikTokChannelStatusResponse>(
+        `${TIKTOK_BASE_PATH}/channel/status`,
+      ),
+    () => getMockTikTokChannelStatus(),
   );
 }
 
 export function getTikTokTrends() {
-  return httpClient.get<TikTokTrendsResponse>(`${TIKTOK_BASE_PATH}/trends`);
+  return withApiMockFallback(
+    "tiktok.trends",
+    () => httpClient.get<TikTokTrendsResponse>(`${TIKTOK_BASE_PATH}/trends`),
+    () => getMockTikTokTrends(),
+  );
 }
 
 export function getTikTokRecommendations() {
-  return httpClient.get<TikTokRecommendationsResponse>(
-    `${TIKTOK_BASE_PATH}/recommendations`,
+  return withApiMockFallback(
+    "tiktok.recommendations",
+    () =>
+      httpClient.get<TikTokRecommendationsResponse>(
+        `${TIKTOK_BASE_PATH}/recommendations`,
+      ),
+    () => getMockTikTokRecommendations(),
   );
 }
 
 export function getTikTokVideos() {
-  return httpClient.get<TikTokVideosResponse>(`${TIKTOK_BASE_PATH}/videos`);
+  return withApiMockFallback(
+    "tiktok.videos",
+    () => httpClient.get<TikTokVideosResponse>(`${TIKTOK_BASE_PATH}/videos`),
+    () => getMockTikTokVideos(),
+  );
 }
 
 export function getTikTokVideo(videoId: string) {
-  return httpClient.get<TikTokVideoDetailResponse>(
-    `${TIKTOK_BASE_PATH}/videos/${encodeURIComponent(videoId)}`,
+  return withApiMockFallback(
+    `tiktok.video.${videoId}`,
+    () =>
+      httpClient.get<TikTokVideoDetailResponse>(
+        `${TIKTOK_BASE_PATH}/videos/${encodeURIComponent(videoId)}`,
+      ),
+    () => getMockTikTokVideo(videoId),
   );
 }
 

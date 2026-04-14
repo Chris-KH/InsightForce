@@ -1,4 +1,12 @@
 import { httpClient } from "@/api/http-client";
+import {
+  getMockYouTubeChannelStatus,
+  getMockYouTubeRecommendations,
+  getMockYouTubeTrends,
+  getMockYouTubeVideo,
+  getMockYouTubeVideos,
+  withApiMockFallback,
+} from "@/api/mock-fallback";
 import type {
   UploadVideoRequest,
   UploadVideoResponse,
@@ -12,28 +20,51 @@ import type {
 const YOUTUBE_BASE_PATH = "/api/v1/youtube";
 
 export function getYouTubeChannelStatus() {
-  return httpClient.get<YouTubeChannelStatusResponse>(
-    `${YOUTUBE_BASE_PATH}/channel/status`,
+  return withApiMockFallback(
+    "youtube.channel.status",
+    () =>
+      httpClient.get<YouTubeChannelStatusResponse>(
+        `${YOUTUBE_BASE_PATH}/channel/status`,
+      ),
+    () => getMockYouTubeChannelStatus(),
   );
 }
 
 export function getYouTubeTrends() {
-  return httpClient.get<YouTubeTrendsResponse>(`${YOUTUBE_BASE_PATH}/trends`);
+  return withApiMockFallback(
+    "youtube.trends",
+    () => httpClient.get<YouTubeTrendsResponse>(`${YOUTUBE_BASE_PATH}/trends`),
+    () => getMockYouTubeTrends(),
+  );
 }
 
 export function getYouTubeRecommendations() {
-  return httpClient.get<YouTubeRecommendationsResponse>(
-    `${YOUTUBE_BASE_PATH}/recommendations`,
+  return withApiMockFallback(
+    "youtube.recommendations",
+    () =>
+      httpClient.get<YouTubeRecommendationsResponse>(
+        `${YOUTUBE_BASE_PATH}/recommendations`,
+      ),
+    () => getMockYouTubeRecommendations(),
   );
 }
 
 export function getYouTubeVideos() {
-  return httpClient.get<YouTubeVideosResponse>(`${YOUTUBE_BASE_PATH}/videos`);
+  return withApiMockFallback(
+    "youtube.videos",
+    () => httpClient.get<YouTubeVideosResponse>(`${YOUTUBE_BASE_PATH}/videos`),
+    () => getMockYouTubeVideos(),
+  );
 }
 
 export function getYouTubeVideo(videoId: string) {
-  return httpClient.get<YouTubeVideoDetailResponse>(
-    `${YOUTUBE_BASE_PATH}/videos/${encodeURIComponent(videoId)}`,
+  return withApiMockFallback(
+    `youtube.video.${videoId}`,
+    () =>
+      httpClient.get<YouTubeVideoDetailResponse>(
+        `${YOUTUBE_BASE_PATH}/videos/${encodeURIComponent(videoId)}`,
+      ),
+    () => getMockYouTubeVideo(videoId),
   );
 }
 

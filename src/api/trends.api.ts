@@ -1,4 +1,9 @@
 import { httpClient } from "@/api/http-client";
+import {
+  getMockTrendAnalyze,
+  getMockTrendOverview,
+  withApiMockFallback,
+} from "@/api/mock-fallback";
 import type {
   TrendAnalyzeRequest,
   TrendAnalyzeResponse,
@@ -14,21 +19,31 @@ export type GetTrendOverviewParams = {
 };
 
 export function analyzeTrend(payload: TrendAnalyzeRequest) {
-  return httpClient.post<TrendAnalyzeResponse>(
-    `${TRENDS_BASE_PATH}/analyze`,
-    payload,
+  return withApiMockFallback(
+    `trends.analyze.${payload.query.trim().toLowerCase()}`,
+    () =>
+      httpClient.post<TrendAnalyzeResponse>(
+        `${TRENDS_BASE_PATH}/analyze`,
+        payload,
+      ),
+    () => getMockTrendAnalyze(payload.query),
   );
 }
 
 export function getTrendOverview(params: GetTrendOverviewParams = {}) {
-  return httpClient.get<TrendOverviewResponse>(
-    `${TRENDS_BASE_PATH}/mock/overview`,
-    {
-      query: {
-        keyword: params.keyword,
-        region: params.region,
-        hashtag: params.hashtag,
-      },
-    },
+  return withApiMockFallback(
+    `trends.overview.${params.keyword?.trim().toLowerCase() ?? "all"}`,
+    () =>
+      httpClient.get<TrendOverviewResponse>(
+        `${TRENDS_BASE_PATH}/mock/overview`,
+        {
+          query: {
+            keyword: params.keyword,
+            region: params.region,
+            hashtag: params.hashtag,
+          },
+        },
+      ),
+    () => getMockTrendOverview(params),
   );
 }
