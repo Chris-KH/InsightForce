@@ -1,584 +1,625 @@
-import { Compass, Lightbulb, Radar, Sparkles, TrendingUp } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Bot,
+  Clock3,
+  Compass,
+  RefreshCw,
+  SendHorizontal,
+  Sparkles,
+  Target,
+} from "lucide-react";
 
 import {
-  useTikTokRecommendationsQuery,
-  useTikTokTrendsQuery,
-  useYouTubeRecommendationsQuery,
-  useYouTubeTrendsQuery,
+  type TrendAnalyzeResponse,
+  type TrendAnalyzeResultItem,
+  useTrendAnalyzeMutation,
+  useTrendGeneralQuery,
 } from "@/api";
-import {
-  BarTrendChart,
-  HeatMatrix,
-  LineTrendChart,
-} from "@/components/app-data-viz";
 import {
   InlineQueryState,
   MetricCardsSkeleton,
-  PanelRowsSkeleton,
   QueryStateCard,
 } from "@/components/app-query-state";
-import { PlatformBadge } from "@/components/platform-badge";
 import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useBilingual } from "@/hooks/use-bilingual";
 import {
   formatCompactNumber,
-  formatPercentFromRatio,
   formatPercentValue,
 } from "@/lib/insight-formatters";
-import { getPlatformSurfaceClassName } from "@/lib/platform-theme";
+import {
+  buildSessionSuggestions,
+  createTrendSessionId,
+  DEFAULT_TREND_PROMPT_SUGGESTIONS,
+  sanitizeTrendResults,
+  type TrendGraphNode,
+} from "@/lib/trend-intelligence";
 import { getQueryErrorMessage } from "@/lib/query-error";
 import { cn } from "@/lib/utils";
+import { PromptSuggestionBar } from "@/pages/strategy/components/PromptSuggestionBar";
+import { ReasoningTimeline } from "@/pages/strategy/components/ReasoningTimeline";
+import { TrendForceGraph } from "@/pages/strategy/components/TrendForceGraph";
+import { TrendResultCards } from "@/pages/strategy/components/TrendResultCards";
 
-type UnifiedTopic = {
-  platform: "tiktok" | "youtube";
-  topicId: string;
-  topic: string;
-  keyword: string;
-  trendScore: number;
-  growth: number;
-  potentialViews: number;
-  searchVolume: number;
+const TREND_SESSION_STORAGE_KEY = "insightforce.trend.session.v1";
+const GENERAL_TREND_QUERY = "xu hướng mạng xã hội tổng quát hôm nay";
+const GENERAL_REFRESH_INTERVAL_MS = 180_000;
+
+type TrendSessionState = {
+  sessionId: string;
+  prompts: string[];
+  suggestions: string[];
 };
 
-type UnifiedRecommendation = {
-  platform: "tiktok" | "youtube";
-  id: string;
-  contentIdea: string;
-  hookOrTitle: string;
-  confidenceScore: number;
-  reasoning: string;
-  sourceTopics: string[];
-};
+function computeAverageScore(results: TrendAnalyzeResultItem[]) {
+  if (results.length === 0) {
+    return 0;
+  }
+  return (
+    results.reduce((total, item) => total + item.trend_score, 0) /
+    results.length
+  );
+}
+
+function computeAverageViewsPerHour(results: TrendAnalyzeResultItem[]) {
+  if (results.length === 0) {
+    return 0;
+  }
+  return (
+    results.reduce((total, item) => total + item.avg_views_per_hour, 0) /
+    results.length
+  );
+}
 
 export function StrategyPage() {
   const copy = useBilingual();
 
-  const tikTokTrendsQuery = useTikTokTrendsQuery();
-  const youTubeTrendsQuery = useYouTubeTrendsQuery();
-  const tikTokRecommendationsQuery = useTikTokRecommendationsQuery();
-  const youTubeRecommendationsQuery = useYouTubeRecommendationsQuery();
+  const [nowTick, setNowTick] = useState(Date.now());
+  const [promptInput, setPromptInput] = useState("");
+  const [promptResponse, setPromptResponse] =
+    useState<TrendAnalyzeResponse | null>(null);
 
-  const allQueries = [
-    tikTokTrendsQuery,
-    youTubeTrendsQuery,
-    tikTokRecommendationsQuery,
-    youTubeRecommendationsQuery,
-  ];
-
-  const isLoading = allQueries.some((query) => query.isLoading);
-  const isInitialLoading = allQueries.some(
-    (query) => query.isLoading && !query.data,
+  const [sessionId, setSessionId] = useState(createTrendSessionId());
+  const [sessionPrompts, setSessionPrompts] = useState<string[]>([]);
+  const [sessionSuggestions, setSessionSuggestions] = useState<string[]>(
+    DEFAULT_TREND_PROMPT_SUGGESTIONS,
   );
-  const firstError = allQueries.find((query) => query.error)?.error;
+  const [sessionReady, setSessionReady] = useState(false);
 
-  const trendTopics: UnifiedTopic[] = [
-    ...(tikTokTrendsQuery.data?.trend_topics ?? []).map((topic) => ({
-      platform: "tiktok" as const,
-      topicId: topic.topic_id,
-      topic: topic.topic,
-      keyword: topic.keyword,
-      trendScore: topic.trend_score,
-      growth: topic.increase_percentage,
-      potentialViews: topic.potential_views,
-      searchVolume: topic.search_volume,
-    })),
-    ...(youTubeTrendsQuery.data?.trend_topics ?? []).map((topic) => ({
-      platform: "youtube" as const,
-      topicId: topic.topic_id,
-      topic: topic.topic,
-      keyword: topic.keyword,
-      trendScore: topic.trend_score,
-      growth: topic.increase_percentage,
-      potentialViews: topic.potential_views,
-      searchVolume: topic.search_volume,
-    })),
-  ].sort((left, right) => right.trendScore - left.trendScore);
+  const [selectedGeneralKeyword, setSelectedGeneralKeyword] = useState<
+    string | undefined
+  >();
+  const [selectedPromptKeyword, setSelectedPromptKeyword] = useState<
+    string | undefined
+  >();
 
-  const recommendations: UnifiedRecommendation[] = [
-    ...(tikTokRecommendationsQuery.data?.recommendations ?? []).map((item) => ({
-      platform: "tiktok" as const,
-      id: item.recommendation_id,
-      contentIdea: item.content_idea,
-      hookOrTitle: item.hook,
-      confidenceScore: item.confidence_score,
-      reasoning: item.reasoning,
-      sourceTopics: item.source_topics,
-    })),
-    ...(youTubeRecommendationsQuery.data?.recommendations ?? []).map(
-      (item) => ({
-        platform: "youtube" as const,
-        id: item.recommendation_id,
-        contentIdea: item.content_idea,
-        hookOrTitle: item.title_idea,
-        confidenceScore: item.confidence_score,
-        reasoning: item.reasoning,
-        sourceTopics: item.source_topics,
-      }),
-    ),
-  ].sort((left, right) => right.confidenceScore - left.confidenceScore);
+  const [reasoningStartedAt, setReasoningStartedAt] = useState<number | null>(
+    null,
+  );
+  const [reasoningElapsedMs, setReasoningElapsedMs] = useState(0);
 
-  const risingTopicsCount =
-    (tikTokTrendsQuery.data?.overview_summary.rising_topic_count ?? 0) +
-    (youTubeTrendsQuery.data?.overview_summary.rising_topic_count ?? 0);
+  const generalTrendQuery = useTrendGeneralQuery({
+    query: GENERAL_TREND_QUERY,
+    limit: 6,
+    refetchIntervalMs: GENERAL_REFRESH_INTERVAL_MS,
+  });
+  const trendAnalyzeMutation = useTrendAnalyzeMutation();
 
-  const averagePotentialViews = trendTopics.length
-    ? trendTopics.reduce((sum, topic) => sum + topic.potentialViews, 0) /
-      trendTopics.length
-    : 0;
+  const generalResults = useMemo(
+    () => sanitizeTrendResults(generalTrendQuery.data?.results),
+    [generalTrendQuery.data?.results],
+  );
 
-  const highConfidenceIdeas = recommendations.filter(
-    (item) => item.confidenceScore >= 0.85,
-  ).length;
+  const promptResults = useMemo(
+    () => sanitizeTrendResults(promptResponse?.results),
+    [promptResponse?.results],
+  );
 
-  const trendScoreBarData = {
-    labels: trendTopics.slice(0, 8).map((topic) => topic.keyword),
-    datasets: [
-      {
-        label: copy("Trend score", "Điểm xu hướng"),
-        data: trendTopics.slice(0, 8).map((topic) => topic.trendScore),
-        backgroundColor: "rgba(249, 115, 22, 0.78)",
-        borderRadius: 10,
-      },
-    ],
-  };
+  const strongestGeneralResult = generalResults[0];
+  const averageGeneralScore = computeAverageScore(generalResults);
+  const averageGeneralViewsPerHour = computeAverageViewsPerHour(generalResults);
 
-  const recommendationConfidenceLineData = {
-    labels: recommendations.slice(0, 8).map((_, index) => `${index + 1}`),
-    datasets: [
-      {
-        label: copy("Confidence %", "Độ tin cậy %"),
-        data: recommendations
-          .slice(0, 8)
-          .map((item) => item.confidenceScore * 100),
-        borderColor: "rgba(225, 29, 72, 0.92)",
-        backgroundColor: "rgba(251, 113, 133, 0.2)",
-        tension: 0.35,
-        fill: true,
-        pointRadius: 3,
-      },
-    ],
-  };
+  const generalSelectedResult = useMemo(
+    () =>
+      generalResults.find(
+        (result) => result.main_keyword === selectedGeneralKeyword,
+      ) ?? strongestGeneralResult,
+    [generalResults, selectedGeneralKeyword, strongestGeneralResult],
+  );
 
-  const sourceTopicMatrix = (() => {
-    const topItems = recommendations.slice(0, 5);
-    const allSourceTopics = Array.from(
-      new Set(topItems.flatMap((item) => item.sourceTopics)),
-    ).slice(0, 5);
+  const promptSelectedResult = useMemo(
+    () =>
+      promptResults.find(
+        (result) => result.main_keyword === selectedPromptKeyword,
+      ) ?? promptResults[0],
+    [promptResults, selectedPromptKeyword],
+  );
 
-    return {
-      rows: topItems.map((item) =>
-        item.contentIdea.length > 26
-          ? `${item.contentIdea.slice(0, 26)}...`
-          : item.contentIdea,
-      ),
-      columns: allSourceTopics,
-      values: topItems.map((item) =>
-        allSourceTopics.map((topic) =>
-          item.sourceTopics.includes(topic) ? item.confidenceScore * 100 : 0,
-        ),
-      ),
+  const selectedGeneralNodeId = useMemo(() => {
+    if (!generalSelectedResult) {
+      return undefined;
+    }
+
+    const index = generalResults.findIndex(
+      (result) => result.main_keyword === generalSelectedResult.main_keyword,
+    );
+    return index >= 0
+      ? `${generalSelectedResult.main_keyword}-${index}`
+      : undefined;
+  }, [generalResults, generalSelectedResult]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNowTick(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const raw = window.localStorage.getItem(TREND_SESSION_STORAGE_KEY);
+
+    if (!raw) {
+      setSessionReady(true);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as TrendSessionState;
+
+      if (parsed.sessionId) {
+        setSessionId(parsed.sessionId);
+      }
+      if (Array.isArray(parsed.prompts)) {
+        setSessionPrompts(parsed.prompts.slice(-20));
+      }
+      if (Array.isArray(parsed.suggestions) && parsed.suggestions.length > 0) {
+        setSessionSuggestions(parsed.suggestions.slice(0, 10));
+      }
+    } catch {
+      // Ignore corrupted local session payload and fallback to defaults.
+    }
+
+    setSessionReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!sessionReady) {
+      return;
+    }
+
+    const payload: TrendSessionState = {
+      sessionId,
+      prompts: sessionPrompts,
+      suggestions: sessionSuggestions,
     };
-  })();
 
-  const playbookLanes = [
-    {
-      step: copy("Detect", "Phat hien"),
-      detail: copy(
-        "Track rising topics and momentum shifts.",
-        "Theo doi chu de dang tang va do doi dong luc.",
-      ),
-      value: risingTopicsCount,
-      tone: "border-orange-500/30 bg-orange-500/10",
-    },
-    {
-      step: copy("Prioritize", "Uu tien"),
-      detail: copy(
-        "Rank ideas by confidence and potential views.",
-        "Xep hang y tuong theo do tin cay va luot xem tiem nang.",
-      ),
-      value: highConfidenceIdeas,
-      tone: "border-rose-500/30 bg-rose-500/10",
-    },
-    {
-      step: copy("Ship", "Trien khai"),
-      detail: copy(
-        "Turn selected ideas into production plans.",
-        "Chuyen y tuong duoc chon thanh ke hoach san xuat.",
-      ),
-      value: recommendations.length,
-      tone: "border-amber-500/30 bg-amber-500/10",
-    },
-  ];
+    window.localStorage.setItem(
+      TREND_SESSION_STORAGE_KEY,
+      JSON.stringify(payload),
+    );
+  }, [sessionReady, sessionId, sessionPrompts, sessionSuggestions]);
+
+  useEffect(() => {
+    if (!trendAnalyzeMutation.isPending || !reasoningStartedAt) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setReasoningElapsedMs(Date.now() - reasoningStartedAt);
+    }, 180);
+
+    return () => window.clearInterval(timer);
+  }, [trendAnalyzeMutation.isPending, reasoningStartedAt]);
+
+  useEffect(() => {
+    if (generalResults.length === 0) {
+      return;
+    }
+
+    if (
+      !selectedGeneralKeyword ||
+      !generalResults.some(
+        (result) => result.main_keyword === selectedGeneralKeyword,
+      )
+    ) {
+      setSelectedGeneralKeyword(generalResults[0].main_keyword);
+    }
+  }, [generalResults, selectedGeneralKeyword]);
+
+  useEffect(() => {
+    if (promptResults.length === 0) {
+      return;
+    }
+
+    if (
+      !selectedPromptKeyword ||
+      !promptResults.some(
+        (result) => result.main_keyword === selectedPromptKeyword,
+      )
+    ) {
+      setSelectedPromptKeyword(promptResults[0].main_keyword);
+    }
+  }, [promptResults, selectedPromptKeyword]);
+
+  const handleAnalyzeSubmit = async () => {
+    const normalizedPrompt = promptInput.trim();
+    if (!normalizedPrompt) {
+      return;
+    }
+
+    const nextPrompts = [...sessionPrompts, normalizedPrompt].slice(-20);
+    setSessionPrompts(nextPrompts);
+
+    setReasoningStartedAt(Date.now());
+    setReasoningElapsedMs(0);
+
+    try {
+      const response = await trendAnalyzeMutation.mutateAsync({
+        query: normalizedPrompt,
+        limit: 5,
+      });
+
+      const normalizedResults = sanitizeTrendResults(response.results);
+      setPromptResponse(response);
+      setPromptInput("");
+
+      setSessionSuggestions(
+        buildSessionSuggestions(
+          nextPrompts,
+          normalizedResults,
+          sessionSuggestions,
+        ),
+      );
+
+      if (normalizedResults[0]) {
+        setSelectedPromptKeyword(normalizedResults[0].main_keyword);
+      }
+    } finally {
+      setReasoningStartedAt(null);
+    }
+  };
+
+  const handleSelectGeneralNode = (node: TrendGraphNode) => {
+    setSelectedGeneralKeyword(node.keyword);
+  };
+
+  const refreshInSeconds = generalTrendQuery.dataUpdatedAt
+    ? Math.max(
+        0,
+        Math.ceil(
+          (generalTrendQuery.dataUpdatedAt +
+            GENERAL_REFRESH_INTERVAL_MS -
+            nowTick) /
+            1000,
+        ),
+      )
+    : null;
 
   return (
     <div className="grid gap-8">
       <SectionHeader
-        eyebrow={copy("Strategic Radar", "Radar chiến lược")}
+        eyebrow={copy("Trend Intelligence", "Trí tuệ xu hướng")}
         title={copy(
-          "Trend-To-Plan Intelligence",
-          "Trí tuệ từ xu hướng tới kế hoạch",
+          "Live Trend Graph And Prompt Studio",
+          "Đồ thị xu hướng trực tiếp và Prompt Studio",
         )}
         description={copy(
-          "The strategy layer now reflects real trend and recommendation endpoints from TikTok and YouTube services.",
-          "Lớp chiến lược hiện phản ánh dữ liệu thật từ endpoint xu hướng và đề xuất của TikTok và YouTube.",
+          "A dedicated strategy workspace with auto-refresh general trend mapping and interactive prompt-driven trend discovery.",
+          "Không gian chiến lược chuyên biệt với bản đồ trend chung tự làm mới và luồng khám phá trend theo prompt tương tác.",
         )}
         action={
           <Badge
             variant="outline"
             className="rounded-full border-primary/25 bg-background/80 px-3 py-1.5 text-primary"
           >
-            <Sparkles className="mr-2 size-3.5" />
-            {copy("Strategy Feed Live", "Feed chiến lược trực tiếp")}
+            <RefreshCw className="mr-2 size-3.5" />
+            {copy("Auto Refresh 3m", "Tự làm mới 3 phút")}
           </Badge>
         }
       />
 
-      {firstError ? (
-        <QueryStateCard
-          state="error"
-          title={copy("Data Load Error", "Lỗi tải dữ liệu")}
-          description={getQueryErrorMessage(
-            firstError,
-            "Unable to load strategy intelligence data.",
-          )}
-          hint={copy(
-            "This page depends on /trends and /recommendations endpoints for both platforms.",
-            "Trang này phụ thuộc vào endpoint /trends và /recommendations của cả hai nền tảng.",
-          )}
-        />
-      ) : null}
-
-      {isInitialLoading ? (
+      {generalTrendQuery.isLoading && !generalTrendQuery.data ? (
         <MetricCardsSkeleton />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label={copy("Rising Topics", "Chủ đề tăng trưởng")}
-            value={isLoading ? "--" : String(risingTopicsCount)}
+            label={copy("General Trend Entries", "Số entry trend chung")}
+            value={String(generalResults.length)}
             detail={copy(
-              "From TikTok + YouTube trend summaries",
-              "Từ tóm tắt xu hướng TikTok + YouTube",
-            )}
-            icon={<Radar className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Average Potential Views", "Lượt xem tiềm năng TB")}
-            value={
-              isLoading ? "--" : formatCompactNumber(averagePotentialViews)
-            }
-            detail={copy(
-              "Mean potential views across ranked topics",
-              "Lượt xem tiềm năng trung bình theo chủ đề xếp hạng",
-            )}
-            icon={<TrendingUp className="size-5" />}
-          />
-          <MetricCard
-            label={copy("High-Confidence Ideas", "Ý tưởng độ tin cậy cao")}
-            value={isLoading ? "--" : String(highConfidenceIdeas)}
-            detail={copy(
-              "Recommendations with confidence >= 85%",
-              "Đề xuất có độ tin cậy >= 85%",
-            )}
-            icon={<Lightbulb className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Total Strategies", "Tổng đề xuất chiến lược")}
-            value={isLoading ? "--" : String(recommendations.length)}
-            detail={copy(
-              "Combined recommendation pool",
-              "Kho đề xuất hợp nhất",
+              "From periodic trend polling",
+              "Lấy từ polling trend định kỳ",
             )}
             icon={<Compass className="size-5" />}
+          />
+          <MetricCard
+            label={copy("Top Trend Score", "Điểm trend cao nhất")}
+            value={
+              strongestGeneralResult
+                ? formatPercentValue(strongestGeneralResult.trend_score)
+                : "--"
+            }
+            detail={strongestGeneralResult?.main_keyword ?? "--"}
+            icon={<Target className="size-5" />}
+          />
+          <MetricCard
+            label={copy("Avg Views / Hour", "Trung bình views / giờ")}
+            value={formatCompactNumber(averageGeneralViewsPerHour)}
+            detail={copy(
+              "Average from general trend results",
+              "Trung bình từ danh sách trend chung",
+            )}
+            icon={<Bot className="size-5" />}
+          />
+          <MetricCard
+            label={copy("Avg Trend Score", "Điểm trend trung bình")}
+            value={formatPercentValue(averageGeneralScore)}
+            detail={
+              refreshInSeconds !== null
+                ? copy(
+                    `Refresh in ${refreshInSeconds}s`,
+                    `Làm mới sau ${refreshInSeconds}s`,
+                  )
+                : copy("Waiting first refresh", "Đang chờ lần làm mới đầu")
+            }
+            icon={<Clock3 className="size-5" />}
           />
         </div>
       )}
 
-      <PanelCard
-        title={copy("Playbook Lanes", "Lan ke hoach")}
-        description={copy(
-          "A strategy pipeline view from signal detection to production-ready ideas.",
-          "Goc nhin dang pipeline tu phat hien tin hieu den y tuong san sang san xuat.",
-        )}
-        className="border-orange-500/28 bg-linear-to-br from-orange-100/55 via-card to-rose-100/45 dark:from-orange-500/12 dark:via-card/92 dark:to-rose-500/10"
-      >
-        <div className="grid gap-3 lg:grid-cols-3">
-          {playbookLanes.map((lane, index) => (
-            <div
-              key={lane.step}
-              className={cn(
-                "rounded-2xl border p-4",
-                lane.tone,
-                index === 1 ? "lg:-translate-y-1" : "",
-              )}
-            >
-              <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-                {lane.step}
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-foreground">
-                {lane.value}
-              </p>
-              <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                {lane.detail}
-              </p>
-            </div>
-          ))}
-        </div>
-      </PanelCard>
+      {generalTrendQuery.error ? (
+        <QueryStateCard
+          state="error"
+          title={copy("Trend Load Error", "Lỗi tải trend")}
+          description={getQueryErrorMessage(
+            generalTrendQuery.error,
+            "Unable to fetch general trend data.",
+          )}
+          hint={copy(
+            "Check /api/v1/trends/analyze availability and backend model configuration.",
+            "Kiểm tra endpoint /api/v1/trends/analyze và cấu hình model phía backend.",
+          )}
+        />
+      ) : null}
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <PanelCard
-          title={copy("Trend Score Map", "Bản đồ điểm xu hướng")}
+          title={copy("General Trend Graph", "Đồ thị trend tổng quát")}
           description={copy(
-            "Ranked trend score across top topic keywords.",
-            "Điểm xu hướng theo thứ hạng keyword chủ đề nổi bật.",
+            "Each node is one trend result; higher trend score means larger node. You can zoom, pan, and drag nodes.",
+            "Mỗi node là một trend result; điểm càng cao node càng to. Bạn có thể zoom, pan và kéo node.",
           )}
+          action={
+            <Badge variant="outline" className="rounded-full border-primary/25">
+              <Sparkles className="mr-1.5 size-3.5" />
+              {copy("Interactive Graph", "Đồ thị tương tác")}
+            </Badge>
+          }
         >
-          {trendTopics.length > 0 ? (
-            <BarTrendChart
-              data={trendScoreBarData}
-              className="bg-linear-to-br from-orange-100/60 via-card to-amber-100/45 dark:from-orange-500/12 dark:via-card/90 dark:to-amber-500/10"
-            />
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No trend score data available.",
-                "Chưa có dữ liệu điểm xu hướng.",
-              )}
-            />
-          )}
+          <TrendForceGraph
+            results={generalResults}
+            selectedNodeId={selectedGeneralNodeId}
+            onSelectNode={handleSelectGeneralNode}
+          />
         </PanelCard>
 
         <PanelCard
-          title={copy("Confidence Curve", "Đường độ tin cậy")}
+          title={copy("General Trend Feed", "Danh sách trend tổng quát")}
           description={copy(
-            "Confidence trajectory of top strategy recommendations.",
-            "Đường biến thiên độ tin cậy của các đề xuất chiến lược hàng đầu.",
+            "Auto-refresh result list for generic trend discovery without a manual prompt.",
+            "Danh sách kết quả tự làm mới cho luồng trend chung không cần prompt thủ công.",
           )}
         >
-          {recommendations.length > 0 ? (
-            <LineTrendChart
-              data={recommendationConfidenceLineData}
-              className="bg-linear-to-br from-rose-100/60 via-card to-orange-100/45 dark:from-rose-500/12 dark:via-card/90 dark:to-orange-500/10"
-            />
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No recommendation confidence data available.",
-                "Chưa có dữ liệu độ tin cậy đề xuất.",
-              )}
-            />
-          )}
+          <TrendResultCards
+            results={generalResults}
+            selectedKeyword={generalSelectedResult?.main_keyword}
+            onSelect={(result) =>
+              setSelectedGeneralKeyword(result.main_keyword)
+            }
+          />
+
+          {generalSelectedResult ? (
+            <Card className="mt-4 border-primary/20 bg-primary/6" size="sm">
+              <CardHeader>
+                <CardTitle>
+                  {copy("Selected Opportunity", "Cơ hội đang chọn")}
+                </CardTitle>
+                <CardDescription>
+                  {generalSelectedResult.main_keyword}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-muted-foreground">
+                <p>{generalSelectedResult.why_the_trend_happens}</p>
+                <p>
+                  {copy("Recommended action", "Hành động gợi ý")}:{" "}
+                  {generalSelectedResult.recommended_action}
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
         </PanelCard>
       </div>
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-        <PanelCard
-          title={copy("Priority Opportunities", "Cơ hội ưu tiên")}
-          description={copy(
-            "Trend topics ranked by trend score and growth.",
-            "Chủ đề xu hướng được xếp theo điểm xu hướng và tăng trưởng.",
-          )}
-        >
-          <div className="space-y-3">
-            {isInitialLoading ? (
-              <PanelRowsSkeleton rows={4} />
-            ) : trendTopics.length > 0 ? (
-              trendTopics.slice(0, 8).map((topic) => (
-                <div
-                  key={`${topic.platform}-${topic.topicId}`}
-                  className={cn(
-                    "rounded-2xl border border-border/55 bg-background/55 p-4",
-                    getPlatformSurfaceClassName(topic.platform),
-                  )}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-medium text-foreground">{topic.topic}</p>
-                    <PlatformBadge platform={topic.platform} />
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {topic.keyword}
-                  </p>
-                  <div className="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
-                    <p>
-                      {copy("Trend", "Điểm xu hướng")}:{" "}
-                      {formatPercentValue(topic.trendScore)}
-                    </p>
-                    <p>
-                      {copy("Growth", "Tăng trưởng")}: +{topic.growth}%
-                    </p>
-                    <p>
-                      {copy("Search", "Lượng tìm kiếm")}:{" "}
-                      {formatCompactNumber(topic.searchVolume)}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
+        <Card className="rounded-3xl border-border/75 bg-linear-to-br from-card via-card/95 to-muted/28">
+          <CardHeader>
+            <CardTitle>
+              {copy("Prompt Trend Studio", "Prompt Trend Studio")}
+            </CardTitle>
+            <CardDescription>
+              {copy(
+                "Ask for trend ideas with context; suggestion chips evolve through your current session.",
+                "Yêu cầu xu hướng theo ngữ cảnh; các gợi ý sẽ thay đổi theo phiên hiện tại của bạn.",
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/60 p-2">
+              <Input
+                value={promptInput}
+                onChange={(event) => setPromptInput(event.target.value)}
+                placeholder={copy(
+                  "Example: trend content ideas for dental clinics in Vietnam",
+                  "Ví dụ: ý tưởng trend content cho nha khoa tại Việt Nam",
+                )}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void handleAnalyzeSubmit();
+                  }
+                }}
+              />
+              <Button
+                onClick={() => void handleAnalyzeSubmit()}
+                disabled={trendAnalyzeMutation.isPending || !promptInput.trim()}
+              >
+                <SendHorizontal data-icon="inline-start" />
+                {copy("Analyze", "Phân tích")}
+              </Button>
+            </div>
+
+            <PromptSuggestionBar
+              suggestions={sessionSuggestions}
+              onSelect={setPromptInput}
+            />
+
+            <div className="rounded-2xl border border-border/55 bg-background/45 p-3 text-xs text-muted-foreground">
+              <p>
+                {copy("Session ID", "Session ID")}: {sessionId}
+              </p>
+              <p className="mt-1">
+                {copy("Prompt turns", "Số lượt prompt")}:{" "}
+                {sessionPrompts.length}
+              </p>
+            </div>
+
+            {trendAnalyzeMutation.error ? (
               <InlineQueryState
-                state="empty"
-                message={copy(
-                  "No trend opportunities available yet.",
-                  "Chưa có cơ hội xu hướng khả dụng.",
+                state="error"
+                message={getQueryErrorMessage(
+                  trendAnalyzeMutation.error,
+                  "Unable to analyze trend prompt.",
                 )}
               />
-            )}
-          </div>
-        </PanelCard>
+            ) : null}
+          </CardContent>
+        </Card>
 
-        <PanelCard
-          title={copy(
-            "Recommended Content Plans",
-            "Kế hoạch nội dung được đề xuất",
-          )}
-          description={copy(
-            "Generated from recommendation endpoints with confidence and rationale.",
-            "Sinh từ endpoint recommendation với độ tin cậy và lập luận đi kèm.",
-          )}
-        >
-          <div className="space-y-3">
-            {isInitialLoading ? (
-              <PanelRowsSkeleton rows={4} />
-            ) : recommendations.length > 0 ? (
-              recommendations.slice(0, 8).map((item) => (
-                <div
-                  key={`${item.platform}-${item.id}`}
-                  className={cn(
-                    "rounded-2xl border border-border/55 bg-background/55 p-4",
-                    getPlatformSurfaceClassName(item.platform),
+        <Card className="rounded-3xl border-border/75 bg-linear-to-br from-card via-card/95 to-muted/28">
+          <CardHeader>
+            <CardTitle>
+              {copy("Reasoning Status", "Trạng thái reasoning")}
+            </CardTitle>
+            <CardDescription>
+              {copy(
+                "Live reasoning progress while waiting for prompt analysis result.",
+                "Tiến trình reasoning trực tiếp trong lúc chờ kết quả phân tích prompt.",
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ReasoningTimeline
+              isPending={trendAnalyzeMutation.isPending}
+              elapsedMs={reasoningElapsedMs}
+            />
+
+            <div
+              className={cn(
+                "rounded-2xl border border-border/55 bg-background/50 p-4 text-xs",
+                trendAnalyzeMutation.isPending
+                  ? "text-primary"
+                  : "text-muted-foreground",
+              )}
+            >
+              {trendAnalyzeMutation.isPending
+                ? copy("Agent is reasoning...", "Agent đang reasoning...")
+                : copy(
+                    "Waiting for next prompt.",
+                    "Đang chờ prompt tiếp theo.",
                   )}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <PlatformBadge platform={item.platform} />
-                    <p className="text-xs text-muted-foreground">
-                      {formatPercentFromRatio(item.confidenceScore)} confidence
-                    </p>
-                  </div>
+            </div>
 
-                  <p className="mt-2 font-medium text-foreground">
-                    {item.contentIdea}
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {item.hookOrTitle}
-                  </p>
-                  <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                    {item.reasoning}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {item.sourceTopics.map((sourceTopic) => (
-                      <Badge
-                        key={`${item.id}-${sourceTopic}`}
-                        variant="outline"
-                        className="rounded-full text-[11px]"
-                      >
-                        {sourceTopic}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <InlineQueryState
-                state="empty"
-                message={copy(
-                  "No recommendation plans available.",
-                  "Chưa có kế hoạch đề xuất khả dụng.",
-                )}
-              />
-            )}
-          </div>
-        </PanelCard>
+            {promptResponse?.markdown_summary ? (
+              <div className="rounded-2xl border border-border/55 bg-background/50 p-4 text-sm text-muted-foreground">
+                <p className="mb-1 text-xs font-semibold tracking-[0.14em] uppercase">
+                  {copy("Narrative Summary", "Tóm tắt diễn giải")}
+                </p>
+                <p className="whitespace-pre-wrap">
+                  {promptResponse.markdown_summary}
+                </p>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
       </div>
 
       <PanelCard
-        title={copy(
-          "Platform Strategist Notes",
-          "Ghi chú chiến lược theo nền tảng",
-        )}
+        title={copy("Prompt Trend Results", "Kết quả trend từ prompt")}
         description={copy(
-          "Direct strategist notes from each trend overview summary.",
-          "Ghi chú chiến lược trực tiếp từ phần tóm tắt xu hướng của từng nền tảng.",
+          "Ranked opportunities from your prompt-driven analysis flow.",
+          "Các cơ hội được xếp hạng từ luồng phân tích dựa trên prompt của bạn.",
         )}
       >
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div
-            className={cn(
-              "rounded-2xl border border-border/55 bg-background/55 p-4",
-              getPlatformSurfaceClassName("tiktok"),
-            )}
-          >
-            <div className="mb-3">
-              <PlatformBadge platform="tiktok" />
-            </div>
-            {tikTokTrendsQuery.data?.overview_summary.strategist_note ? (
-              <p className="text-sm leading-6 text-foreground">
-                {tikTokTrendsQuery.data.overview_summary.strategist_note}
-              </p>
-            ) : (
-              <InlineQueryState
-                state="loading"
-                message={copy(
-                  "Waiting for strategist note.",
-                  "Đang chờ ghi chú chiến lược.",
-                )}
-                className="p-3"
-              />
-            )}
-          </div>
-          <div
-            className={cn(
-              "rounded-2xl border border-border/55 bg-background/55 p-4",
-              getPlatformSurfaceClassName("youtube"),
-            )}
-          >
-            <div className="mb-3">
-              <PlatformBadge platform="youtube" />
-            </div>
-            {youTubeTrendsQuery.data?.overview_summary.strategist_note ? (
-              <p className="text-sm leading-6 text-foreground">
-                {youTubeTrendsQuery.data.overview_summary.strategist_note}
-              </p>
-            ) : (
-              <InlineQueryState
-                state="loading"
-                message={copy(
-                  "Waiting for strategist note.",
-                  "Đang chờ ghi chú chiến lược.",
-                )}
-                className="p-3"
-              />
-            )}
-          </div>
-        </div>
-      </PanelCard>
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)]">
+          <TrendResultCards
+            results={promptResults}
+            selectedKeyword={promptSelectedResult?.main_keyword}
+            onSelect={(result) => setSelectedPromptKeyword(result.main_keyword)}
+          />
 
-      <PanelCard
-        title={copy("Source Topic Matrix", "Ma trận chủ đề nguồn")}
-        description={copy(
-          "Relationship matrix between top recommendations and their source topics.",
-          "Ma trận tương quan giữa đề xuất hàng đầu và chủ đề nguồn tương ứng.",
-        )}
-      >
-        {sourceTopicMatrix.rows.length > 0 &&
-        sourceTopicMatrix.columns.length > 0 ? (
-          <HeatMatrix
-            rows={sourceTopicMatrix.rows}
-            columns={sourceTopicMatrix.columns}
-            values={sourceTopicMatrix.values}
-            valueFormatter={(value) => `${Math.round(value)}%`}
-            className="bg-linear-to-br from-amber-100/60 via-card to-rose-100/45 dark:from-amber-500/12 dark:via-card/90 dark:to-rose-500/10"
-          />
-        ) : (
-          <InlineQueryState
-            state="empty"
-            message={copy(
-              "No source-topic relationships available.",
-              "Chưa có dữ liệu quan hệ chủ đề nguồn.",
-            )}
-          />
-        )}
+          {promptSelectedResult ? (
+            <Card
+              className="h-fit rounded-2xl border-primary/22 bg-primary/6"
+              size="sm"
+            >
+              <CardHeader>
+                <CardTitle>{promptSelectedResult.main_keyword}</CardTitle>
+                <CardDescription>
+                  {copy("Deep-dive insight", "Phân tích chi tiết")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <p>{promptSelectedResult.why_the_trend_happens}</p>
+                <p>
+                  {copy("Action", "Hành động")}:{" "}
+                  {promptSelectedResult.recommended_action}
+                </p>
+                <p>
+                  {copy("Avg views / hour", "Trung bình views / giờ")}:{" "}
+                  {formatCompactNumber(promptSelectedResult.avg_views_per_hour)}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {promptSelectedResult.top_hashtags.map((hashtag) => (
+                    <Badge
+                      key={hashtag}
+                      variant="outline"
+                      className="rounded-full"
+                    >
+                      {hashtag}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <InlineQueryState
+              state="empty"
+              message={copy(
+                "Submit a prompt to generate ranked trend opportunities.",
+                "Hãy gửi prompt để tạo danh sách cơ hội trend được xếp hạng.",
+              )}
+            />
+          )}
+        </div>
       </PanelCard>
     </div>
   );

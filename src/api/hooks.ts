@@ -9,6 +9,11 @@ import { getAgentsStatus } from "@/api/agents.api";
 import { getHealthStatus } from "@/api/health.api";
 import { queryKeys } from "@/api/query-keys";
 import {
+  analyzeTrend,
+  getTrendOverview,
+  type GetTrendOverviewParams,
+} from "@/api/trends.api";
+import {
   getTikTokChannelStatus,
   getTikTokRecommendations,
   getTikTokTrends,
@@ -16,7 +21,11 @@ import {
   getTikTokVideos,
   uploadTikTokVideo,
 } from "@/api/tiktok.api";
-import type { ContentPlatform, UploadVideoRequest } from "@/api/types";
+import type {
+  ContentPlatform,
+  TrendAnalyzeRequest,
+  UploadVideoRequest,
+} from "@/api/types";
 import {
   createUploadPostProfile,
   deleteUploadPostProfile,
@@ -81,6 +90,17 @@ export type UploadPostCommentsQueryParams = {
   enabled?: boolean;
 };
 
+export type TrendGeneralQueryParams = {
+  query?: string;
+  limit?: number;
+  enabled?: boolean;
+  refetchIntervalMs?: number;
+};
+
+export type TrendOverviewQueryParams = GetTrendOverviewParams & {
+  enabled?: boolean;
+};
+
 export function healthQueryOptions() {
   return queryOptions({
     queryKey: queryKeys.health,
@@ -92,6 +112,59 @@ export function healthQueryOptions() {
 
 export function useHealthQuery() {
   return useQuery(healthQueryOptions());
+}
+
+export function trendGeneralQueryOptions(params: TrendGeneralQueryParams = {}) {
+  const query = params.query?.trim() || "xu huong trend tong quat hom nay";
+  const limit = params.limit ?? 5;
+
+  return queryOptions({
+    queryKey: queryKeys.trend.general(query, limit),
+    queryFn: () => analyzeTrend({ query, limit }),
+    staleTime: 30_000,
+    refetchInterval: params.refetchIntervalMs ?? 180_000,
+  });
+}
+
+export function useTrendGeneralQuery(params: TrendGeneralQueryParams = {}) {
+  return useQuery({
+    ...trendGeneralQueryOptions(params),
+    enabled: params.enabled ?? true,
+  });
+}
+
+export function trendOverviewQueryOptions(
+  params: TrendOverviewQueryParams = {},
+) {
+  const keyword = params.keyword?.trim() || "ai video editor";
+  const region = params.region?.trim() || "VN";
+  const hashtag = params.hashtag?.trim() || "aivideo";
+
+  return queryOptions({
+    queryKey: queryKeys.trend.overview(keyword, region, hashtag),
+    queryFn: () =>
+      getTrendOverview({
+        keyword,
+        region,
+        hashtag,
+      }),
+    staleTime: 60_000,
+    refetchInterval: 180_000,
+  });
+}
+
+export function useTrendOverviewQuery(params: TrendOverviewQueryParams = {}) {
+  return useQuery({
+    ...trendOverviewQueryOptions(params),
+    enabled: params.enabled ?? true,
+  });
+}
+
+export function useTrendAnalyzeMutation() {
+  return useMutation({
+    mutationKey: ["trend", "analyze"],
+    mutationFn: (payload: TrendAnalyzeRequest) => analyzeTrend(payload),
+  });
 }
 
 export function agentsStatusQueryOptions() {

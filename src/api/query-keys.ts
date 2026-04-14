@@ -2,6 +2,13 @@ import type { ContentPlatform } from "@/api/types";
 
 export const queryKeys = {
   health: ["health"] as const,
+  trend: {
+    general: (query: string, limit: number) =>
+      ["trend", "general", query, limit] as const,
+    overview: (keyword: string, region: string, hashtag: string) =>
+      ["trend", "overview", keyword, region, hashtag] as const,
+    session: (sessionId: string) => ["trend", "session", sessionId] as const,
+  },
   agents: {
     status: ["agents", "status"] as const,
   },

@@ -574,3 +574,38 @@ export type UploadPostPostAnalyticsEnvelope = {
   request_id: string;
   payload: UploadPostPostAnalyticsPayload;
 };
+
+export type TrendAnalyzeRequest = {
+  query: string;
+  limit?: number;
+};
+
+export type TrendInterestPoint = {
+  date?: string;
+  timestamp?: number;
+  value?: number;
+};
+
+export type TrendAnalyzeResultItem = {
+  main_keyword: string;
+  why_the_trend_happens: string;
+  trend_score: number;
+  interest_over_day: Array<number | TrendInterestPoint>;
+  avg_views_per_hour: number;
+  recommended_action: string;
+  top_hashtags: string[];
+};
+
+export type TrendAnalyzeResponse = {
+  query: string;
+  results: TrendAnalyzeResultItem[];
+  markdown_summary: string;
+  error?: Record<string, unknown> | null;
+};
+
+export type TrendOverviewResponse = {
+  keyword: string;
+  region: string;
+  hashtag: string;
+  overview: Record<string, unknown>;
+};
