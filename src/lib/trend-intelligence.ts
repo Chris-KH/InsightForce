@@ -9,6 +9,8 @@ export type TrendGraphNode = {
   hashtags: string[];
   radius: number;
   color: string;
+  strokeColor: string;
+  glowColor: string;
   x?: number;
   y?: number;
 };
@@ -86,37 +88,57 @@ export function extractInterestValues(
     .filter((value): value is number => value !== null);
 }
 
-function toNodeColor(score: number): string {
-  if (score >= 80) {
-    return "#10b981";
+function clampScore(score: number) {
+  return Math.max(0, Math.min(100, score));
+}
+
+function hashKeyword(keyword: string) {
+  let hash = 0;
+  for (let i = 0; i < keyword.length; i += 1) {
+    hash = (hash * 31 + keyword.charCodeAt(i)) >>> 0;
   }
-  if (score >= 60) {
-    return "#0ea5e9";
-  }
-  if (score >= 40) {
-    return "#f59e0b";
-  }
-  return "#64748b";
+  return hash;
+}
+
+function toNodePalette(score: number, keyword: string) {
+  const normalized = clampScore(score) / 100;
+  const baseHue = 220 - normalized * 170;
+  const hueOffset = (hashKeyword(keyword) % 24) - 12;
+  const hue = Math.round((baseHue + hueOffset + 360) % 360);
+  const saturation = Math.round(74 + normalized * 14);
+  const lightness = Math.round(46 + normalized * 10);
+
+  return {
+    color: `hsl(${hue} ${saturation}% ${lightness}%)`,
+    strokeColor: `hsl(${hue} ${Math.min(96, saturation + 6)}% ${Math.max(30, lightness - 14)}%)`,
+    glowColor: `hsla(${hue} ${Math.min(96, saturation + 8)}% ${Math.min(72, lightness + 8)}% / 0.45)`,
+  };
 }
 
 function toNodeRadius(score: number): number {
-  return Math.max(9, Math.min(34, 8 + score * 0.35));
+  return Math.max(12, Math.min(30, 11 + clampScore(score) * 0.2));
 }
 
 export function buildTrendGraphData(
   results: TrendAnalyzeResultItem[],
 ): TrendGraphData {
   const nodes: TrendGraphNode[] = sanitizeTrendResults(results).map(
-    (result, index) => ({
-      id: `${result.main_keyword}-${index}`,
-      keyword: result.main_keyword,
-      trendScore: result.trend_score,
-      avgViewsPerHour: result.avg_views_per_hour,
-      why: result.why_the_trend_happens,
-      hashtags: result.top_hashtags,
-      radius: toNodeRadius(result.trend_score),
-      color: toNodeColor(result.trend_score),
-    }),
+    (result, index) => {
+      const palette = toNodePalette(result.trend_score, result.main_keyword);
+
+      return {
+        id: `${result.main_keyword}-${index}`,
+        keyword: result.main_keyword,
+        trendScore: result.trend_score,
+        avgViewsPerHour: result.avg_views_per_hour,
+        why: result.why_the_trend_happens,
+        hashtags: result.top_hashtags,
+        radius: toNodeRadius(result.trend_score),
+        color: palette.color,
+        strokeColor: palette.strokeColor,
+        glowColor: palette.glowColor,
+      };
+    },
   );
 
   const links: TrendGraphLink[] = [];
@@ -129,16 +151,14 @@ export function buildTrendGraphData(
         nodes[j].hashtags.map((tag) => tag.toLowerCase()),
       );
       const sharedTags = [...leftTags].filter((tag) => rightTags.has(tag));
+      const scoreGap = Math.abs(nodes[i].trendScore - nodes[j].trendScore);
 
-      if (
-        sharedTags.length > 0 ||
-        Math.abs(nodes[i].trendScore - nodes[j].trendScore) <= 10
-      ) {
+      if (sharedTags.length > 0 || scoreGap <= 7) {
         links.push({
           source: nodes[i].id,
           target: nodes[j].id,
           sharedTags,
-          weight: Math.max(1, sharedTags.length),
+          weight: Math.max(1, sharedTags.length + (scoreGap <= 4 ? 1 : 0)),
         });
       }
     }
