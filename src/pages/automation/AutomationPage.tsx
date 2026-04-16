@@ -197,10 +197,10 @@ export function AutomationPage() {
     <div className="grid gap-8">
       <SectionHeader
         eyebrow={copy("Automation Ops", "Vận hành tự động")}
-        title={copy("Backend Orchestration Hub", "Trung tâm điều phối backend")}
+        title={copy("Automation Command Center", "Trung tâm tự động hóa")}
         description={copy(
-          "Operational status from health checks, recommendation queues, upload history, and latest request analytics.",
-          "Trạng thái vận hành từ health check, hàng đợi đề xuất, lịch sử upload và phân tích request gần nhất.",
+          "Operational status from health checks, recommendation queues, publishing history, and performance signals.",
+          "Trạng thái vận hành từ kiểm tra hệ thống, hàng đợi đề xuất, lịch sử đăng bài và các tín hiệu hiệu suất.",
         )}
         action={
           <Badge
@@ -224,8 +224,8 @@ export function AutomationPage() {
             "Unable to load automation telemetry.",
           )}
           hint={copy(
-            "Automation telemetry consumes /health, /recommendations, /videos, /upload-post/history and /agents/status.",
-            "Telemetry tự động hóa dùng /health, /recommendations, /videos, /upload-post/history và /agents/status.",
+            "Some data sources may be syncing. You can continue working and refresh shortly.",
+            "Một số nguồn dữ liệu có thể đang đồng bộ. Bạn vẫn có thể làm việc và thử làm mới sau ít phút.",
           )}
         />
       ) : null}
@@ -258,8 +258,8 @@ export function AutomationPage() {
             label={copy("Content Backlog", "Kho nội dung")}
             value={isLoading ? "--" : String(contentBacklog)}
             detail={copy(
-              "Videos available in backend feeds",
-              "Số video có trong feed backend",
+              "Videos currently ready in your content pipeline",
+              "Số video hiện sẵn sàng trong luồng nội dung",
             )}
             icon={<Bot className="size-5" />}
           />
@@ -267,8 +267,8 @@ export function AutomationPage() {
             label={copy("Processed Operations", "Tác vụ đã xử lý")}
             value={isLoading ? "--" : formatCompactNumber(historyItems.length)}
             detail={copy(
-              "From upload-post history ledger",
-              "Từ sổ lịch sử upload-post",
+              "Based on recent publishing activity",
+              "Dựa trên hoạt động đăng bài gần đây",
             )}
             icon={<Cpu className="size-5" />}
           />
@@ -279,8 +279,8 @@ export function AutomationPage() {
         <PanelCard
           title={copy("Publish Operations Path", "Lộ trình vận hành publish")}
           description={copy(
-            "Publishing is handled in a dedicated route to avoid duplicated forms and keep automation telemetry focused.",
-            "Publish được đưa sang route chuyên biệt để tránh trùng form và giữ trang automation tập trung vào telemetry.",
+            "Publishing is handled in a dedicated workspace to keep this page focused on monitoring and decision support.",
+            "Publish được xử lý ở một không gian chuyên biệt để trang này tập trung vào theo dõi và hỗ trợ quyết định.",
           )}
         >
           <div className="space-y-4">
@@ -290,8 +290,8 @@ export function AutomationPage() {
               </p>
               <p className="mt-1.5">
                 {copy(
-                  "Use Publish Ops for the full core-input flow (platforms, title, description, tags, first_comment, schedule_post, asset_urls, files).",
-                  "Dùng Publish Ops cho luồng core-input đầy đủ (platforms, title, description, tags, first_comment, schedule_post, asset_urls, files).",
+                  "Use Publish Ops to prepare channels, captions, schedule timing, and media assets in one guided flow.",
+                  "Dùng Publish Ops để chuẩn bị kênh đăng, caption, lịch đăng và media trong một luồng hướng dẫn duy nhất.",
                 )}
               </p>
             </div>
@@ -314,8 +314,8 @@ export function AutomationPage() {
             {historyItems[0] ? (
               <div className="rounded-2xl border border-border/55 bg-background/55 p-4 text-xs text-muted-foreground">
                 <p>
-                  {copy("Latest request", "Request mới nhất")}:{" "}
-                  {historyItems[0].request_id}
+                  {copy("Latest campaign", "Chiến dịch gần nhất")}: {" "}
+                  {historyItems[0].post_title || copy("Untitled post", "Bài chưa đặt tiêu đề")}
                 </p>
                 <p className="mt-1">
                   {copy("Platform", "Nền tảng")}: {historyItems[0].platform}
@@ -495,8 +495,8 @@ export function AutomationPage() {
       <PanelCard
         title={copy("Agent Runtime Mesh", "Lưới runtime agent")}
         description={copy(
-          "Live process reachability from /api/v1/agents/status.",
-          "Trạng thái kết nối tiến trình theo thời gian thực từ /api/v1/agents/status.",
+          "Live readiness of each assistant used in your automation workflow.",
+          "Mức sẵn sàng theo thời gian thực của từng trợ lý trong luồng tự động hóa của bạn.",
         )}
         action={
           <Badge variant="outline" className="rounded-full border-primary/25">
@@ -525,8 +525,10 @@ export function AutomationPage() {
                 <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                   {process.name}
                 </p>
-                <p className="mt-2 truncate text-xs text-muted-foreground">
-                  {process.url}
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {process.reachable
+                    ? copy("Ready to support your workflow.", "Sẵn sàng hỗ trợ luồng làm việc của bạn.")
+                    : copy("Temporarily unavailable, retrying automatically.", "Tạm thời gián đoạn, hệ thống sẽ tự thử lại.")}
                 </p>
                 <p
                   className={cn(
@@ -555,8 +557,8 @@ export function AutomationPage() {
       <PanelCard
         title={copy("Comment Relay Console", "Bảng điều khiển bình luận")}
         description={copy(
-          "Lookup comments via /api/v1/upload-post/interactions/comments by post_id or post_url.",
-          "Tra cứu bình luận qua /api/v1/upload-post/interactions/comments bằng post_id hoặc post_url.",
+          "Look up comments by post code or post link to understand audience reactions quickly.",
+          "Tra cứu bình luận theo mã bài hoặc đường dẫn bài đăng để nắm phản hồi khán giả nhanh hơn.",
         )}
       >
         <form className="space-y-3" onSubmit={handleCommentLookupSubmit}>
@@ -589,7 +591,7 @@ export function AutomationPage() {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="comment-post-id">Post ID</Label>
+            <Label htmlFor="comment-post-id">{copy("Post Code", "Mã bài đăng")}</Label>
             <Input
               id="comment-post-id"
               value={commentPostId}
@@ -599,7 +601,7 @@ export function AutomationPage() {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="comment-post-url">Post URL</Label>
+            <Label htmlFor="comment-post-url">{copy("Post Link", "Đường dẫn bài đăng")}</Label>
             <Input
               id="comment-post-url"
               value={commentPostUrl}

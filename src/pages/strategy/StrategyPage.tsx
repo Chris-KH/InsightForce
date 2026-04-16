@@ -466,8 +466,8 @@ export function StrategyPage() {
             "Unable to fetch general trend data.",
           )}
           hint={copy(
-            "Check /api/v1/trends/analyze availability and backend model configuration.",
-            "Kiểm tra endpoint /api/v1/trends/analyze và cấu hình model phía backend.",
+            "Trend data is syncing. Please try again in a moment.",
+            "Dữ liệu xu hướng đang đồng bộ. Vui lòng thử lại sau ít phút.",
           )}
         />
       ) : null}

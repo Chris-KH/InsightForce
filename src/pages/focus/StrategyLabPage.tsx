@@ -39,7 +39,14 @@ import { getQueryErrorMessage } from "@/lib/query-error";
 import { FocusSectionHeader } from "@/pages/focus/components/FocusSectionHeader";
 
 const DEFAULT_PROMPT =
-  "Chủ đề đang trend trong ngày hôm nay về thể thao là gì và tôi nên tạo nội dung như thế nào?";
+  "Hôm nay mình nên làm nội dung gì để tăng tương tác tự nhiên trong tệp người theo dõi hiện tại?";
+
+const QUICK_PROMPTS = [
+  "Chọn 3 chủ đề hot nhất hôm nay cho creator mảng lifestyle, ưu tiên khả năng viral tự nhiên.",
+  "Tìm giúp mình góc nội dung dễ quay tại nhà nhưng vẫn đủ khác biệt với đối thủ.",
+  "Đề xuất 5 ý tưởng video ngắn có hook mạnh cho tuần này và gợi ý CTA phù hợp.",
+  "Nếu muốn tăng tỉ lệ lưu bài, mình nên đi theo chủ đề nào trong 7 ngày tới?",
+];
 
 function asRecord(value: unknown): Record<string, unknown> {
   if (typeof value === "object" && value !== null) {
@@ -141,10 +148,10 @@ export function StrategyLabPage() {
       <FocusSectionHeader
         title={{ en: "Strategy Lab", vi: "Phòng lab chiến lược" }}
         description={{
-          en: "Run the full Orchestrator pipeline (Trend Agent + Content Agent), inspect structured output, and track saved records in Postgres.",
-          vi: "Chạy full pipeline Orchestrator (Trend Agent + Content Agent), kiểm tra structured output và theo dõi record đã lưu trên Postgres.",
+          en: "Turn one idea into clear trend insights and actionable content suggestions for your next campaign.",
+          vi: "Biến một ý tưởng thành insight xu hướng rõ ràng và gợi ý nội dung có thể triển khai ngay cho chiến dịch tiếp theo.",
         }}
-        badge={{ en: "Orchestrator Pipeline", vi: "Pipeline Orchestrator" }}
+        badge={{ en: "Creative Strategy Studio", vi: "Studio chiến lược sáng tạo" }}
         icon={FlaskConical}
       />
 
@@ -155,7 +162,7 @@ export function StrategyLabPage() {
           state="error"
           message={getQueryErrorMessage(
             firstError,
-            "Unable to load strategy-lab backend records.",
+            "Unable to load strategy records right now.",
           )}
         />
       ) : null}
@@ -163,40 +170,47 @@ export function StrategyLabPage() {
       {!isLoading && !firstError ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label={copy("Trend Analyses", "Số lần phân tích trend")}
+            label={copy("Trend Sessions", "Phiên phân tích xu hướng")}
             value={formatCompactNumber(latestTrendRecords.length)}
             icon={<Target className="size-5" />}
             detail={copy(
-              "From /api/v1/trends/history",
-              "Từ /api/v1/trends/history",
+              "Recent strategic research rounds",
+              "Số phiên nghiên cứu chiến lược gần đây",
             )}
           />
           <MetricCard
-            label={copy("Generated Contents", "Nội dung đã tạo")}
+            label={copy("Content Drafts", "Bản nháp nội dung")}
             value={formatCompactNumber(latestGeneratedContents.length)}
             icon={<Bot className="size-5" />}
-            detail={copy("From /api/v1/contents", "Từ /api/v1/contents")}
+            detail={copy(
+              "Drafts ready for publishing workflow",
+              "Bản nháp sẵn sàng cho luồng đăng bài",
+            )}
           />
           <MetricCard
-            label={copy("Top Trend Score", "Điểm trend cao nhất")}
+            label={copy("Top Momentum", "Độ nóng cao nhất")}
             value={formatPercentValue(getTopTrendScore(trendResults))}
             icon={<Sparkles className="size-5" />}
             detail={copy(
-              "From latest orchestrate run",
-              "Từ lần chạy orchestrate gần nhất",
+              "From your latest strategy run",
+              "Từ lần chạy chiến lược gần nhất",
             )}
           />
           <MetricCard
-            label={copy("Latest Orchestrate", "Lần orchestrate gần nhất")}
+            label={copy("Latest Run", "Lần chạy gần nhất")}
             value={
               lastRun
-                ? copy("Completed", "Hoàn tất")
+                ? copy("Ready", "Đã sẵn sàng")
                 : copy("Waiting", "Đang chờ")
             }
             icon={<FileJson className="size-5" />}
             detail={
-              lastRun?.output_file ||
-              copy("No run yet in this session", "Chưa chạy trong phiên này")
+              lastRun
+                ? copy(
+                    "New insight pack just generated",
+                    "Vừa tạo xong bộ insight mới",
+                  )
+                : copy("Run your first prompt", "Hãy chạy prompt đầu tiên")
             }
           />
         </div>
@@ -204,16 +218,34 @@ export function StrategyLabPage() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
         <PanelCard
-          title={copy("Orchestrator Run Console", "Bảng chạy Orchestrator")}
+          title={copy("Strategy Prompt Studio", "Studio prompt chiến lược")}
           description={copy(
-            "Send one prompt to /api/v1/agents/orchestrate and receive full trend_analysis + generated_content in one response.",
-            "Gửi một prompt tới /api/v1/agents/orchestrate và nhận đồng thời trend_analysis + generated_content trong một response.",
+            "Write one prompt and let the assistant generate trend direction plus content-ready output.",
+            "Viết một prompt và để trợ lý tạo định hướng xu hướng cùng đầu ra nội dung có thể dùng ngay.",
           )}
         >
           <form
             className="space-y-4"
             onSubmit={(event) => void handleSubmit(event)}
           >
+            <div className="space-y-2">
+              <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                {copy("Quick Prompt Ideas", "Gợi ý prompt nhanh")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_PROMPTS.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setPrompt(item)}
+                    className="rounded-full border border-border/70 bg-background/70 px-3 py-1 text-xs text-muted-foreground transition hover:border-primary/45 hover:text-primary"
+                  >
+                    {item.length > 46 ? `${item.slice(0, 46)}...` : item}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="orchestrator-prompt">
                 {copy("Prompt", "Prompt")}
@@ -230,13 +262,13 @@ export function StrategyLabPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="orchestrator-user-id">
-                  {copy("User ID (optional)", "User ID (tùy chọn)")}
+                  {copy("Workspace Account (optional)", "Tài khoản làm việc (tùy chọn)")}
                 </Label>
                 <Input
                   id="orchestrator-user-id"
                   value={userId}
                   onChange={(event) => setUserId(event.target.value)}
-                  placeholder="uuid"
+                  placeholder={copy("Account code", "Mã tài khoản")}
                 />
               </div>
 
@@ -248,12 +280,15 @@ export function StrategyLabPage() {
                     checked={saveFiles}
                     onChange={(event) => setSaveFiles(event.target.checked)}
                   />
-                  {copy("Save raw/output files", "Lưu file raw/output")}
+                  {copy(
+                    "Save a detailed project log",
+                    "Lưu bản ghi chi tiết cho dự án",
+                  )}
                 </label>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {copy(
-                    "Enable to persist orchestrator_raw_response.json and orchestrator_output.json on backend.",
-                    "Bật để backend lưu orchestrator_raw_response.json và orchestrator_output.json.",
+                    "Useful when your operation team needs to review generated outputs later.",
+                    "Hữu ích khi đội vận hành cần xem lại đầu ra đã tạo vào lúc khác.",
                   )}
                 </p>
               </div>
@@ -270,8 +305,8 @@ export function StrategyLabPage() {
                 <PlayCircle data-icon="inline-start" />
               )}
               {orchestrateMutation.isPending
-                ? copy("Running Pipeline...", "Đang chạy pipeline...")
-                : copy("Run Orchestrator", "Chạy Orchestrator")}
+                ? copy("Analyzing...", "Đang phân tích...")
+                : copy("Run Strategy", "Chạy chiến lược")}
             </Button>
 
             {orchestrateMutation.error ? (
@@ -279,27 +314,24 @@ export function StrategyLabPage() {
                 state="error"
                 message={getQueryErrorMessage(
                   orchestrateMutation.error,
-                  "Orchestrator request failed.",
+                  "The strategy run did not complete successfully.",
                 )}
               />
             ) : null}
 
             {lastRun ? (
-              <div className="rounded-2xl border border-border/65 bg-background/60 p-4 text-xs text-muted-foreground">
-                <p>
-                  {copy("Status", "Trạng thái")}: {lastRun.status}
+              <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-4 text-xs text-muted-foreground">
+                <p className="font-semibold text-foreground">
+                  {copy(
+                    "Your strategy package is ready",
+                    "Bộ chiến lược của bạn đã sẵn sàng",
+                  )}
                 </p>
                 <p className="mt-1">
-                  Trend Analysis ID: {lastRun.trend_analysis_id ?? "--"}
-                </p>
-                <p className="mt-1">
-                  Generated Content ID: {lastRun.generated_content_id ?? "--"}
-                </p>
-                <p className="mt-1">
-                  Raw File: {lastRun.raw_response_file ?? "--"}
-                </p>
-                <p className="mt-1">
-                  Output File: {lastRun.output_file ?? "--"}
+                  {copy(
+                    "Trend insights and content draft were generated successfully.",
+                    "Insight xu hướng và bản nháp nội dung đã được tạo thành công.",
+                  )}
                 </p>
               </div>
             ) : null}
@@ -307,25 +339,25 @@ export function StrategyLabPage() {
         </PanelCard>
 
         <PanelCard
-          title={copy("Pipeline Output", "Đầu ra pipeline")}
+          title={copy("Output Preview", "Xem trước đầu ra")}
           description={copy(
-            "Inspect structured trend and generated content data from the latest orchestrator response.",
-            "Kiểm tra dữ liệu trend và generated content có cấu trúc từ response orchestrator mới nhất.",
+            "Review trend takeaways and content direction from your latest run.",
+            "Xem điểm chính về xu hướng và hướng nội dung từ lần chạy gần nhất.",
           )}
         >
           {!lastRun ? (
             <InlineQueryState
               state="empty"
               message={copy(
-                "Run one orchestrator prompt to populate this panel.",
-                "Hãy chạy một prompt orchestrator để hiển thị dữ liệu ở panel này.",
+                "Run one strategy prompt to populate this panel.",
+                "Hãy chạy một prompt chiến lược để hiển thị dữ liệu ở đây.",
               )}
             />
           ) : (
             <div className="space-y-4">
               <div className="rounded-2xl border border-border/65 bg-background/60 p-4">
                 <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                  Trend Summary
+                  {copy("Trend Summary", "Tóm tắt xu hướng")}
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {lastRun.output.trend_analysis.markdown_summary || "--"}
@@ -334,15 +366,14 @@ export function StrategyLabPage() {
 
               <div className="space-y-2">
                 <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                  {copy("Trend Results", "Kết quả trend")}
+                  {copy("Top Keywords", "Keyword nổi bật")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {trendResults.map((result) => (
                     <Button
                       key={result.main_keyword}
                       variant={
-                        selectedTrendResult?.main_keyword ===
-                        result.main_keyword
+                        selectedTrendResult?.main_keyword === result.main_keyword
                           ? "default"
                           : "outline"
                       }
@@ -362,38 +393,30 @@ export function StrategyLabPage() {
                     {selectedTrendResult.main_keyword}
                   </p>
                   <p className="mt-1">
-                    {copy("Trend Score", "Điểm xu hướng")}:{" "}
-                    {formatPercentValue(selectedTrendResult.trend_score)}
+                    {copy("Momentum", "Độ nóng")}: {formatPercentValue(selectedTrendResult.trend_score)}
                   </p>
                   <p className="mt-1">
-                    {copy("Avg views/hour", "Trung bình views/giờ")}:{" "}
-                    {formatCompactNumber(
-                      selectedTrendResult.avg_views_per_hour,
-                    )}
+                    {copy("Estimated views/hour", "Ước tính views/giờ")}: {formatCompactNumber(selectedTrendResult.avg_views_per_hour)}
                   </p>
-                  <p className="mt-2">
-                    {selectedTrendResult.why_the_trend_happens}
-                  </p>
+                  <p className="mt-2">{selectedTrendResult.why_the_trend_happens}</p>
                 </div>
               ) : null}
 
               <div className="rounded-2xl border border-border/65 bg-background/60 p-4 text-sm text-muted-foreground">
                 <p className="text-xs font-semibold tracking-[0.12em] uppercase">
-                  Generated Content
+                  {copy("Content Direction", "Định hướng nội dung")}
                 </p>
                 <p className="mt-2">
-                  {copy("Keyword", "Keyword")}: {selectedOutputKeyword ?? "--"}
+                  {copy("Focus keyword", "Keyword trọng tâm")}: {selectedOutputKeyword ?? "--"}
                 </p>
                 <p className="mt-1">
                   {copy("Main title", "Tiêu đề chính")}: {mainTitle ?? "--"}
                 </p>
                 <p className="mt-1">
-                  {copy("Music background", "Nhạc nền")}:{" "}
-                  {musicBackground ?? "--"}
+                  {copy("Mood suggestion", "Gợi ý cảm hứng nhạc")}: {musicBackground ?? "--"}
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {copy("Platform post blocks", "Số block post nền tảng")}:{" "}
-                  {Object.keys(platformPosts).length}
+                  {copy("Channel-specific post drafts", "Bản nháp theo từng kênh")}: {Object.keys(platformPosts).length}
                 </p>
               </div>
             </div>
@@ -403,10 +426,10 @@ export function StrategyLabPage() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <PanelCard
-          title={copy("Recent Trend Analyses", "Lịch sử trend gần đây")}
+          title={copy("Recent Trend Sessions", "Phiên xu hướng gần đây")}
           description={copy(
-            "Saved records from /api/v1/trends/history.",
-            "Record đã lưu từ /api/v1/trends/history.",
+            "Your latest trend research sessions.",
+            "Các phiên nghiên cứu xu hướng gần đây của bạn.",
           )}
         >
           {trendHistoryQuery.isLoading ? (
@@ -430,7 +453,7 @@ export function StrategyLabPage() {
                     {formatDateTime(item.created_at)}
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    {copy("Results", "Số kết quả")}: {item.results.length}
+                    {copy("Insights", "Số insight")}: {item.results.length}
                   </p>
                 </div>
               ))}
@@ -439,18 +462,18 @@ export function StrategyLabPage() {
             <InlineQueryState
               state="empty"
               message={copy(
-                "No trend analysis records yet.",
-                "Chưa có record trend analysis.",
+                "No trend sessions yet.",
+                "Chưa có phiên phân tích xu hướng nào.",
               )}
             />
           )}
         </PanelCard>
 
         <PanelCard
-          title={copy("Recent Generated Contents", "Nội dung tạo gần đây")}
+          title={copy("Recent Content Drafts", "Bản nháp nội dung gần đây")}
           description={copy(
-            "Saved records from /api/v1/contents.",
-            "Record đã lưu từ /api/v1/contents.",
+            "Latest generated drafts ready for editing or publishing.",
+            "Các bản nháp mới tạo sẵn sàng để chỉnh sửa hoặc lên lịch đăng.",
           )}
         >
           {generatedContentsQuery.isLoading ? (
@@ -472,7 +495,7 @@ export function StrategyLabPage() {
                     {copy("Status", "Trạng thái")}: {item.status}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Keyword: {item.selected_keyword ?? "--"}
+                    {copy("Keyword", "Keyword")}: {item.selected_keyword ?? "--"}
                   </p>
                 </div>
               ))}
@@ -481,8 +504,8 @@ export function StrategyLabPage() {
             <InlineQueryState
               state="empty"
               message={copy(
-                "No generated content records yet.",
-                "Chưa có record generated content.",
+                "No generated drafts yet.",
+                "Chưa có bản nháp nội dung nào.",
               )}
             />
           )}

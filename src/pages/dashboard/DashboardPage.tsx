@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Activity,
   Bot,
@@ -57,6 +57,9 @@ type PipelineEvent = {
   status: string;
 };
 
+type EventFilter = "all" | PipelineEvent["type"];
+type KeywordSortMode = "score" | "frequency";
+
 function toTimestamp(value: string) {
   const timestamp = Date.parse(value);
   return Number.isNaN(timestamp) ? 0 : timestamp;
@@ -87,8 +90,33 @@ function eventTypeClass(type: PipelineEvent["type"]) {
   return "border-amber-500/40 bg-amber-500/10 text-amber-700";
 }
 
+function getAssistantDisplayName(name: string) {
+  if (name === "routing_orchestrator") {
+    return "Điều phối chiến dịch";
+  }
+
+  if (name === "trend_agent") {
+    return "Trợ lý xu hướng";
+  }
+
+  if (name === "content_agent") {
+    return "Trợ lý nội dung";
+  }
+
+  if (name === "posting_agent") {
+    return "Trợ lý đăng bài";
+  }
+
+  return name.replaceAll("_", " ");
+}
+
 export function DashboardPage() {
   const copy = useBilingual();
+
+  const [eventFilter, setEventFilter] = useState<EventFilter>("all");
+  const [keywordSortMode, setKeywordSortMode] = useState<KeywordSortMode>(
+    "score",
+  );
 
   const healthQuery = useHealthQuery();
   const agentsQuery = useAgentsStatusQuery();
@@ -114,9 +142,7 @@ export function DashboardPage() {
   const firstError = allQueries.find((query) => query.error)?.error;
 
   const processes = agentsQuery.data?.processes ?? [];
-  const reachableAgents = processes.filter(
-    (process) => process.reachable,
-  ).length;
+  const reachableAgents = processes.filter((process) => process.reachable).length;
 
   const trendRecords = trendHistoryQuery.data?.items ?? [];
   const generatedContents = generatedContentsQuery.data?.items ?? [];
@@ -173,7 +199,7 @@ export function DashboardPage() {
       ],
       datasets: [
         {
-          label: copy("Publish Jobs", "Publish jobs"),
+          label: copy("Publishing Tasks", "Tác vụ đăng"),
           data: [pendingJobs, publishedJobs, failedJobs],
           backgroundColor: [
             "rgba(245, 158, 11, 0.78)",
@@ -187,7 +213,7 @@ export function DashboardPage() {
     [copy, failedJobs, pendingJobs, publishedJobs],
   );
 
-  const keywordPulse = useMemo(() => {
+  const keywordPulseRaw = useMemo(() => {
     const collector = new Map<string, { score: number; count: number }>();
 
     for (const record of trendRecords) {
@@ -206,13 +232,23 @@ export function DashboardPage() {
       }
     }
 
-    return [...collector.entries()]
-      .map(([keyword, stats]) => ({ keyword, ...stats }))
-      .sort(
-        (left, right) => right.score - left.score || right.count - left.count,
-      )
-      .slice(0, 8);
+    return [...collector.entries()].map(([keyword, stats]) => ({
+      keyword,
+      ...stats,
+    }));
   }, [trendRecords]);
+
+  const keywordPulse = useMemo(() => {
+    const items = [...keywordPulseRaw];
+
+    if (keywordSortMode === "frequency") {
+      items.sort((left, right) => right.count - left.count || right.score - left.score);
+    } else {
+      items.sort((left, right) => right.score - left.score || right.count - left.count);
+    }
+
+    return items.slice(0, 8);
+  }, [keywordPulseRaw, keywordSortMode]);
 
   const userHeatMatrix = useMemo(() => {
     const limitedUsers = users.slice(0, 6);
@@ -245,15 +281,13 @@ export function DashboardPage() {
   }, [copy, users]);
 
   const pipelineEvents = useMemo(() => {
-    const trendEvents: PipelineEvent[] = trendRecords
-      .slice(0, 8)
-      .map((item) => ({
-        id: item.analysis_id ?? `${item.query}-${item.created_at}`,
-        type: "trend",
-        title: item.query,
-        createdAt: item.created_at,
-        status: item.status,
-      }));
+    const trendEvents: PipelineEvent[] = trendRecords.slice(0, 8).map((item) => ({
+      id: item.analysis_id ?? `${item.query}-${item.created_at}`,
+      type: "trend",
+      title: item.query,
+      createdAt: item.created_at,
+      status: item.status,
+    }));
 
     const contentEvents: PipelineEvent[] = generatedContents
       .slice(0, 8)
@@ -265,15 +299,13 @@ export function DashboardPage() {
         status: item.status,
       }));
 
-    const publishEvents: PipelineEvent[] = publishJobs
-      .slice(0, 8)
-      .map((item) => ({
-        id: item.id,
-        type: "publish",
-        title: item.title,
-        createdAt: item.created_at,
-        status: item.status,
-      }));
+    const publishEvents: PipelineEvent[] = publishJobs.slice(0, 8).map((item) => ({
+      id: item.id,
+      type: "publish",
+      title: item.title,
+      createdAt: item.created_at,
+      status: item.status,
+    }));
 
     return [...trendEvents, ...contentEvents, ...publishEvents]
       .sort(
@@ -283,6 +315,14 @@ export function DashboardPage() {
       .slice(0, 14);
   }, [generatedContents, publishJobs, trendRecords]);
 
+  const filteredEvents = useMemo(() => {
+    if (eventFilter === "all") {
+      return pipelineEvents;
+    }
+
+    return pipelineEvents.filter((event) => event.type === eventFilter);
+  }, [eventFilter, pipelineEvents]);
+
   const handleRefresh = async () => {
     await Promise.all(allQueries.map((query) => query.refetch()));
   };
@@ -290,14 +330,14 @@ export function DashboardPage() {
   return (
     <div className="grid gap-8">
       <SectionHeader
-        eyebrow={copy("Backend Runtime", "Runtime backend")}
+        eyebrow={copy("Daily Creator View", "Góc nhìn creator mỗi ngày")}
         title={copy(
-          "Unified Intelligence Dashboard",
-          "Dashboard intelligence hợp nhất",
+          "Your Campaign Command Center",
+          "Trung tâm điều phối chiến dịch",
         )}
         description={copy(
-          "Overview built from active FastAPI modules: health, agents, trends history, generated contents, users, and publish jobs.",
-          "Tổng quan xây trên các module FastAPI đang hoạt động: health, agents, trends history, generated contents, users và publish jobs.",
+          "Track what is trending, what is ready to publish, and where your team should focus next.",
+          "Theo dõi chủ đề đang lên, nội dung sẵn sàng đăng và nơi đội của bạn cần tập trung tiếp theo.",
         )}
         action={
           <div className="flex flex-wrap items-center gap-3">
@@ -307,8 +347,8 @@ export function DashboardPage() {
             >
               <PulseDot className="mr-2" />
               {healthQuery.data?.status === "ok"
-                ? copy("Backend Healthy", "Backend ổn định")
-                : copy("Health Unknown", "Chưa rõ trạng thái")}
+                ? copy("Everything Is Running", "Mọi thứ đang hoạt động")
+                : copy("Checking System", "Đang kiểm tra hệ thống")}
             </Badge>
             <Button
               type="button"
@@ -331,11 +371,11 @@ export function DashboardPage() {
           title={copy("Data Load Error", "Lỗi tải dữ liệu")}
           description={getQueryErrorMessage(
             firstError,
-            "Unable to load dashboard runtime data.",
+            "Unable to load dashboard data right now.",
           )}
           hint={copy(
-            "Check that FastAPI is running and frontend API base URL points to backend app.main service.",
-            "Kiểm tra FastAPI đang chạy và API base URL frontend trỏ đúng service app.main của backend.",
+            "You can keep working, then refresh this page in a moment.",
+            "Bạn vẫn có thể làm việc, sau đó thử làm mới lại trang sau ít phút.",
           )}
         />
       ) : null}
@@ -345,35 +385,41 @@ export function DashboardPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label={copy("Service Health", "Sức khỏe dịch vụ")}
+            label={copy("System Readiness", "Mức sẵn sàng hệ thống")}
             value={(healthQuery.data?.status ?? "unknown").toUpperCase()}
-            detail={healthQuery.data?.service ?? "InsightForce API"}
+            detail={copy(
+              "Core services for your daily flow",
+              "Các thành phần cốt lõi cho luồng làm việc hằng ngày",
+            )}
             icon={<Activity className="size-5" />}
           />
           <MetricCard
-            label={copy("Reachable Agents", "Agent khả dụng")}
+            label={copy("Ready Assistants", "Trợ lý sẵn sàng")}
             value={`${reachableAgents}/${processes.length}`}
             detail={copy(
-              "From /api/v1/agents/status",
-              "Từ /api/v1/agents/status",
+              "Support team currently online",
+              "Đội trợ lý đang trực tuyến",
             )}
             icon={<Bot className="size-5" />}
           />
           <MetricCard
-            label={copy("Persisted Records", "Record đã lưu")}
+            label={copy("Idea Inventory", "Kho ý tưởng")}
             value={formatCompactNumber(
               trendRecords.length + generatedContents.length,
             )}
             detail={copy(
-              "Trend analyses + generated contents",
-              "Trend analyses + generated contents",
+              "Trend insights and generated drafts",
+              "Insight xu hướng và bản nháp đã tạo",
             )}
             icon={<Database className="size-5" />}
           />
           <MetricCard
-            label={copy("Publish Success", "Tỉ lệ publish")}
+            label={copy("Publishing Health", "Sức khỏe đăng bài")}
             value={formatPercentFromRatio(publishSuccessRatio)}
-            detail={copy("Completed jobs only", "Tính trên jobs đã hoàn tất")}
+            detail={copy(
+              "Quality of recent publishing tasks",
+              "Chất lượng các tác vụ đăng gần đây",
+            )}
             icon={<Workflow className="size-5" />}
           />
         </div>
@@ -381,10 +427,10 @@ export function DashboardPage() {
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <PanelCard
-          title={copy("Trend Momentum", "Đà tăng trend")}
+          title={copy("Trend Momentum", "Đà tăng xu hướng")}
           description={copy(
-            "Average trend score from recent analyses in /api/v1/trends/history.",
-            "Điểm trend trung bình từ các phân tích gần đây trong /api/v1/trends/history.",
+            "See how hot your recent trend opportunities are moving.",
+            "Xem mức độ tăng nhiệt của các cơ hội xu hướng gần đây.",
           )}
         >
           {trendRecords.length > 0 ? (
@@ -393,21 +439,18 @@ export function DashboardPage() {
             <InlineQueryState
               state="empty"
               message={copy(
-                "No trend analysis records available yet.",
-                "Chưa có record trend analysis.",
+                "No trend activity yet.",
+                "Chưa có hoạt động xu hướng.",
               )}
             />
           )}
         </PanelCard>
 
         <PanelCard
-          title={copy(
-            "Publish Status Distribution",
-            "Phân bố trạng thái publish",
-          )}
+          title={copy("Publishing Mix", "Tình hình đăng bài")}
           description={copy(
-            "Current queue distribution from /api/v1/upload-post/publish-jobs.",
-            "Phân bố queue hiện tại từ /api/v1/upload-post/publish-jobs.",
+            "Distribution of pending, successful, and failed posting tasks.",
+            "Phân bố tác vụ đăng: chờ xử lý, thành công và thất bại.",
           )}
         >
           {publishJobs.length > 0 ? (
@@ -415,7 +458,10 @@ export function DashboardPage() {
           ) : (
             <InlineQueryState
               state="empty"
-              message={copy("No publish jobs found.", "Không có publish jobs.")}
+              message={copy(
+                "No publishing tasks yet.",
+                "Chưa có tác vụ đăng bài.",
+              )}
             />
           )}
         </PanelCard>
@@ -423,12 +469,36 @@ export function DashboardPage() {
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <PanelCard
-          title={copy("Keyword Pulse", "Nhịp keyword")}
+          title={copy("Keyword Priority", "Ưu tiên keyword")}
           description={copy(
-            "Most recurring high-score keywords extracted from trend history results.",
-            "Các keyword có điểm cao xuất hiện lặp lại từ kết quả trend history.",
+            "Switch sorting mode to discover top keywords by strength or repetition.",
+            "Chuyển chế độ sắp xếp để xem keyword mạnh nhất hoặc xuất hiện nhiều nhất.",
           )}
         >
+          <div className="mb-4 flex flex-wrap gap-2">
+            {([
+              { key: "score", label: copy("By Strength", "Theo độ mạnh") },
+              { key: "frequency", label: copy("By Frequency", "Theo tần suất") },
+            ] as const).map((mode) => {
+              const active = keywordSortMode === mode.key;
+              return (
+                <button
+                  key={mode.key}
+                  type="button"
+                  onClick={() => setKeywordSortMode(mode.key)}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                    active
+                      ? "border-primary/45 bg-primary/10 text-primary"
+                      : "border-border/70 bg-background/70 text-muted-foreground",
+                  )}
+                >
+                  {mode.label}
+                </button>
+              );
+            })}
+          </div>
+
           {keywordPulse.length > 0 ? (
             <div className="space-y-4">
               {keywordPulse.map((item, index) => (
@@ -452,8 +522,8 @@ export function DashboardPage() {
             <InlineQueryState
               state="empty"
               message={copy(
-                "No keyword pulse data available.",
-                "Không có dữ liệu keyword pulse.",
+                "No keyword signal available.",
+                "Chưa có tín hiệu keyword.",
               )}
             />
           )}
@@ -462,8 +532,8 @@ export function DashboardPage() {
         <PanelCard
           title={copy("User Activity Matrix", "Ma trận hoạt động user")}
           description={copy(
-            "Per-user activity counters from /api/v1/users.",
-            "Chỉ số hoạt động theo user từ /api/v1/users.",
+            "Understand which account is producing trends, content, and publishing output.",
+            "Xem tài khoản nào đang đóng góp nhiều nhất cho xu hướng, nội dung và đăng bài.",
           )}
         >
           <HeatMatrix
@@ -477,17 +547,43 @@ export function DashboardPage() {
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <PanelCard
-          title={copy("Recent Pipeline Events", "Sự kiện pipeline gần đây")}
+          title={copy("Recent Activity Feed", "Bảng hoạt động gần đây")}
           description={copy(
-            "Merged event stream across trends, generated contents, and publish jobs.",
-            "Luồng sự kiện hợp nhất từ trends, generated contents và publish jobs.",
+            "Filter activity stream by trend, content, or publishing tasks.",
+            "Lọc luồng hoạt động theo xu hướng, nội dung hoặc tác vụ đăng bài.",
           )}
         >
-          {isLoading && pipelineEvents.length === 0 ? (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {([
+              { key: "all", label: copy("All", "Tất cả") },
+              { key: "trend", label: copy("Trend", "Xu hướng") },
+              { key: "content", label: copy("Content", "Nội dung") },
+              { key: "publish", label: copy("Publish", "Đăng bài") },
+            ] as const).map((filter) => {
+              const active = eventFilter === filter.key;
+              return (
+                <button
+                  key={filter.key}
+                  type="button"
+                  onClick={() => setEventFilter(filter.key)}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                    active
+                      ? "border-primary/45 bg-primary/10 text-primary"
+                      : "border-border/70 bg-background/70 text-muted-foreground",
+                  )}
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {isLoading && filteredEvents.length === 0 ? (
             <PanelRowsSkeleton rows={6} />
-          ) : pipelineEvents.length > 0 ? (
+          ) : filteredEvents.length > 0 ? (
             <div className="space-y-3">
-              {pipelineEvents.map((event) => (
+              {filteredEvents.map((event) => (
                 <div
                   key={`${event.type}-${event.id}`}
                   className="rounded-2xl border border-border/65 bg-background/65 p-4"
@@ -510,7 +606,7 @@ export function DashboardPage() {
                     {event.title}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Status: {event.status}
+                    {copy("Status", "Trạng thái")}: {event.status}
                   </p>
                 </div>
               ))}
@@ -519,18 +615,18 @@ export function DashboardPage() {
             <InlineQueryState
               state="empty"
               message={copy(
-                "No events in current runtime window.",
-                "Không có sự kiện trong cửa sổ runtime hiện tại.",
+                "No activity for the selected filter.",
+                "Không có hoạt động phù hợp bộ lọc đã chọn.",
               )}
             />
           )}
         </PanelCard>
 
         <PanelCard
-          title={copy("Agent Reachability", "Khả năng kết nối agent")}
+          title={copy("Assistant Status", "Trạng thái trợ lý")}
           description={copy(
-            "Connectivity status for configured agent runtimes.",
-            "Trạng thái kết nối của các runtime agent cấu hình sẵn.",
+            "Live readiness of each assistant in your workflow.",
+            "Mức sẵn sàng theo thời gian thực của từng trợ lý trong luồng làm việc.",
           )}
         >
           {agentsQuery.isLoading ? (
@@ -548,13 +644,18 @@ export function DashboardPage() {
                     ) : (
                       <Clock3 className="size-4 text-amber-600" />
                     )}
-                    {process.name}
+                    {getAssistantDisplayName(process.name)}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {process.url}
-                  </p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {process.detail}
+                    {process.reachable
+                      ? copy(
+                          "Sẵn sàng hỗ trợ ngay lúc này.",
+                          "Sẵn sàng hỗ trợ ngay lúc này.",
+                        )
+                      : copy(
+                          "Đang khôi phục, vui lòng thử lại sau ít phút.",
+                          "Đang khôi phục, vui lòng thử lại sau ít phút.",
+                        )}
                   </p>
                 </div>
               ))}
@@ -563,8 +664,8 @@ export function DashboardPage() {
             <InlineQueryState
               state="empty"
               message={copy(
-                "No agent process status reported.",
-                "Không có trạng thái process agent.",
+                "No assistant status available.",
+                "Chưa có trạng thái trợ lý.",
               )}
             />
           )}
@@ -572,16 +673,16 @@ export function DashboardPage() {
       </div>
 
       <PanelCard
-        title={copy("Runtime Snapshot", "Snapshot runtime")}
+        title={copy("Today Snapshot", "Snapshot hôm nay")}
         description={copy(
-          "One-line pulse of backend persistence and queue execution health.",
-          "Nhịp nhanh một dòng về dữ liệu lưu trữ backend và sức khỏe queue thực thi.",
+          "A quick pulse so you know where to act next.",
+          "Nhịp nhanh để bạn biết bước hành động tiếp theo.",
         )}
       >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
             <p className="text-xs text-muted-foreground">
-              {copy("Trend Analyses", "Trend analyses")}
+              {copy("Trend Analyses", "Phân tích xu hướng")}
             </p>
             <p className="mt-2 text-2xl font-semibold text-foreground">
               {formatCompactNumber(trendRecords.length)}
@@ -589,7 +690,7 @@ export function DashboardPage() {
           </div>
           <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
             <p className="text-xs text-muted-foreground">
-              {copy("Generated Contents", "Generated contents")}
+              {copy("Generated Contents", "Nội dung đã tạo")}
             </p>
             <p className="mt-2 text-2xl font-semibold text-foreground">
               {formatCompactNumber(generatedContents.length)}
@@ -597,7 +698,7 @@ export function DashboardPage() {
           </div>
           <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
             <p className="text-xs text-muted-foreground">
-              {copy("Publish Jobs", "Publish jobs")}
+              {copy("Publishing Tasks", "Tác vụ đăng bài")}
             </p>
             <p className="mt-2 text-2xl font-semibold text-foreground">
               {formatCompactNumber(publishJobs.length)}
@@ -605,13 +706,11 @@ export function DashboardPage() {
           </div>
           <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
             <p className="text-xs text-muted-foreground">
-              {copy("Top Keyword Score", "Điểm keyword cao nhất")}
+              {copy("Top Keyword Strength", "Độ mạnh keyword cao nhất")}
             </p>
             <p className="mt-2 flex items-center gap-2 text-2xl font-semibold text-foreground">
               <Sparkles className="size-5 text-amber-500" />
-              {keywordPulse[0]
-                ? formatPercentValue(keywordPulse[0].score)
-                : "0%"}
+              {keywordPulse[0] ? formatPercentValue(keywordPulse[0].score) : "0%"}
             </p>
           </div>
         </div>

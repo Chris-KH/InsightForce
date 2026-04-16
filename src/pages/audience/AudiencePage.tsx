@@ -302,8 +302,8 @@ export function AudiencePage() {
             "Unable to load audience intelligence data.",
           )}
           hint={copy(
-            "Audience pipelines depend on /trends and /upload-post/interactions/comments endpoints.",
-            "Dữ liệu audience phụ thuộc vào endpoint /trends và /upload-post/interactions/comments.",
+            "Some audience signals are syncing. You can keep exploring available insights.",
+            "Một số tín hiệu audience đang đồng bộ. Bạn vẫn có thể tiếp tục khám phá dữ liệu sẵn có.",
           )}
         />
       ) : null}
@@ -481,8 +481,8 @@ export function AudiencePage() {
         <PanelCard
           title={copy("High-Affinity Segments", "Phân khúc ái lực cao")}
           description={copy(
-            "Watcher segments from TikTok and YouTube trend endpoints.",
-            "Phân khúc người xem từ endpoint xu hướng TikTok và YouTube.",
+            "Top viewer groups combined from your active trend channels.",
+            "Nhóm khán giả nổi bật được tổng hợp từ các kênh xu hướng đang hoạt động.",
           )}
         >
           <div className="space-y-3">

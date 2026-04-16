@@ -141,8 +141,8 @@ export function FinancePage() {
     ? getQueryErrorMessage(
         accountStateError,
         copy(
-          "Real provider account endpoints are unstable right now. You can still submit control actions below.",
-          "Endpoint tai khoan provider dang chua on dinh. Ban van co the gui thao tac dieu khien ben duoi.",
+          "Account connection is unstable right now. You can still continue with available actions below.",
+          "Kết nối tài khoản hiện chưa ổn định. Bạn vẫn có thể tiếp tục với các thao tác khả dụng bên dưới.",
         ),
       )
     : null;
@@ -329,12 +329,12 @@ export function FinancePage() {
       <SectionHeader
         eyebrow={copy("Monetization Ops", "Vận hành kiếm tiền")}
         title={copy(
-          "Upload-Post Analytics Center",
-          "Trung tâm phân tích Upload-Post",
+          "Creator Revenue Analytics",
+          "Trung tâm phân tích doanh thu creator",
         )}
         description={copy(
-          "Finance screens now mirror real profile analytics, total impressions, and post-level performance from backend upload-post endpoints.",
-          "Màn hình tài chính hiện phản ánh dữ liệu thật từ endpoint upload-post gồm profile analytics, total impressions và hiệu suất từng bài đăng.",
+          "Track account growth, impressions, and post-level performance in one financial overview.",
+          "Theo dõi tăng trưởng tài khoản, impressions và hiệu suất từng bài đăng trong một màn hình tài chính tổng quan.",
         )}
         action={
           <Badge
@@ -356,14 +356,14 @@ export function FinancePage() {
           description={
             isUploadPostApiKeyMissingInAnalytics
               ? copy(
-                  "Backend is missing UPLOAD_POST_API_KEY, so Upload-Post analytics cannot be loaded yet.",
-                  "Backend dang thieu UPLOAD_POST_API_KEY, nen du lieu Upload-Post analytics chua the tai.",
+                  "A required integration key is missing, so analytics data is temporarily unavailable.",
+                  "Thiếu khóa tích hợp cần thiết nên dữ liệu phân tích tạm thời chưa thể tải.",
                 )
               : (firstErrorMessage ?? "Unable to load finance analytics.")
           }
           hint={copy(
-            "Finance view requires /upload-post/history, /analytics/profiles, and /analytics/posts endpoints.",
-            "Màn hình tài chính cần các endpoint /upload-post/history, /analytics/profiles và /analytics/posts.",
+            "Data sources are syncing. Please refresh shortly.",
+            "Nguồn dữ liệu đang đồng bộ. Vui lòng làm mới sau ít phút.",
           )}
         />
       ) : null}
@@ -446,8 +446,8 @@ export function FinancePage() {
       <PanelCard
         title={copy("Account Control Plane", "Bảng điều khiển tài khoản")}
         description={copy(
-          "Real account controls for /account/me, /users, /users/{username}, /jwt/generate and /jwt/validate.",
-          "Bảng điều khiển tài khoản thật cho /account/me, /users, /users/{username}, /jwt/generate và /jwt/validate.",
+          "Manage connected profiles, invite access, and verify account links in one place.",
+          "Quản lý hồ sơ liên kết, tạo quyền truy cập và xác thực liên kết tài khoản tại một nơi.",
         )}
       >
         {accountQuery.isLoading || profilesQuery.isLoading ? (
@@ -460,13 +460,13 @@ export function FinancePage() {
                 message={
                   isUploadPostApiKeyMissing
                     ? copy(
-                        "Backend is missing UPLOAD_POST_API_KEY, so account controls and JWT actions are temporarily unavailable.",
-                        "Backend dang thieu UPLOAD_POST_API_KEY, nen cac thao tac account control va JWT tam thoi chua su dung duoc.",
+                        "A required integration key is missing, so account controls are temporarily unavailable.",
+                        "Thiếu khóa tích hợp cần thiết nên các thao tác tài khoản đang tạm thời chưa khả dụng.",
                       )
                     : (accountStateMessage ??
                       copy(
-                        "Real provider account endpoints are unstable right now. You can still submit control actions below.",
-                        "Endpoint tai khoan provider dang chua on dinh. Ban van co the gui thao tac dieu khien ben duoi.",
+                        "Account connection is unstable right now. You can still continue with available actions below.",
+                        "Kết nối tài khoản hiện chưa ổn định. Bạn vẫn có thể tiếp tục với các thao tác khả dụng bên dưới.",
                       ))
                 }
               />
@@ -506,7 +506,7 @@ export function FinancePage() {
                   {uploadPostProfiles.length} {copy("profiles", "hồ sơ")}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {copy("Provider limit", "Giới hạn provider")}:{" "}
+                  {copy("Profile limit", "Giới hạn hồ sơ")}: {" "}
                   {profilesQuery.data?.limit ?? "--"}
                 </p>
               </div>
@@ -644,8 +644,8 @@ export function FinancePage() {
                 <InlineQueryState
                   state="empty"
                   message={copy(
-                    "No managed profiles returned by /users endpoint.",
-                    "Endpoint /users chưa trả về profile nào.",
+                    "No managed profiles available yet.",
+                    "Chưa có hồ sơ nào đang được quản lý.",
                   )}
                 />
               )}
@@ -708,7 +708,7 @@ export function FinancePage() {
                 >
                   {generateJwtMutation.isPending
                     ? copy("Generating...", "Đang tạo...")
-                    : copy("Generate Access URL", "Tạo Access URL")}
+                    : copy("Create Access Link", "Tạo liên kết truy cập")}
                 </Button>
                 {generatedAccessUrl ? (
                   <a
@@ -737,7 +737,10 @@ export function FinancePage() {
                   id="jwt-token"
                   value={jwtTokenInput}
                   onChange={(event) => setJwtTokenInput(event.target.value)}
-                  placeholder="Paste token from access_url"
+                  placeholder={copy(
+                    "Paste token from your access link",
+                    "Dán token từ liên kết truy cập",
+                  )}
                 />
                 <Button
                   type="submit"
@@ -791,8 +794,8 @@ export function FinancePage() {
                   )
             }
             detail={copy(
-              "From total-impressions endpoint",
-              "Lấy từ endpoint total-impressions",
+              "From your selected reporting period",
+              "Từ khoảng thời gian báo cáo đã chọn",
             )}
             icon={<Eye className="size-5" />}
           />
@@ -995,10 +998,10 @@ export function FinancePage() {
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         <PanelCard
-          title={copy("Latest Request Analytics", "Phân tích request mới nhất")}
+          title={copy("Latest Post Performance", "Hiệu suất bài đăng mới nhất")}
           description={copy(
-            "Detail view from /analytics/posts/{request_id}.",
-            "Chi tiết từ /analytics/posts/{request_id}.",
+            "Detailed performance snapshot for the most recent published post.",
+            "Ảnh chụp chi tiết hiệu suất của bài đăng gần nhất.",
           )}
         >
           <div className="space-y-3">
@@ -1017,8 +1020,8 @@ export function FinancePage() {
                 ) : null}
                 <div className="rounded-2xl border border-border/55 bg-background/55 p-4">
                   <p className="text-xs text-muted-foreground">
-                    {copy("Request", "Request")}:{" "}
-                    {latestPostAnalyticsQuery.data.request_id}
+                    {copy("Channels measured", "Số kênh được đo")}: {" "}
+                    {Object.keys(latestPostAnalyticsQuery.data.payload.platforms).length}
                   </p>
                   <p className="mt-1 font-medium text-foreground">
                     {latestPostAnalyticsQuery.data.payload.post.post_title}
@@ -1068,8 +1071,8 @@ export function FinancePage() {
               <InlineQueryState
                 state="empty"
                 message={copy(
-                  "No post analytics available for latest request.",
-                  "Chưa có analytics bài đăng cho request mới nhất.",
+                  "No post performance data available for the latest campaign.",
+                  "Chưa có dữ liệu hiệu suất bài đăng cho chiến dịch gần nhất.",
                 )}
               />
             )}
@@ -1079,8 +1082,8 @@ export function FinancePage() {
         <PanelCard
           title={copy("Upload History", "Lịch sử upload")}
           description={copy(
-            "Operational ledger from /upload-post/history.",
-            "Sổ vận hành từ /upload-post/history.",
+            "Timeline of publishing activity across connected channels.",
+            "Dòng thời gian hoạt động đăng bài trên các kênh đã kết nối.",
           )}
           action={
             <Badge variant="outline" className="rounded-full">

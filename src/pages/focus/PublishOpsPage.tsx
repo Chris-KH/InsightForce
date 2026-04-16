@@ -99,6 +99,7 @@ export function PublishOpsPage() {
   const publishMutation = useUploadPostPublishMutation();
 
   const [selectedJobId, setSelectedJobId] = useState<string>();
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const selectedJobQuery = useUploadPostPublishJobQuery({
     publishJobId: selectedJobId,
@@ -169,6 +170,15 @@ export function PublishOpsPage() {
     );
   };
 
+  const applyPreset = (preset: "short-video" | "multichannel") => {
+    if (preset === "short-video") {
+      setPlatforms(["tiktok", "instagram", "youtube"]);
+      return;
+    }
+
+    setPlatforms(["tiktok", "instagram", "youtube", "facebook", "threads"]);
+  };
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFiles(Array.from(event.target.files ?? []));
   };
@@ -223,21 +233,21 @@ export function PublishOpsPage() {
   return (
     <div className="grid gap-6">
       <FocusSectionHeader
-        title={{ en: "Publish Ops", vi: "Vận hành publish" }}
+        title={{ en: "Publish Ops", vi: "Vận hành đăng bài" }}
         description={{
-          en: "Job-centric execution surface for /api/v1/upload-post/publish and /publish-jobs with direct links to users and generated content records.",
-          vi: "Màn hình thực thi theo hướng job cho /api/v1/upload-post/publish và /publish-jobs, liên kết trực tiếp với users và generated contents.",
+          en: "Plan, schedule, and monitor your posts from one creator-friendly workspace.",
+          vi: "Lập kế hoạch, lên lịch và theo dõi bài đăng trong một không gian thân thiện cho creator.",
         }}
-        badge={{ en: "Publish Job Lifecycle", vi: "Vòng đời publish job" }}
+        badge={{ en: "Publishing Workspace", vi: "Không gian đăng bài" }}
         icon={Workflow}
       />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <PanelCard
-          title={copy("Publish Job Composer", "Trình tạo publish job")}
+          title={copy("Post Planner", "Lên kế hoạch bài đăng")}
           description={copy(
-            "Compose one publish request and optionally bind it to user_id + generated_content_id from backend records.",
-            "Tạo publish request và tùy chọn gắn với user_id + generated_content_id từ các record backend.",
+            "Prepare one posting task with title, channels, timing, and supporting assets.",
+            "Chuẩn bị một tác vụ đăng bài với tiêu đề, kênh đăng, thời gian và tài nguyên hỗ trợ.",
           )}
         >
           <form
@@ -247,14 +257,14 @@ export function PublishOpsPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="publish-ops-user">
-                  {copy("Profile Username", "Profile username")}
+                  {copy("Publishing Profile", "Hồ sơ đăng bài")}
                 </Label>
                 <Input
                   id="publish-ops-user"
                   value={user}
                   list="publish-ops-users"
                   onChange={(event) => setUser(event.target.value)}
-                  placeholder="blhoang23"
+                  placeholder="Tên tài khoản đăng bài"
                 />
                 <datalist id="publish-ops-users">
                   {(profilesQuery.data?.profiles ?? []).map((profile) => (
@@ -265,61 +275,36 @@ export function PublishOpsPage() {
 
               <div className="space-y-1">
                 <Label htmlFor="publish-ops-title">
-                  {copy("Title", "Tiêu đề")}
+                  {copy("Post Title", "Tiêu đề bài đăng")}
                 </Label>
                 <Input
                   id="publish-ops-title"
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
-                  placeholder="AI workflow in 3 steps"
+                  placeholder={copy("Ex: 3 tips to boost reach", "Ví dụ: 3 cách tăng độ phủ")}
                 />
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label htmlFor="publish-ops-user-id">User ID</Label>
-                <Input
-                  id="publish-ops-user-id"
-                  value={userId}
-                  list="publish-ops-user-ids"
-                  onChange={(event) => setUserId(event.target.value)}
-                  placeholder="uuid"
-                />
-                <datalist id="publish-ops-user-ids">
-                  {(usersQuery.data?.users ?? []).map((appUser) => (
-                    <option key={appUser.id} value={appUser.id}>
-                      {appUser.email}
-                    </option>
-                  ))}
-                </datalist>
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="publish-ops-generated-content">
-                  Generated Content ID
-                </Label>
-                <Input
-                  id="publish-ops-generated-content"
-                  value={generatedContentId}
-                  list="publish-ops-generated-content-ids"
-                  onChange={(event) =>
-                    setGeneratedContentId(event.target.value)
-                  }
-                  placeholder="uuid"
-                />
-                <datalist id="publish-ops-generated-content-ids">
-                  {(generatedContentsQuery.data?.items ?? []).map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {getDisplayTitle(item)}
-                    </option>
-                  ))}
-                </datalist>
               </div>
             </div>
 
             <div className="space-y-1">
-              <Label>{copy("Platforms", "Nền tảng")}</Label>
+              <Label>{copy("Channels", "Kênh đăng")}</Label>
+              <div className="mb-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => applyPreset("short-video")}
+                  className="rounded-full border border-border/70 bg-background/70 px-3 py-1 text-xs text-muted-foreground transition hover:border-primary/45 hover:text-primary"
+                >
+                  {copy("Preset: Short-video", "Preset: Video ngắn")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset("multichannel")}
+                  className="rounded-full border border-border/70 bg-background/70 px-3 py-1 text-xs text-muted-foreground transition hover:border-primary/45 hover:text-primary"
+                >
+                  {copy("Preset: Multi-channel", "Preset: Đa kênh")}
+                </button>
+              </div>
+
               <div className="flex flex-wrap gap-2">
                 {PUBLISH_PLATFORM_OPTIONS.map((platform) => {
                   const active = platforms.includes(platform);
@@ -345,32 +330,34 @@ export function PublishOpsPage() {
 
             <div className="space-y-1">
               <Label htmlFor="publish-ops-description">
-                {copy("Description", "Mô tả")}
+                {copy("Caption / Context", "Nội dung mô tả")}
               </Label>
               <Textarea
                 id="publish-ops-description"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder={copy(
-                  "Short context for post payload",
-                  "Ngữ cảnh ngắn cho payload bài đăng",
+                  "Write the core context for this post.",
+                  "Viết nội dung cốt lõi cho bài đăng này.",
                 )}
               />
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
-                <Label htmlFor="publish-ops-tags">{copy("Tags", "Tags")}</Label>
+                <Label htmlFor="publish-ops-tags">
+                  {copy("Tags", "Tags")}
+                </Label>
                 <Input
                   id="publish-ops-tags"
                   value={tags}
                   onChange={(event) => setTags(event.target.value)}
-                  placeholder="demo,automation,launch"
+                  placeholder={copy("tag1,tag2,tag3", "tag1,tag2,tag3")}
                 />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="publish-ops-schedule">
-                  {copy("Schedule", "Lịch đăng")}
+                  {copy("Schedule Time", "Thời gian đăng")}
                 </Label>
                 <Input
                   id="publish-ops-schedule"
@@ -390,7 +377,7 @@ export function PublishOpsPage() {
                   id="publish-ops-comment"
                   value={firstComment}
                   onChange={(event) => setFirstComment(event.target.value)}
-                  placeholder="Tell me what you think"
+                  placeholder={copy("Optional starter comment", "Bình luận mở đầu tùy chọn")}
                 />
               </div>
               <div className="space-y-1">
@@ -426,7 +413,7 @@ export function PublishOpsPage() {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="publish-ops-files">{copy("Files", "Tệp")}</Label>
+              <Label htmlFor="publish-ops-files">{copy("Media Files", "Tệp media")}</Label>
               <Input
                 id="publish-ops-files"
                 type="file"
@@ -435,6 +422,58 @@ export function PublishOpsPage() {
                 onChange={handleFileChange}
               />
             </div>
+
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((value) => !value)}
+              className="text-xs text-primary underline-offset-4 hover:underline"
+            >
+              {showAdvanced
+                ? copy("Hide advanced linking", "Ẩn liên kết nâng cao")
+                : copy("Show advanced linking", "Hiện liên kết nâng cao")}
+            </button>
+
+            {showAdvanced ? (
+              <div className="grid gap-3 rounded-2xl border border-border/60 bg-background/55 p-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="publish-ops-user-id">
+                    {copy("Campaign Owner", "Tài khoản chiến dịch")}
+                  </Label>
+                  <select
+                    id="publish-ops-user-id"
+                    className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
+                    value={userId}
+                    onChange={(event) => setUserId(event.target.value)}
+                  >
+                    <option value="">{copy("No link", "Không liên kết")}</option>
+                    {(usersQuery.data?.users ?? []).map((appUser) => (
+                      <option key={appUser.id} value={appUser.id}>
+                        {appUser.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="publish-ops-generated-content">
+                    {copy("Attach Content Draft", "Gắn bản nháp nội dung")}
+                  </Label>
+                  <select
+                    id="publish-ops-generated-content"
+                    className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
+                    value={generatedContentId}
+                    onChange={(event) => setGeneratedContentId(event.target.value)}
+                  >
+                    <option value="">{copy("No link", "Không liên kết")}</option>
+                    {(generatedContentsQuery.data?.items ?? []).map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {getDisplayTitle(item)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ) : null}
 
             {files.length > 0 ? (
               <div className="rounded-2xl border border-border/55 bg-background/55 p-3 text-xs text-muted-foreground">
@@ -465,8 +504,8 @@ export function PublishOpsPage() {
                 <Upload data-icon="inline-start" />
               )}
               {publishMutation.isPending
-                ? copy("Publishing...", "Đang publish...")
-                : copy("Create Publish Job", "Tạo publish job")}
+                ? copy("Scheduling...", "Đang lên lịch...")
+                : copy("Create Publishing Task", "Tạo tác vụ đăng bài")}
             </Button>
 
             {publishMutation.error ? (
@@ -474,7 +513,7 @@ export function PublishOpsPage() {
                 state="error"
                 message={getQueryErrorMessage(
                   publishMutation.error,
-                  "Unable to publish content.",
+                  "Unable to create publishing task.",
                 )}
               />
             ) : null}
@@ -484,17 +523,15 @@ export function PublishOpsPage() {
                 <p className="flex items-center gap-2 text-foreground">
                   <CheckCircle2 className="size-4 text-emerald-600" />
                   {copy(
-                    "Publish job created successfully",
-                    "Đã tạo publish job thành công",
+                    "Publishing task created successfully",
+                    "Đã tạo tác vụ đăng bài thành công",
                   )}
                 </p>
                 <p className="mt-2">
-                  Job ID: {publishMutation.data.publish_job.id}
+                  {copy("Current status", "Trạng thái hiện tại")}: {publishMutation.data.publish_job.status}
                 </p>
-                <p>Status: {publishMutation.data.publish_job.status}</p>
                 <p>
-                  Platforms:{" "}
-                  {publishMutation.data.publish_job.platforms.join(", ")}
+                  {copy("Channels", "Kênh đăng")}: {publishMutation.data.publish_job.platforms.join(", ")}
                 </p>
               </div>
             ) : null}
@@ -502,10 +539,10 @@ export function PublishOpsPage() {
         </PanelCard>
 
         <PanelCard
-          title={copy("Publish Queue", "Publish queue")}
+          title={copy("Publishing Queue", "Hàng đợi đăng bài")}
           description={copy(
-            "Live job stream from /api/v1/upload-post/publish-jobs. Select one row to inspect full detail.",
-            "Luồng job realtime từ /api/v1/upload-post/publish-jobs. Chọn một dòng để xem chi tiết đầy đủ.",
+            "Track every publishing task and open one item for detail view.",
+            "Theo dõi toàn bộ tác vụ đăng bài và mở từng mục để xem chi tiết.",
           )}
         >
           <div className="mb-3 flex flex-wrap gap-2">
@@ -548,9 +585,7 @@ export function PublishOpsPage() {
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-foreground">
-                      {job.title}
-                    </p>
+                    <p className="text-sm font-semibold text-foreground">{job.title}</p>
                     <Badge
                       variant="outline"
                       className={cn(
@@ -575,8 +610,8 @@ export function PublishOpsPage() {
             <InlineQueryState
               state="empty"
               message={copy(
-                "No jobs found for current filter.",
-                "Không có job phù hợp với bộ lọc hiện tại.",
+                "No tasks found for current filter.",
+                "Không có tác vụ phù hợp với bộ lọc hiện tại.",
               )}
             />
           )}
@@ -585,10 +620,10 @@ export function PublishOpsPage() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <PanelCard
-          title={copy("Selected Job Detail", "Chi tiết job đã chọn")}
+          title={copy("Selected Task Detail", "Chi tiết tác vụ đã chọn")}
           description={copy(
-            "Detail from /api/v1/upload-post/publish-jobs/{publish_job_id}.",
-            "Chi tiết từ /api/v1/upload-post/publish-jobs/{publish_job_id}.",
+            "A clear summary of timing, channels, and media readiness.",
+            "Tóm tắt rõ ràng về thời gian, kênh đăng và mức sẵn sàng media.",
           )}
         >
           {selectedJobQuery.isLoading ? (
@@ -596,48 +631,48 @@ export function PublishOpsPage() {
           ) : selectedJobQuery.data ? (
             <div className="space-y-3 rounded-2xl border border-border/65 bg-background/65 p-4 text-xs text-muted-foreground">
               <p>
-                <span className="font-semibold text-foreground">ID:</span>{" "}
-                {selectedJobQuery.data.id}
-              </p>
-              <p>
-                <span className="font-semibold text-foreground">Status:</span>{" "}
-                {selectedJobQuery.data.status}
-              </p>
-              <p>
-                <span className="font-semibold text-foreground">Created:</span>{" "}
-                {formatDateTime(selectedJobQuery.data.created_at)}
+                <span className="font-semibold text-foreground">
+                  {copy("Status", "Trạng thái")}
+                </span>
+                : {selectedJobQuery.data.status}
               </p>
               <p>
                 <span className="font-semibold text-foreground">
-                  Platforms:
-                </span>{" "}
-                {selectedJobQuery.data.platforms.join(", ")}
+                  {copy("Created time", "Thời điểm tạo")}
+                </span>
+                : {formatDateTime(selectedJobQuery.data.created_at)}
               </p>
               <p>
                 <span className="font-semibold text-foreground">
-                  Provider Request ID:
-                </span>{" "}
-                {selectedJobQuery.data.provider_request_id ?? "--"}
+                  {copy("Scheduled time", "Thời gian lên lịch")}
+                </span>
+                : {selectedJobQuery.data.schedule_post ? formatDateTime(selectedJobQuery.data.schedule_post) : "--"}
               </p>
               <p>
                 <span className="font-semibold text-foreground">
-                  Provider Job ID:
-                </span>{" "}
-                {selectedJobQuery.data.provider_job_id ?? "--"}
+                  {copy("Channels", "Kênh đăng")}
+                </span>
+                : {selectedJobQuery.data.platforms.join(", ")}
               </p>
               <p>
                 <span className="font-semibold text-foreground">
-                  Asset URLs:
-                </span>{" "}
-                {selectedJobQuery.data.asset_urls.length}
+                  {copy("Attached media links", "Liên kết media đính kèm")}
+                </span>
+                : {selectedJobQuery.data.asset_urls.length}
+              </p>
+              <p>
+                <span className="font-semibold text-foreground">
+                  {copy("Uploaded files", "Số tệp tải lên")}
+                </span>
+                : {selectedJobQuery.data.uploaded_files.length}
               </p>
             </div>
           ) : (
             <InlineQueryState
               state="empty"
               message={copy(
-                "Choose one job from the queue to inspect details.",
-                "Hãy chọn một job trong queue để xem chi tiết.",
+                "Choose one task from the queue to inspect details.",
+                "Hãy chọn một tác vụ trong hàng đợi để xem chi tiết.",
               )}
             />
           )}
@@ -648,17 +683,17 @@ export function PublishOpsPage() {
               state="error"
               message={getQueryErrorMessage(
                 selectedJobQuery.error,
-                "Unable to load publish job detail.",
+                "Unable to load selected task detail.",
               )}
             />
           ) : null}
         </PanelCard>
 
         <PanelCard
-          title={copy("Generated Content Picker", "Bộ chọn generated content")}
+          title={copy("Content Draft Picker", "Bộ chọn bản nháp nội dung")}
           description={copy(
-            "Use one generated content record to prefill title/description and attach generated_content_id in publish payload.",
-            "Dùng record generated content để điền nhanh title/description và gắn generated_content_id trong payload publish.",
+            "Pick one draft to prefill title and context for faster publishing.",
+            "Chọn một bản nháp để điền nhanh tiêu đề và nội dung khi đăng bài.",
           )}
         >
           {generatedContentsQuery.isLoading ? (
@@ -684,12 +719,8 @@ export function PublishOpsPage() {
                       {copy("Use", "Dùng")}
                     </Button>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    ID: {record.id}
-                  </p>
                   <p className="text-xs text-muted-foreground">
-                    {copy("Created", "Tạo lúc")}:{" "}
-                    {formatDateTime(record.created_at)}
+                    {copy("Created", "Tạo lúc")}: {formatDateTime(record.created_at)}
                   </p>
                 </div>
               ))}
@@ -698,8 +729,8 @@ export function PublishOpsPage() {
             <InlineQueryState
               state="empty"
               message={copy(
-                "No generated content records available.",
-                "Không có record generated content.",
+                "No content drafts available.",
+                "Chưa có bản nháp nội dung khả dụng.",
               )}
             />
           )}
