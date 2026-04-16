@@ -161,6 +161,7 @@ export function SignalWaveCanvas({
 }: SignalWaveCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef(0);
+  const activeRef = useRef(true);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -174,6 +175,7 @@ export function SignalWaveCanvas({
     }
 
     let time = 0;
+    let lastFrameTime = 0;
 
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
@@ -183,7 +185,19 @@ export function SignalWaveCanvas({
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    const render = () => {
+    const render = (timestamp = 0) => {
+      if (!activeRef.current) {
+        frameRef.current = 0;
+        return;
+      }
+
+      if (timestamp - lastFrameTime < 33) {
+        frameRef.current = requestAnimationFrame(render);
+        return;
+      }
+
+      lastFrameTime = timestamp;
+
       const rect = canvas.getBoundingClientRect();
       context.clearRect(0, 0, rect.width, rect.height);
 
@@ -217,13 +231,35 @@ export function SignalWaveCanvas({
       frameRef.current = requestAnimationFrame(render);
     };
 
+    const handleVisibilityChange = () => {
+      activeRef.current = !document.hidden;
+
+      if (activeRef.current && frameRef.current === 0) {
+        frameRef.current = requestAnimationFrame(render);
+      }
+
+      if (!activeRef.current && frameRef.current !== 0) {
+        cancelAnimationFrame(frameRef.current);
+        frameRef.current = 0;
+      }
+    };
+
+    activeRef.current = !document.hidden;
     resize();
     window.addEventListener("resize", resize);
-    render();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    if (activeRef.current) {
+      frameRef.current = requestAnimationFrame(render);
+    }
 
     return () => {
       window.removeEventListener("resize", resize);
-      cancelAnimationFrame(frameRef.current);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (frameRef.current !== 0) {
+        cancelAnimationFrame(frameRef.current);
+      }
+      frameRef.current = 0;
     };
   }, [cell, speed]);
 

@@ -5,79 +5,66 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { getAgentsStatus } from "@/api/agents.api";
+import { getAgentsStatus, orchestrateAgentsPipeline } from "@/api/agents.api";
+import {
+  generateContent,
+  getGeneratedContent,
+  getGeneratedContents,
+  type GetGeneratedContentsParams,
+} from "@/api/contents.api";
 import { getHealthStatus } from "@/api/health.api";
 import { queryKeys } from "@/api/query-keys";
 import {
-  getTikTokChannelStatus,
-  getTikTokRecommendations,
-  getTikTokTrends,
-  getTikTokVideo,
-  getTikTokVideos,
-  uploadTikTokVideo,
-} from "@/api/tiktok.api";
-import type { ContentPlatform, UploadVideoRequest } from "@/api/types";
+  analyzeTrend,
+  getTrendAnalysisDetail,
+  getTrendHistory,
+  type GetTrendHistoryParams,
+} from "@/api/trends.api";
+import type {
+  ContentGenerateRequest,
+  OrchestratorRequest,
+  TrendAnalyzeRequest,
+} from "@/api/types";
 import {
-  createUploadPostProfile,
-  deleteUploadPostProfile,
-  generateUploadPostJwt,
-  getUploadPostAccount,
-  getUploadPostComments,
-  getUploadPostHistory,
-  getUploadPostPostAnalytics,
-  getUploadPostProfile,
-  getUploadPostProfileAnalytics,
-  getUploadPostProfiles,
-  getUploadPostTotalImpressions,
+  getUploadPostPublishJob,
+  getUploadPostPublishJobs,
   publishUploadPostContent,
-  validateUploadPostJwt,
-  type GetUploadPostHistoryParams,
+  type GetPublishJobsParams,
 } from "@/api/upload-post.api";
-import {
-  getYouTubeChannelStatus,
-  getYouTubeRecommendations,
-  getYouTubeTrends,
-  getYouTubeVideo,
-  getYouTubeVideos,
-  uploadYouTubeVideo,
-} from "@/api/youtube.api";
+import { createUser, getUser, getUsers } from "@/api/users.api";
+import { getDefaultGeneralTrendQuery } from "@/lib/trend-query";
 
-export type UploadPostProfileAnalyticsQueryParams = {
-  profileUsername?: string;
-  platforms: ContentPlatform[];
-  pageId?: string;
-  pageUrn?: string;
+export type TrendGeneralQueryParams = {
+  query?: string;
+  limit?: number;
+  enabled?: boolean;
+  refetchIntervalMs?: number;
+};
+
+export type TrendHistoryQueryParams = GetTrendHistoryParams & {
   enabled?: boolean;
 };
 
-export type UploadPostProfileQueryParams = {
-  profileUsername?: string;
+export type TrendDetailQueryParams = {
+  analysisId?: string;
   enabled?: boolean;
 };
 
-export type UploadPostTotalImpressionsQueryParams = {
-  profileUsername?: string;
-  date?: string;
-  startDate?: string;
-  endDate?: string;
-  period?: string;
-  platforms?: ContentPlatform[];
-  breakdown?: boolean;
-  metrics?: string[];
+export type GeneratedContentsQueryParams = GetGeneratedContentsParams & {
   enabled?: boolean;
 };
 
-export type UploadPostPostAnalyticsQueryParams = {
-  requestId?: string;
-  platform?: ContentPlatform;
+export type GeneratedContentQueryParams = {
+  contentId?: string;
   enabled?: boolean;
 };
 
-export type UploadPostCommentsQueryParams = {
-  platform?: ContentPlatform;
-  user?: string;
-  postId?: string;
-  postUrl?: string;
+export type PublishJobsQueryParams = GetPublishJobsParams & {
+  enabled?: boolean;
+};
+
+export type PublishJobQueryParams = {
+  publishJobId?: string;
   enabled?: boolean;
 };
 
@@ -94,6 +81,68 @@ export function useHealthQuery() {
   return useQuery(healthQueryOptions());
 }
 
+export function trendGeneralQueryOptions(params: TrendGeneralQueryParams = {}) {
+  const normalizedQuery = params.query?.trim();
+  const query =
+    normalizedQuery && normalizedQuery.length >= 2
+      ? normalizedQuery
+      : getDefaultGeneralTrendQuery();
+  const limit = Math.max(1, Math.min(5, params.limit ?? 5));
+
+  return queryOptions({
+    queryKey: queryKeys.trend.general(query, limit),
+    queryFn: () => analyzeTrend({ query, limit }),
+    staleTime: 30_000,
+    refetchInterval: params.refetchIntervalMs ?? 180_000,
+  });
+}
+
+export function useTrendGeneralQuery(params: TrendGeneralQueryParams = {}) {
+  return useQuery({
+    ...trendGeneralQueryOptions(params),
+    enabled: params.enabled ?? true,
+  });
+}
+
+export function useTrendAnalyzeMutation() {
+  return useMutation({
+    mutationKey: ["trend", "analyze"],
+    mutationFn: (payload: TrendAnalyzeRequest) => analyzeTrend(payload),
+  });
+}
+
+export function trendHistoryQueryOptions(params: TrendHistoryQueryParams = {}) {
+  const limit = params.limit ?? 20;
+
+  return queryOptions({
+    queryKey: queryKeys.trend.history(params.userId, limit),
+    queryFn: () => getTrendHistory({ userId: params.userId, limit }),
+    staleTime: 30_000,
+  });
+}
+
+export function useTrendHistoryQuery(params: TrendHistoryQueryParams = {}) {
+  return useQuery({
+    ...trendHistoryQueryOptions(params),
+    enabled: params.enabled ?? true,
+  });
+}
+
+export function trendDetailQueryOptions(analysisId: string) {
+  return queryOptions({
+    queryKey: queryKeys.trend.detail(analysisId),
+    queryFn: () => getTrendAnalysisDetail(analysisId),
+    staleTime: 30_000,
+  });
+}
+
+export function useTrendDetailQuery(params: TrendDetailQueryParams) {
+  return useQuery({
+    ...trendDetailQueryOptions(params.analysisId ?? ""),
+    enabled: (params.enabled ?? true) && Boolean(params.analysisId),
+  });
+}
+
 export function agentsStatusQueryOptions() {
   return queryOptions({
     queryKey: queryKeys.agents.status,
@@ -107,393 +156,160 @@ export function useAgentsStatusQuery() {
   return useQuery(agentsStatusQueryOptions());
 }
 
-export function tikTokChannelStatusQueryOptions() {
-  return queryOptions({
-    queryKey: queryKeys.tiktok.channelStatus,
-    queryFn: getTikTokChannelStatus,
-    staleTime: 60_000,
+export function useAgentsOrchestrateMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: queryKeys.agents.orchestrate,
+    mutationFn: (payload: OrchestratorRequest) =>
+      orchestrateAgentsPipeline(payload),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["trend", "history"] }),
+        queryClient.invalidateQueries({ queryKey: ["contents", "list"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["upload-post", "publish-jobs"],
+        }),
+      ]);
+    },
   });
 }
 
-export function useTikTokChannelStatusQuery() {
-  return useQuery(tikTokChannelStatusQueryOptions());
-}
-
-export function tikTokTrendsQueryOptions() {
-  return queryOptions({
-    queryKey: queryKeys.tiktok.trends,
-    queryFn: getTikTokTrends,
-    staleTime: 60_000,
-  });
-}
-
-export function useTikTokTrendsQuery() {
-  return useQuery(tikTokTrendsQueryOptions());
-}
-
-export function tikTokRecommendationsQueryOptions() {
-  return queryOptions({
-    queryKey: queryKeys.tiktok.recommendations,
-    queryFn: getTikTokRecommendations,
-    staleTime: 60_000,
-  });
-}
-
-export function useTikTokRecommendationsQuery() {
-  return useQuery(tikTokRecommendationsQueryOptions());
-}
-
-export function tikTokVideosQueryOptions() {
-  return queryOptions({
-    queryKey: queryKeys.tiktok.videos,
-    queryFn: getTikTokVideos,
-    staleTime: 60_000,
-  });
-}
-
-export function useTikTokVideosQuery() {
-  return useQuery(tikTokVideosQueryOptions());
-}
-
-export function tikTokVideoQueryOptions(videoId: string) {
-  return queryOptions({
-    queryKey: queryKeys.tiktok.video(videoId),
-    queryFn: () => getTikTokVideo(videoId),
-    staleTime: 60_000,
-  });
-}
-
-export function useTikTokVideoQuery(videoId?: string) {
-  return useQuery({
-    ...tikTokVideoQueryOptions(videoId ?? ""),
-    enabled: Boolean(videoId),
-  });
-}
-
-export function youTubeChannelStatusQueryOptions() {
-  return queryOptions({
-    queryKey: queryKeys.youtube.channelStatus,
-    queryFn: getYouTubeChannelStatus,
-    staleTime: 60_000,
-  });
-}
-
-export function useYouTubeChannelStatusQuery() {
-  return useQuery(youTubeChannelStatusQueryOptions());
-}
-
-export function youTubeTrendsQueryOptions() {
-  return queryOptions({
-    queryKey: queryKeys.youtube.trends,
-    queryFn: getYouTubeTrends,
-    staleTime: 60_000,
-  });
-}
-
-export function useYouTubeTrendsQuery() {
-  return useQuery(youTubeTrendsQueryOptions());
-}
-
-export function youTubeRecommendationsQueryOptions() {
-  return queryOptions({
-    queryKey: queryKeys.youtube.recommendations,
-    queryFn: getYouTubeRecommendations,
-    staleTime: 60_000,
-  });
-}
-
-export function useYouTubeRecommendationsQuery() {
-  return useQuery(youTubeRecommendationsQueryOptions());
-}
-
-export function youTubeVideosQueryOptions() {
-  return queryOptions({
-    queryKey: queryKeys.youtube.videos,
-    queryFn: getYouTubeVideos,
-    staleTime: 60_000,
-  });
-}
-
-export function useYouTubeVideosQuery() {
-  return useQuery(youTubeVideosQueryOptions());
-}
-
-export function youTubeVideoQueryOptions(videoId: string) {
-  return queryOptions({
-    queryKey: queryKeys.youtube.video(videoId),
-    queryFn: () => getYouTubeVideo(videoId),
-    staleTime: 60_000,
-  });
-}
-
-export function useYouTubeVideoQuery(videoId?: string) {
-  return useQuery({
-    ...youTubeVideoQueryOptions(videoId ?? ""),
-    enabled: Boolean(videoId),
-  });
-}
-
-export function uploadPostAccountQueryOptions() {
-  return queryOptions({
-    queryKey: queryKeys.uploadPost.account,
-    queryFn: getUploadPostAccount,
-    staleTime: 60_000,
-  });
-}
-
-export function useUploadPostAccountQuery(enabled = true) {
-  return useQuery({
-    ...uploadPostAccountQueryOptions(),
-    enabled,
-  });
-}
-
-export function uploadPostProfilesQueryOptions() {
-  return queryOptions({
-    queryKey: queryKeys.uploadPost.profiles,
-    queryFn: getUploadPostProfiles,
-    staleTime: 60_000,
-  });
-}
-
-export function useUploadPostProfilesQuery(enabled = true) {
-  return useQuery({
-    ...uploadPostProfilesQueryOptions(),
-    enabled,
-  });
-}
-
-export function uploadPostProfileQueryOptions(profileUsername: string) {
-  return queryOptions({
-    queryKey: queryKeys.uploadPost.profile(profileUsername),
-    queryFn: () => getUploadPostProfile(profileUsername),
-    staleTime: 60_000,
-  });
-}
-
-export function useUploadPostProfileQuery(
-  params: UploadPostProfileQueryParams,
+export function generatedContentsQueryOptions(
+  params: GeneratedContentsQueryParams = {},
 ) {
-  const enabled = (params.enabled ?? true) && Boolean(params.profileUsername);
-
-  return useQuery({
-    ...uploadPostProfileQueryOptions(params.profileUsername ?? ""),
-    enabled,
-  });
-}
-
-export function uploadPostHistoryQueryOptions(
-  params: GetUploadPostHistoryParams = {},
-) {
-  const page = params.page ?? 1;
   const limit = params.limit ?? 20;
 
   return queryOptions({
-    queryKey: queryKeys.uploadPost.history(page, limit),
-    queryFn: () => getUploadPostHistory({ page, limit }),
+    queryKey: queryKeys.contents.list(params.userId, limit),
+    queryFn: () => getGeneratedContents({ userId: params.userId, limit }),
     staleTime: 30_000,
   });
 }
 
-export function useUploadPostHistoryQuery(
-  params: GetUploadPostHistoryParams = {},
+export function useGeneratedContentsQuery(
+  params: GeneratedContentsQueryParams = {},
 ) {
-  return useQuery(uploadPostHistoryQueryOptions(params));
-}
-
-export function uploadPostProfileAnalyticsQueryOptions(
-  params: UploadPostProfileAnalyticsQueryParams,
-) {
-  return queryOptions({
-    queryKey: queryKeys.uploadPost.profileAnalytics(
-      params.profileUsername ?? "",
-      params.platforms,
-      params.pageId,
-      params.pageUrn,
-    ),
-    queryFn: () =>
-      getUploadPostProfileAnalytics({
-        profileUsername: params.profileUsername ?? "",
-        platforms: params.platforms,
-        pageId: params.pageId,
-        pageUrn: params.pageUrn,
-      }),
-    staleTime: 30_000,
-  });
-}
-
-export function useUploadPostProfileAnalyticsQuery(
-  params: UploadPostProfileAnalyticsQueryParams,
-) {
-  const enabled =
-    (params.enabled ?? true) &&
-    Boolean(params.profileUsername) &&
-    params.platforms.length > 0;
-
   return useQuery({
-    ...uploadPostProfileAnalyticsQueryOptions(params),
-    enabled,
+    ...generatedContentsQueryOptions(params),
+    enabled: params.enabled ?? true,
   });
 }
 
-export function uploadPostTotalImpressionsQueryOptions(
-  params: UploadPostTotalImpressionsQueryParams,
-) {
+export function generatedContentQueryOptions(contentId: string) {
   return queryOptions({
-    queryKey: queryKeys.uploadPost.totalImpressions(
-      params.profileUsername ?? "",
-      {
-        date: params.date,
-        startDate: params.startDate,
-        endDate: params.endDate,
-        period: params.period,
-        platforms: params.platforms,
-        breakdown: params.breakdown,
-        metrics: params.metrics,
-      },
-    ),
-    queryFn: () =>
-      getUploadPostTotalImpressions({
-        profileUsername: params.profileUsername ?? "",
-        date: params.date,
-        startDate: params.startDate,
-        endDate: params.endDate,
-        period: params.period,
-        platforms: params.platforms,
-        breakdown: params.breakdown,
-        metrics: params.metrics,
-      }),
+    queryKey: queryKeys.contents.detail(contentId),
+    queryFn: () => getGeneratedContent(contentId),
     staleTime: 30_000,
   });
 }
 
-export function useUploadPostTotalImpressionsQuery(
-  params: UploadPostTotalImpressionsQueryParams,
-) {
-  const enabled = (params.enabled ?? true) && Boolean(params.profileUsername);
-
+export function useGeneratedContentQuery(params: GeneratedContentQueryParams) {
   return useQuery({
-    ...uploadPostTotalImpressionsQueryOptions(params),
-    enabled,
+    ...generatedContentQueryOptions(params.contentId ?? ""),
+    enabled: (params.enabled ?? true) && Boolean(params.contentId),
   });
 }
 
-export function uploadPostPostAnalyticsQueryOptions(
-  params: UploadPostPostAnalyticsQueryParams,
-) {
-  return queryOptions({
-    queryKey: queryKeys.uploadPost.postAnalytics(
-      params.requestId ?? "",
-      params.platform,
-    ),
-    queryFn: () =>
-      getUploadPostPostAnalytics({
-        requestId: params.requestId ?? "",
-        platform: params.platform,
-      }),
-    staleTime: 30_000,
-  });
-}
-
-export function useUploadPostPostAnalyticsQuery(
-  params: UploadPostPostAnalyticsQueryParams,
-) {
-  const enabled = (params.enabled ?? true) && Boolean(params.requestId);
-
-  return useQuery({
-    ...uploadPostPostAnalyticsQueryOptions(params),
-    enabled,
-  });
-}
-
-export function uploadPostCommentsQueryOptions(
-  params: UploadPostCommentsQueryParams,
-) {
-  return queryOptions({
-    queryKey: queryKeys.uploadPost.comments(
-      params.platform ?? "tiktok",
-      params.user ?? "",
-      params.postId,
-      params.postUrl,
-    ),
-    queryFn: () =>
-      getUploadPostComments({
-        platform: params.platform ?? "tiktok",
-        user: params.user ?? "",
-        postId: params.postId,
-        postUrl: params.postUrl,
-      }),
-    staleTime: 30_000,
-  });
-}
-
-export function useUploadPostCommentsQuery(
-  params: UploadPostCommentsQueryParams,
-) {
-  const enabled =
-    (params.enabled ?? true) &&
-    Boolean(params.platform) &&
-    Boolean(params.user) &&
-    Boolean(params.postId || params.postUrl);
-
-  return useQuery({
-    ...uploadPostCommentsQueryOptions(params),
-    enabled,
-  });
-}
-
-export function useCreateUploadPostProfileMutation() {
+export function useContentGenerateMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: ["upload-post", "create-profile"],
-    mutationFn: createUploadPostProfile,
-    onSuccess: async (result) => {
+    mutationKey: ["contents", "generate"],
+    mutationFn: (payload: ContentGenerateRequest) => generateContent(payload),
+    onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.uploadPost.account,
-        }),
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.uploadPost.profiles,
-        }),
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.uploadPost.profile(result.profile.username),
-        }),
+        queryClient.invalidateQueries({ queryKey: ["contents", "list"] }),
+        queryClient.invalidateQueries({ queryKey: ["trend", "history"] }),
       ]);
     },
   });
 }
 
-export function useDeleteUploadPostProfileMutation() {
+export function usersQueryOptions() {
+  return queryOptions({
+    queryKey: queryKeys.users.list,
+    queryFn: getUsers,
+    staleTime: 60_000,
+  });
+}
+
+export function useUsersQuery(enabled = true) {
+  return useQuery({
+    ...usersQueryOptions(),
+    enabled,
+  });
+}
+
+export function userQueryOptions(userId: string) {
+  return queryOptions({
+    queryKey: queryKeys.users.detail(userId),
+    queryFn: () => getUser(userId),
+    staleTime: 60_000,
+  });
+}
+
+export function useUserQuery(userId?: string, enabled = true) {
+  return useQuery({
+    ...userQueryOptions(userId ?? ""),
+    enabled: enabled && Boolean(userId),
+  });
+}
+
+export function useCreateUserMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: ["upload-post", "delete-profile"],
-    mutationFn: deleteUploadPostProfile,
-    onSuccess: async (_result, profileUsername) => {
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.uploadPost.profiles,
-        }),
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.uploadPost.profile(profileUsername),
-        }),
-      ]);
+    mutationKey: ["users", "create"],
+    mutationFn: createUser,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.users.list });
     },
   });
 }
 
-export function useGenerateUploadPostJwtMutation() {
-  return useMutation({
-    mutationKey: ["upload-post", "jwt", "generate"],
-    mutationFn: generateUploadPostJwt,
+export function uploadPostPublishJobsQueryOptions(
+  params: PublishJobsQueryParams = {},
+) {
+  const limit = params.limit ?? 20;
+
+  return queryOptions({
+    queryKey: queryKeys.uploadPost.publishJobs(
+      params.userId,
+      params.generatedContentId,
+      limit,
+    ),
+    queryFn: () =>
+      getUploadPostPublishJobs({
+        userId: params.userId,
+        generatedContentId: params.generatedContentId,
+        limit,
+      }),
+    staleTime: 30_000,
   });
 }
 
-export function useValidateUploadPostJwtMutation() {
-  return useMutation({
-    mutationKey: ["upload-post", "jwt", "validate"],
-    mutationFn: validateUploadPostJwt,
+export function useUploadPostPublishJobsQuery(
+  params: PublishJobsQueryParams = {},
+) {
+  return useQuery({
+    ...uploadPostPublishJobsQueryOptions(params),
+    enabled: params.enabled ?? true,
+  });
+}
+
+export function uploadPostPublishJobQueryOptions(publishJobId: string) {
+  return queryOptions({
+    queryKey: queryKeys.uploadPost.publishJob(publishJobId),
+    queryFn: () => getUploadPostPublishJob(publishJobId),
+    staleTime: 30_000,
+  });
+}
+
+export function useUploadPostPublishJobQuery(params: PublishJobQueryParams) {
+  return useQuery({
+    ...uploadPostPublishJobQueryOptions(params.publishJobId ?? ""),
+    enabled: (params.enabled ?? true) && Boolean(params.publishJobId),
   });
 }
 
@@ -504,37 +320,9 @@ export function useUploadPostPublishMutation() {
     mutationKey: queryKeys.uploadPost.publish,
     mutationFn: publishUploadPostContent,
     onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["upload-post", "history"] }),
-        queryClient.invalidateQueries({
-          queryKey: ["upload-post", "post-analytics"],
-        }),
-      ]);
-    },
-  });
-}
-
-function getUploadMutation(platform: ContentPlatform) {
-  return platform === "tiktok" ? uploadTikTokVideo : uploadYouTubeVideo;
-}
-
-export function usePlatformUploadMutation(platform: ContentPlatform) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ["upload", platform],
-    mutationFn: (payload: UploadVideoRequest) =>
-      getUploadMutation(platform)(payload),
-    onSuccess: async () => {
-      if (platform === "tiktok") {
-        await queryClient.invalidateQueries({
-          queryKey: queryKeys.tiktok.videos,
-        });
-      } else {
-        await queryClient.invalidateQueries({
-          queryKey: queryKeys.youtube.videos,
-        });
-      }
+      await queryClient.invalidateQueries({
+        queryKey: ["upload-post", "publish-jobs"],
+      });
     },
   });
 }
