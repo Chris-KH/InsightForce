@@ -8,23 +8,12 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useBilingual } from "@/hooks/use-bilingual";
+import { AssistantSidebarStatus } from "@/layouts/components/AssistantSidebarStatus";
 import { AppNavLink } from "@/layouts/components/AppNavLink";
-import {
-  APP_FOCUS_NAV_ITEMS,
-  APP_NAV_ITEMS,
-  APP_SIDEBAR_STATUS,
-} from "@/layouts/components/app-layout-data";
-import { cn } from "@/lib/utils";
+import { APP_NAV_ITEMS } from "@/layouts/components/app-layout-data";
 
 export function AppSidebar() {
   const copy = useBilingual();
-
-  const getStatusToneClass = (tone: "primary" | "secondary" | "tertiary") =>
-    tone === "primary"
-      ? "bg-primary"
-      : tone === "secondary"
-        ? "bg-chart-2"
-        : "bg-chart-3";
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-sidebar-border/80 bg-sidebar/90 backdrop-blur-xl md:flex md:flex-col">
@@ -41,39 +30,10 @@ export function AppSidebar() {
           >
             Insight<span className="text-chart-1">Forge</span>
           </Link>
-          <p className="mt-2 text-xs leading-6 text-muted-foreground">
-            {copy(
-              "Command center for creator operations, finance, and automation loops.",
-              "Trung tâm điều phối cho vận hành creator, tài chính và luồng tự động hóa.",
-            )}
-          </p>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
-          <section className="rounded-2xl border border-border/70 bg-background/75 p-4 shadow-[0_14px_30px_rgba(0,0,0,0.06)]">
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-              {copy("Live Core Status", "Trạng thái lõi trực tiếp")}
-            </p>
-            <div className="mt-3 flex flex-col gap-3">
-              {APP_SIDEBAR_STATUS.map((status) => (
-                <div key={status.label.en}>
-                  <div className="mb-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span>{copy(status.label.en, status.label.vi)}</span>
-                    <span>{status.value}%</span>
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={cn(
-                        "h-full rounded-full",
-                        getStatusToneClass(status.tone),
-                      )}
-                      style={{ width: `${status.value}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          <AssistantSidebarStatus />
 
           <Collapsible
             defaultOpen
@@ -90,31 +50,6 @@ export function AppSidebar() {
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-2 flex flex-col gap-1">
               {APP_NAV_ITEMS.map((item) => (
-                <AppNavLink
-                  key={item.path}
-                  to={item.path}
-                  label={copy(item.label.en, item.label.vi)}
-                  icon={item.icon}
-                />
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Collapsible
-            defaultOpen={false}
-            className="mt-4 rounded-xl border border-border/55 bg-background/45 p-2"
-          >
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="group h-8 w-full justify-between px-2 text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase data-[state=open]:text-foreground"
-              >
-                {copy("Focus Pages", "Trang chuyên sâu")}
-                <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2 flex flex-col gap-1">
-              {APP_FOCUS_NAV_ITEMS.map((item) => (
                 <AppNavLink
                   key={item.path}
                   to={item.path}

@@ -55,7 +55,6 @@ import { TrendForceGraph } from "@/pages/strategy/components/TrendForceGraph";
 import { TrendResultCards } from "@/pages/strategy/components/TrendResultCards";
 
 const TREND_SESSION_STORAGE_KEY = "insightforce.trend.session.v1";
-const GENERAL_TREND_QUERY = "xu hướng mạng xã hội tổng quát hôm nay";
 const GENERAL_REFRESH_INTERVAL_MS = 180_000;
 
 type TrendSessionState = {
@@ -84,26 +83,58 @@ function computeAverageViewsPerHour(results: TrendAnalyzeResultItem[]) {
   );
 }
 
-function buildGeneralTrendPlans(result: TrendAnalyzeResultItem) {
+function buildGeneralTrendPlans(
+  result: TrendAnalyzeResultItem,
+  copy: (en: string, vi: string) => string,
+) {
   const firstTag = result.top_hashtags[0] ?? "#trend";
 
   return [
     result.recommended_action,
-    `Triển khai 2 format cho ${result.main_keyword}: 1 video ngắn giải thích + 1 case study thực thi trong 24 giờ.`,
-    `A/B test hai mở bài dựa trên ${firstTag} và đo retention tại mốc 3s, 8s, 15s để chốt format hiệu quả.`,
+    copy(
+      `Ship 2 formats for ${result.main_keyword}: one short explainer and one 24-hour execution case study.`,
+      `Triển khai 2 format cho ${result.main_keyword}: 1 video ngắn giải thích + 1 case study thực thi trong 24 giờ.`,
+    ),
+    copy(
+      `A/B test two opening hooks using ${firstTag} and measure retention at 3s, 8s, and 15s to lock the highest-performing format.`,
+      `A/B test hai mở bài dựa trên ${firstTag} và đo retention tại mốc 3s, 8s, 15s để chốt format hiệu quả.`,
+    ),
   ];
 }
 
-function buildGeneralTrendPrompts(result: TrendAnalyzeResultItem) {
+function buildGeneralTrendPrompts(
+  result: TrendAnalyzeResultItem,
+  copy: (en: string, vi: string) => string,
+) {
   const unique = new Set<string>();
   const topTags = result.top_hashtags.slice(0, 3);
 
-  unique.add(`phân tích sâu hơn về ${result.main_keyword}`);
-  unique.add(`lập kế hoạch nội dung 7 ngày cho ${result.main_keyword}`);
-  unique.add(`tạo 5 hook video ngắn cho ${result.main_keyword}`);
+  unique.add(
+    copy(
+      `deeper analysis for ${result.main_keyword}`,
+      `phân tích sâu hơn về ${result.main_keyword}`,
+    ),
+  );
+  unique.add(
+    copy(
+      `build a 7-day content plan for ${result.main_keyword}`,
+      `lập kế hoạch nội dung 7 ngày cho ${result.main_keyword}`,
+    ),
+  );
+  unique.add(
+    copy(
+      `create 5 short-video hooks for ${result.main_keyword}`,
+      `tạo 5 hook video ngắn cho ${result.main_keyword}`,
+    ),
+  );
 
   for (const tag of topTags) {
-    unique.add(`xây dựng chiến dịch nội dung xoay quanh ${tag}`);
+    unique.add(
+      copy(
+        `build a content campaign around ${tag}`,
+        `xây dựng chiến dịch nội dung xoay quanh ${tag}`,
+      ),
+    );
   }
 
   return [...unique].slice(0, 6);
@@ -138,7 +169,6 @@ export function StrategyPage() {
   const [reasoningElapsedMs, setReasoningElapsedMs] = useState(0);
 
   const generalTrendQuery = useTrendGeneralQuery({
-    query: GENERAL_TREND_QUERY,
     limit: 5,
     refetchIntervalMs: GENERAL_REFRESH_INTERVAL_MS,
   });
@@ -169,17 +199,17 @@ export function StrategyPage() {
   const generalPlanSuggestions = useMemo(
     () =>
       generalSelectedResult
-        ? buildGeneralTrendPlans(generalSelectedResult)
+        ? buildGeneralTrendPlans(generalSelectedResult, copy)
         : [],
-    [generalSelectedResult],
+    [copy, generalSelectedResult],
   );
 
   const generalPromptSuggestions = useMemo(
     () =>
       generalSelectedResult
-        ? buildGeneralTrendPrompts(generalSelectedResult)
+        ? buildGeneralTrendPrompts(generalSelectedResult, copy)
         : [],
-    [generalSelectedResult],
+    [copy, generalSelectedResult],
   );
 
   const promptSelectedResult = useMemo(

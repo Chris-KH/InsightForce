@@ -1,7 +1,6 @@
 import { Link } from "react-router";
 import { Menu } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -11,24 +10,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
-import { AppNavLink } from "@/layouts/components/AppNavLink";
-import {
-  APP_AGENT_ITEMS,
-  APP_FOCUS_NAV_ITEMS,
-  APP_NAV_ITEMS,
-  APP_SIDEBAR_STATUS,
-} from "@/layouts/components/app-layout-data";
 import { useBilingual } from "@/hooks/use-bilingual";
+import { AssistantSidebarStatus } from "@/layouts/components/AssistantSidebarStatus";
+import { AppNavLink } from "@/layouts/components/AppNavLink";
+import { APP_NAV_ITEMS } from "@/layouts/components/app-layout-data";
 
 export function MobileSidebarSheet() {
   const copy = useBilingual();
-
-  const getAgentStatus = (status: "Active" | "Idle") => {
-    return status === "Active"
-      ? copy("Active", "Đang hoạt động")
-      : copy("Idle", "Tạm nghỉ");
-  };
 
   return (
     <Sheet>
@@ -56,33 +44,7 @@ export function MobileSidebarSheet() {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 rounded-2xl border border-border/70 bg-muted/35 p-4">
-          <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-            {copy("Live Core Status", "Trạng thái lõi trực tiếp")}
-          </p>
-          <div className="mt-3 flex flex-col gap-3">
-            {APP_SIDEBAR_STATUS.map((status) => (
-              <div key={status.label.en}>
-                <div className="mb-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span>{copy(status.label.en, status.label.vi)}</span>
-                  <span>{status.value}%</span>
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-background/90">
-                  <div
-                    className={
-                      status.tone === "primary"
-                        ? "h-full rounded-full bg-primary"
-                        : status.tone === "secondary"
-                          ? "h-full rounded-full bg-chart-2"
-                          : "h-full rounded-full bg-chart-3"
-                    }
-                    style={{ width: `${status.value}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <AssistantSidebarStatus className="mt-6 border-border/70 bg-muted/35" />
 
         <div className="mt-6 flex flex-col gap-2">
           {APP_NAV_ITEMS.map((item) => (
@@ -94,49 +56,6 @@ export function MobileSidebarSheet() {
               mobile
             />
           ))}
-        </div>
-
-        <div className="mt-4 flex flex-col gap-2">
-          <p className="px-1 text-[11px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-            {copy("Focus Pages", "Trang chuyên sâu")}
-          </p>
-          {APP_FOCUS_NAV_ITEMS.map((item) => (
-            <AppNavLink
-              key={item.path}
-              to={item.path}
-              label={copy(item.label.en, item.label.vi)}
-              icon={item.icon}
-              mobile
-            />
-          ))}
-        </div>
-
-        <Separator className="my-6" />
-
-        <div className="flex flex-col gap-2">
-          <p className="px-1 text-[11px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-            {copy("Core Guards", "Hệ thống phòng vệ cốt lõi")}
-          </p>
-          {APP_AGENT_ITEMS.map((agent) => {
-            const Icon = agent.icon;
-            return (
-              <div
-                key={agent.label.en}
-                className="flex items-center justify-between rounded-xl border border-border/60 px-3 py-2.5"
-              >
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <Icon className="size-4" />
-                  <span>{copy(agent.label.en, agent.label.vi)}</span>
-                </div>
-                <Badge
-                  variant="outline"
-                  className="rounded-full border-primary/20 text-primary"
-                >
-                  {getAgentStatus(agent.status)}
-                </Badge>
-              </div>
-            );
-          })}
         </div>
 
         <div className="mt-6 rounded-xl bg-muted/40 p-4 text-xs text-muted-foreground">

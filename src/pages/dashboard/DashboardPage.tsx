@@ -2,8 +2,6 @@ import { useMemo, useState } from "react";
 import {
   Activity,
   Bot,
-  CheckCircle2,
-  Clock3,
   Database,
   RefreshCcw,
   Sparkles,
@@ -88,26 +86,6 @@ function eventTypeClass(type: PipelineEvent["type"]) {
   }
 
   return "border-amber-500/40 bg-amber-500/10 text-amber-700";
-}
-
-function getAssistantDisplayName(name: string) {
-  if (name === "routing_orchestrator") {
-    return "Điều phối chiến dịch";
-  }
-
-  if (name === "trend_agent") {
-    return "Trợ lý xu hướng";
-  }
-
-  if (name === "content_agent") {
-    return "Trợ lý nội dung";
-  }
-
-  if (name === "posting_agent") {
-    return "Trợ lý đăng bài";
-  }
-
-  return name.replaceAll("_", " ");
 }
 
 export function DashboardPage() {
@@ -559,7 +537,7 @@ export function DashboardPage() {
         </PanelCard>
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+      <div className="grid gap-8">
         <PanelCard
           title={copy("Recent Activity Feed", "Bảng hoạt động gần đây")}
           description={copy(
@@ -633,55 +611,6 @@ export function DashboardPage() {
               message={copy(
                 "No activity for the selected filter.",
                 "Không có hoạt động phù hợp bộ lọc đã chọn.",
-              )}
-            />
-          )}
-        </PanelCard>
-
-        <PanelCard
-          title={copy("Assistant Status", "Trạng thái trợ lý")}
-          description={copy(
-            "Live readiness of each assistant in your workflow.",
-            "Mức sẵn sàng theo thời gian thực của từng trợ lý trong luồng làm việc.",
-          )}
-        >
-          {agentsQuery.isLoading ? (
-            <PanelRowsSkeleton rows={4} />
-          ) : processes.length > 0 ? (
-            <div className="space-y-3">
-              {processes.map((process) => (
-                <div
-                  key={process.name}
-                  className="rounded-2xl border border-border/65 bg-background/65 p-4"
-                >
-                  <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                    {process.reachable ? (
-                      <CheckCircle2 className="size-4 text-emerald-600" />
-                    ) : (
-                      <Clock3 className="size-4 text-amber-600" />
-                    )}
-                    {getAssistantDisplayName(process.name)}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {process.reachable
-                      ? copy(
-                          "Sẵn sàng hỗ trợ ngay lúc này.",
-                          "Sẵn sàng hỗ trợ ngay lúc này.",
-                        )
-                      : copy(
-                          "Đang khôi phục, vui lòng thử lại sau ít phút.",
-                          "Đang khôi phục, vui lòng thử lại sau ít phút.",
-                        )}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No assistant status available.",
-                "Chưa có trạng thái trợ lý.",
               )}
             />
           )}

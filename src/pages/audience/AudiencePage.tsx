@@ -14,6 +14,7 @@ import {
   useTrendHistoryQuery,
   useUploadPostPublishJobsQuery,
 } from "@/api";
+import type { TrendAnalyzeResponse, TrendAnalyzeResultItem } from "@/api/types";
 import { BarTrendChart, DoughnutTrendChart } from "@/components/app-data-viz";
 import {
   InlineQueryState,
@@ -31,8 +32,6 @@ import {
 } from "@/lib/insight-formatters";
 import { getQueryErrorMessage } from "@/lib/query-error";
 
-const GENERAL_TREND_QUERY = "xu hướng mạng xã hội tổng quát hôm nay";
-
 type TrendSignal = {
   keyword: string;
   score: number;
@@ -42,10 +41,8 @@ type TrendSignal = {
   avgViewsPerHour: number;
 };
 
-function normalizeTrendSignals(
-  raw: ReturnType<typeof useTrendGeneralQuery>["data"],
-) {
-  const source = raw?.results ?? [];
+function normalizeTrendSignals(raw: TrendAnalyzeResponse | undefined) {
+  const source: TrendAnalyzeResultItem[] = raw?.results ?? [];
 
   return source.map<TrendSignal>((item) => ({
     keyword: item.main_keyword,
@@ -61,7 +58,6 @@ export function AudiencePage() {
   const copy = useBilingual();
 
   const trendGeneralQuery = useTrendGeneralQuery({
-    query: GENERAL_TREND_QUERY,
     limit: 5,
   });
   const trendHistoryQuery = useTrendHistoryQuery({ limit: 20 });
@@ -76,12 +72,12 @@ export function AudiencePage() {
   const topSignal = trendSignals[0];
 
   const topHashtags = useMemo(
-    () =>
+    (): string[] =>
       Array.from(
-        new Set(
+        new Set<string>(
           trendSignals
-            .flatMap((item) => item.tags)
-            .map((tag) => tag.trim())
+            .flatMap((item: TrendSignal) => item.tags)
+            .map((tag: string) => tag.trim())
             .filter(Boolean),
         ),
       ).slice(0, 12),
@@ -90,11 +86,11 @@ export function AudiencePage() {
 
   const trendBarData = useMemo(
     () => ({
-      labels: trendSignals.map((item) => item.keyword),
+      labels: trendSignals.map((item: TrendSignal) => item.keyword),
       datasets: [
         {
           label: copy("Trend score", "Điểm xu hướng"),
-          data: trendSignals.map((item) => item.score),
+          data: trendSignals.map((item: TrendSignal) => item.score),
           backgroundColor: "rgba(20, 184, 166, 0.78)",
           borderRadius: 10,
         },

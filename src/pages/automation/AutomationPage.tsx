@@ -40,15 +40,18 @@ import {
   formatDateTime,
   formatPercentFromRatio,
 } from "@/lib/insight-formatters";
+import { PublishWorkspaceSection } from "@/pages/automation/components/PublishWorkspaceSection";
 import { getQueryErrorMessage } from "@/lib/query-error";
-
-const DEFAULT_AUTOMATION_PROMPT =
-  "Hãy đề xuất kế hoạch nội dung 7 ngày để tăng tương tác tự nhiên cho creator lifestyle.";
 
 export function AutomationPage() {
   const copy = useBilingual();
 
-  const [prompt, setPrompt] = useState(DEFAULT_AUTOMATION_PROMPT);
+  const [prompt, setPrompt] = useState(() =>
+    copy(
+      "Suggest a 7-day content plan to increase organic engagement for a lifestyle creator.",
+      "Hãy đề xuất kế hoạch nội dung 7 ngày để tăng tương tác tự nhiên cho creator lifestyle.",
+    ),
+  );
   const [userId, setUserId] = useState("");
   const [saveFiles, setSaveFiles] = useState(true);
 
@@ -330,27 +333,27 @@ export function AutomationPage() {
         <PanelCard
           title={copy("Quick Navigation", "Điều hướng nhanh")}
           description={copy(
-            "Open the next workspace based on your current operation state.",
-            "Mở nhanh workspace tiếp theo theo trạng thái vận hành hiện tại.",
+            "Open the next core workspace based on your current operation state.",
+            "Mở nhanh workspace cốt lõi tiếp theo theo trạng thái vận hành hiện tại.",
           )}
         >
           <div className="grid gap-3">
             <Button asChild>
-              <Link to="/app/strategy-lab">
+              <Link to="/app/strategy">
                 <Activity data-icon="inline-start" />
-                {copy("Open Strategy Lab", "Mở Strategy Lab")}
+                {copy("Open Strategy", "Mở chiến lược")}
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/app/publish-ops">
+              <Link to="/app/audience">
                 <Workflow data-icon="inline-start" />
-                {copy("Open Publish Ops", "Mở Publish Ops")}
+                {copy("Open Audience", "Mở khách hàng")}
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/app/ops-control">
+              <Link to="/app/finance">
                 <Send data-icon="inline-start" />
-                {copy("Open Ops Control", "Mở Ops Control")}
+                {copy("Open Finance", "Mở tài chính")}
               </Link>
             </Button>
           </div>
@@ -463,6 +466,8 @@ export function AutomationPage() {
           />
         )}
       </PanelCard>
+
+      <PublishWorkspaceSection />
     </div>
   );
 }

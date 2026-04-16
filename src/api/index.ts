@@ -1,2 +1,2 @@
-export * from "@/api/hooks";
-export * from "@/api/types";
+export * from "./hooks";
+export * from "./types";

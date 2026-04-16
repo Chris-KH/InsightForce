@@ -32,6 +32,7 @@ import {
   type GetPublishJobsParams,
 } from "@/api/upload-post.api";
 import { createUser, getUser, getUsers } from "@/api/users.api";
+import { getDefaultGeneralTrendQuery } from "@/lib/trend-query";
 
 export type TrendGeneralQueryParams = {
   query?: string;
@@ -85,7 +86,7 @@ export function trendGeneralQueryOptions(params: TrendGeneralQueryParams = {}) {
   const query =
     normalizedQuery && normalizedQuery.length >= 2
       ? normalizedQuery
-      : "xu huong trend tong quat hom nay";
+      : getDefaultGeneralTrendQuery();
   const limit = Math.max(1, Math.min(5, params.limit ?? 5));
 
   return queryOptions({

@@ -1,5 +1,13 @@
 import { useMemo } from "react";
-import { BarChart3, Coins, Eye, History, Sparkles, Wallet } from "lucide-react";
+import {
+  AlertTriangle,
+  BarChart3,
+  Coins,
+  Eye,
+  History,
+  Sparkles,
+  Wallet,
+} from "lucide-react";
 
 import {
   useGeneratedContentsQuery,
@@ -30,8 +38,6 @@ import {
 } from "@/lib/insight-formatters";
 import { getQueryErrorMessage } from "@/lib/query-error";
 
-const GENERAL_TREND_QUERY = "xu hướng mạng xã hội tổng quát hôm nay";
-
 function groupJobsByDay(items: Array<{ created_at: string }>) {
   const buckets = new Map<string, number>();
 
@@ -50,7 +56,6 @@ export function FinancePage() {
 
   const usersQuery = useUsersQuery();
   const trendGeneralQuery = useTrendGeneralQuery({
-    query: GENERAL_TREND_QUERY,
     limit: 5,
   });
   const trendHistoryQuery = useTrendHistoryQuery({ limit: 20 });
@@ -363,6 +368,45 @@ export function FinancePage() {
           )}
         </PanelCard>
       </div>
+
+      <PanelCard
+        title={copy("Financial Guardrails", "Rào chắn tài chính")}
+        description={copy(
+          "Action-first reminders to reduce failed output and wasted posting cycles.",
+          "Nhắc nhở ưu tiên hành động để giảm đầu ra lỗi và chu kỳ đăng bài lãng phí.",
+        )}
+      >
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-muted-foreground">
+            <p className="flex items-center gap-2 font-semibold text-foreground">
+              <AlertTriangle className="size-4" />
+              {copy("Before Scheduling", "Trước khi lên lịch")}
+            </p>
+            <p className="mt-1.5">
+              {copy(
+                "Only schedule jobs when trend direction and generated content are already reviewed.",
+                "Chỉ lên lịch khi hướng trend và nội dung tạo ra đã được kiểm tra.",
+              )}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4 text-xs text-muted-foreground">
+            <p className="font-semibold text-foreground">
+              {copy("Failure Follow-up", "Theo dõi lỗi")}
+            </p>
+            <p className="mt-1.5">
+              {copy("Failed jobs", "Job lỗi")}:{" "}
+              {formatCompactNumber(failedJobsCount)}
+            </p>
+            <p className="mt-1.5">
+              {copy(
+                "Review title, platforms, and scheduling window before re-run.",
+                "Rà soát tiêu đề, nền tảng và khung thời gian trước khi chạy lại.",
+              )}
+            </p>
+          </div>
+        </div>
+      </PanelCard>
 
       <PanelCard
         title={copy("Finance Notes", "Ghi chú tài chính")}
