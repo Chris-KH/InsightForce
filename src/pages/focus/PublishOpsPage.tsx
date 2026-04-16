@@ -19,7 +19,6 @@ import {
   type PublishJobResponse,
   type UploadPostPublishPlatform,
   useGeneratedContentsQuery,
-  useUploadPostProfilesQuery,
   useUploadPostPublishJobQuery,
   useUploadPostPublishJobsQuery,
   useUploadPostPublishMutation,
@@ -83,16 +82,18 @@ function sortJobsByCreatedAt(items: PublishJobResponse[]) {
   return [...items].sort((left, right) => {
     const leftTime = Date.parse(left.created_at);
     const rightTime = Date.parse(right.created_at);
-    return Number.isNaN(rightTime) || Number.isNaN(leftTime)
-      ? 0
-      : rightTime - leftTime;
+
+    if (Number.isNaN(leftTime) || Number.isNaN(rightTime)) {
+      return 0;
+    }
+
+    return rightTime - leftTime;
   });
 }
 
 export function PublishOpsPage() {
   const copy = useBilingual();
 
-  const profilesQuery = useUploadPostProfilesQuery();
   const usersQuery = useUsersQuery();
   const generatedContentsQuery = useGeneratedContentsQuery({ limit: 20 });
   const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 30 });
@@ -139,10 +140,10 @@ export function PublishOpsPage() {
   }, [publishJobs, statusFilter]);
 
   useEffect(() => {
-    if (!user && profilesQuery.data?.profiles[0]?.username) {
-      setUser(profilesQuery.data.profiles[0].username);
+    if (!user && usersQuery.data?.users[0]) {
+      setUser(usersQuery.data.users[0].email);
     }
-  }, [profilesQuery.data, user]);
+  }, [usersQuery.data, user]);
 
   useEffect(() => {
     if (!userId && usersQuery.data?.users[0]?.id) {
@@ -235,8 +236,8 @@ export function PublishOpsPage() {
       <FocusSectionHeader
         title={{ en: "Publish Ops", vi: "Vận hành đăng bài" }}
         description={{
-          en: "Plan, schedule, and monitor your posts from one creator-friendly workspace.",
-          vi: "Lập kế hoạch, lên lịch và theo dõi bài đăng trong một không gian thân thiện cho creator.",
+          en: "Plan, schedule, and monitor your posts from one docs-aligned workspace.",
+          vi: "Lập kế hoạch, lên lịch và theo dõi bài đăng từ một workspace bám sát docs API.",
         }}
         badge={{ en: "Publishing Workspace", vi: "Không gian đăng bài" }}
         icon={Workflow}
@@ -246,8 +247,8 @@ export function PublishOpsPage() {
         <PanelCard
           title={copy("Post Planner", "Lên kế hoạch bài đăng")}
           description={copy(
-            "Prepare one posting task with title, channels, timing, and supporting assets.",
-            "Chuẩn bị một tác vụ đăng bài với tiêu đề, kênh đăng, thời gian và tài nguyên hỗ trợ.",
+            "Prepare one posting task with title, channels, timing, and assets.",
+            "Chuẩn bị một tác vụ đăng bài với tiêu đề, kênh, thời gian và tài nguyên.",
           )}
         >
           <form
@@ -257,18 +258,18 @@ export function PublishOpsPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="publish-ops-user">
-                  {copy("Publishing Profile", "Hồ sơ đăng bài")}
+                  {copy("Publisher", "Tài khoản đăng")}
                 </Label>
                 <Input
                   id="publish-ops-user"
                   value={user}
                   list="publish-ops-users"
                   onChange={(event) => setUser(event.target.value)}
-                  placeholder="Tên tài khoản đăng bài"
+                  placeholder={copy("Email or username", "Email hoặc username")}
                 />
                 <datalist id="publish-ops-users">
-                  {(profilesQuery.data?.profiles ?? []).map((profile) => (
-                    <option key={profile.username} value={profile.username} />
+                  {(usersQuery.data?.users ?? []).map((item) => (
+                    <option key={item.id} value={item.email} />
                   ))}
                 </datalist>
               </div>
@@ -378,185 +379,180 @@ export function PublishOpsPage() {
                   id="publish-ops-comment"
                   value={firstComment}
                   onChange={(event) => setFirstComment(event.target.value)}
-                  placeholder={copy(
-                    "Optional starter comment",
-                    "Bình luận mở đầu tùy chọn",
-                  )}
+                  placeholder={copy("Optional", "Tùy chọn")}
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="publish-ops-asset-urls">Asset URLs</Label>
+                <Label htmlFor="publish-ops-asset-urls">
+                  {copy("Asset URLs", "Đường dẫn asset")}
+                </Label>
                 <Input
                   id="publish-ops-asset-urls"
                   value={assetUrls}
                   onChange={(event) => setAssetUrls(event.target.value)}
-                  placeholder="https://site/a.jpg,https://site/b.jpg"
+                  placeholder={copy(
+                    "https://... , https://...",
+                    "https://... , https://...",
+                  )}
                 />
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
-                <Label htmlFor="publish-ops-link">Link URL</Label>
+                <Label htmlFor="publish-ops-link-url">
+                  {copy("Reference Link", "Liên kết tham chiếu")}
+                </Label>
                 <Input
-                  id="publish-ops-link"
+                  id="publish-ops-link-url"
                   value={linkUrl}
                   onChange={(event) => setLinkUrl(event.target.value)}
-                  placeholder="https://example.com/article"
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="publish-ops-subreddit">Subreddit</Label>
+                <Label htmlFor="publish-ops-subreddit">
+                  {copy("Subreddit", "Subreddit")}
+                </Label>
                 <Input
                   id="publish-ops-subreddit"
                   value={subreddit}
                   onChange={(event) => setSubreddit(event.target.value)}
-                  placeholder="r/technology"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="publish-ops-user-id">
+                  {copy("Workspace User ID", "ID user workspace")}
+                </Label>
+                <Input
+                  id="publish-ops-user-id"
+                  value={userId}
+                  onChange={(event) => setUserId(event.target.value)}
+                  list="publish-ops-user-ids"
+                />
+                <datalist id="publish-ops-user-ids">
+                  {(usersQuery.data?.users ?? []).map((item) => (
+                    <option key={item.id} value={item.id} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="publish-ops-generated-content-id">
+                  {copy("Generated Content ID", "ID nội dung đã tạo")}
+                </Label>
+                <Input
+                  id="publish-ops-generated-content-id"
+                  value={generatedContentId}
+                  onChange={(event) =>
+                    setGeneratedContentId(event.target.value)
+                  }
                 />
               </div>
             </div>
 
             <div className="space-y-1">
               <Label htmlFor="publish-ops-files">
-                {copy("Media Files", "Tệp media")}
+                {copy("Upload Media Files", "Tải tệp media")}
               </Label>
               <Input
                 id="publish-ops-files"
                 type="file"
                 multiple
-                accept="video/*,image/*"
                 onChange={handleFileChange}
               />
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowAdvanced((value) => !value)}
-              className="text-xs text-primary underline-offset-4 hover:underline"
-            >
-              {showAdvanced
-                ? copy("Hide advanced linking", "Ẩn liên kết nâng cao")
-                : copy("Show advanced linking", "Hiện liên kết nâng cao")}
-            </button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAdvanced((current) => !current)}
+              >
+                <FileStack data-icon="inline-start" />
+                {showAdvanced
+                  ? copy("Hide Draft Picker", "Ẩn bộ chọn bản nháp")
+                  : copy("Show Draft Picker", "Hiện bộ chọn bản nháp")}
+              </Button>
 
-            {showAdvanced ? (
-              <div className="grid gap-3 rounded-2xl border border-border/60 bg-background/55 p-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <Label htmlFor="publish-ops-user-id">
-                    {copy("Campaign Owner", "Tài khoản chiến dịch")}
-                  </Label>
-                  <select
-                    id="publish-ops-user-id"
-                    className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
-                    value={userId}
-                    onChange={(event) => setUserId(event.target.value)}
-                  >
-                    <option value="">
-                      {copy("No link", "Không liên kết")}
-                    </option>
-                    {(usersQuery.data?.users ?? []).map((appUser) => (
-                      <option key={appUser.id} value={appUser.id}>
-                        {appUser.email}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <Label htmlFor="publish-ops-generated-content">
-                    {copy("Attach Content Draft", "Gắn bản nháp nội dung")}
-                  </Label>
-                  <select
-                    id="publish-ops-generated-content"
-                    className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
-                    value={generatedContentId}
-                    onChange={(event) =>
-                      setGeneratedContentId(event.target.value)
-                    }
-                  >
-                    <option value="">
-                      {copy("No link", "Không liên kết")}
-                    </option>
-                    {(generatedContentsQuery.data?.items ?? []).map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {getDisplayTitle(item)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            ) : null}
-
-            {files.length > 0 ? (
-              <div className="rounded-2xl border border-border/55 bg-background/55 p-3 text-xs text-muted-foreground">
-                <p className="mb-1 font-medium text-foreground">
-                  {copy("Selected files", "Tệp đã chọn")}: {files.length}
-                </p>
-                <div className="space-y-1">
-                  {files.map((file) => (
-                    <p key={`${file.name}-${file.size}`}>{file.name}</p>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={
-                publishMutation.isPending ||
-                !user.trim() ||
-                !title.trim() ||
-                platforms.length === 0
-              }
-            >
-              {publishMutation.isPending ? (
-                <Loader2 data-icon="inline-start" className="animate-spin" />
-              ) : (
-                <Upload data-icon="inline-start" />
-              )}
-              {publishMutation.isPending
-                ? copy("Scheduling...", "Đang lên lịch...")
-                : copy("Create Publishing Task", "Tạo tác vụ đăng bài")}
-            </Button>
+              <Button
+                type="submit"
+                className="ml-auto"
+                disabled={
+                  publishMutation.isPending ||
+                  !user.trim() ||
+                  !title.trim() ||
+                  platforms.length === 0
+                }
+              >
+                {publishMutation.isPending ? (
+                  <Loader2 data-icon="inline-start" className="animate-spin" />
+                ) : (
+                  <Upload data-icon="inline-start" />
+                )}
+                {publishMutation.isPending
+                  ? copy("Publishing...", "Đang đăng...")
+                  : copy("Publish", "Xuất bản")}
+              </Button>
+            </div>
 
             {publishMutation.error ? (
               <InlineQueryState
                 state="error"
                 message={getQueryErrorMessage(
                   publishMutation.error,
-                  "Unable to create publishing task.",
+                  "Publishing request failed.",
                 )}
               />
             ) : null}
 
             {publishMutation.data ? (
               <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-4 text-xs text-muted-foreground">
-                <p className="flex items-center gap-2 text-foreground">
-                  <CheckCircle2 className="size-4 text-emerald-600" />
+                <p className="font-semibold text-foreground">
+                  {copy("Publish request created", "Đã tạo yêu cầu xuất bản")}
+                </p>
+                <p className="mt-1.5">
+                  {copy("Job ID", "Mã job")}:{" "}
+                  {publishMutation.data.publish_job.id}
+                </p>
+              </div>
+            ) : null}
+
+            {showAdvanced ? (
+              <div className="space-y-2 rounded-2xl border border-border/65 bg-background/60 p-3">
+                <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                   {copy(
-                    "Publishing task created successfully",
-                    "Đã tạo tác vụ đăng bài thành công",
+                    "Generated Content Shortcuts",
+                    "Lối tắt nội dung đã tạo",
                   )}
                 </p>
-                <p className="mt-2">
-                  {copy("Current status", "Trạng thái hiện tại")}:{" "}
-                  {publishMutation.data.publish_job.status}
-                </p>
-                <p>
-                  {copy("Channels", "Kênh đăng")}:{" "}
-                  {publishMutation.data.publish_job.platforms.join(", ")}
-                </p>
+                {generatedContentsQuery.data?.items
+                  .slice(0, 6)
+                  .map((record) => (
+                    <button
+                      key={record.id}
+                      type="button"
+                      onClick={() => applyGeneratedContent(record)}
+                      className="block w-full rounded-xl border border-border/65 bg-background/70 px-3 py-2 text-left text-xs transition hover:border-primary/35"
+                    >
+                      <p className="font-medium text-foreground">
+                        {getDisplayTitle(record)}
+                      </p>
+                      <p className="mt-1 text-muted-foreground">{record.id}</p>
+                    </button>
+                  ))}
               </div>
             ) : null}
           </form>
         </PanelCard>
 
         <PanelCard
-          title={copy("Publishing Queue", "Hàng đợi đăng bài")}
+          title={copy("Publishing Timeline", "Dòng thời gian xuất bản")}
           description={copy(
-            "Track every publishing task and open one item for detail view.",
-            "Theo dõi toàn bộ tác vụ đăng bài và mở từng mục để xem chi tiết.",
+            "Track recently created jobs and inspect one job in detail.",
+            "Theo dõi các job mới tạo và xem chi tiết từng job.",
           )}
         >
           <div className="mb-3 flex flex-wrap gap-2">
@@ -584,7 +580,7 @@ export function PublishOpsPage() {
           </div>
 
           {publishJobsQuery.isLoading ? (
-            <PanelRowsSkeleton rows={6} />
+            <PanelRowsSkeleton rows={7} />
           ) : filteredJobs.length > 0 ? (
             <div className="space-y-3">
               {filteredJobs.slice(0, 10).map((job) => (
@@ -593,9 +589,8 @@ export function PublishOpsPage() {
                   type="button"
                   onClick={() => setSelectedJobId(job.id)}
                   className={cn(
-                    "w-full rounded-2xl border border-border/65 bg-background/65 p-4 text-left transition",
-                    selectedJobId === job.id &&
-                      "border-primary/45 bg-primary/5 shadow-[0_0_0_1px_rgba(59,130,246,0.2)]",
+                    "w-full rounded-2xl border border-border/65 bg-background/65 p-4 text-left transition-colors hover:border-primary/35",
+                    selectedJobId === job.id ? "border-primary/45" : undefined,
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -613,10 +608,10 @@ export function PublishOpsPage() {
                     </Badge>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {job.profile_username} • {job.platforms.join(", ")}
+                    {copy("Platforms", "Nền tảng")}: {job.platforms.join(", ")}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    <Clock3 className="mr-1 inline size-3" />
+                    {copy("Created", "Tạo lúc")}:{" "}
                     {formatDateTime(job.created_at)}
                   </p>
                 </button>
@@ -626,136 +621,129 @@ export function PublishOpsPage() {
             <InlineQueryState
               state="empty"
               message={copy(
-                "No tasks found for current filter.",
-                "Không có tác vụ phù hợp với bộ lọc hiện tại.",
+                "No jobs for this filter.",
+                "Không có job nào cho bộ lọc này.",
               )}
             />
           )}
         </PanelCard>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <PanelCard
-          title={copy("Selected Task Detail", "Chi tiết tác vụ đã chọn")}
-          description={copy(
-            "A clear summary of timing, channels, and media readiness.",
-            "Tóm tắt rõ ràng về thời gian, kênh đăng và mức sẵn sàng media.",
-          )}
-        >
-          {selectedJobQuery.isLoading ? (
-            <PanelRowsSkeleton rows={4} />
-          ) : selectedJobQuery.data ? (
-            <div className="space-y-3 rounded-2xl border border-border/65 bg-background/65 p-4 text-xs text-muted-foreground">
-              <p>
-                <span className="font-semibold text-foreground">
-                  {copy("Status", "Trạng thái")}
-                </span>
-                : {selectedJobQuery.data.status}
+      <PanelCard
+        title={copy("Selected Job Detail", "Chi tiết job đã chọn")}
+        description={copy(
+          "Detail endpoint view for one publish job.",
+          "Góc nhìn endpoint chi tiết cho một publish job.",
+        )}
+      >
+        {!selectedJobId ? (
+          <InlineQueryState
+            state="empty"
+            message={copy(
+              "Select one publish job from the timeline.",
+              "Hãy chọn một publish job từ dòng thời gian.",
+            )}
+          />
+        ) : selectedJobQuery.isLoading ? (
+          <PanelRowsSkeleton rows={4} />
+        ) : selectedJobQuery.error ? (
+          <InlineQueryState
+            state="error"
+            message={getQueryErrorMessage(
+              selectedJobQuery.error,
+              "Unable to load selected publish job.",
+            )}
+          />
+        ) : selectedJobQuery.data ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Title", "Tiêu đề")}
               </p>
-              <p>
-                <span className="font-semibold text-foreground">
-                  {copy("Created time", "Thời điểm tạo")}
-                </span>
-                : {formatDateTime(selectedJobQuery.data.created_at)}
-              </p>
-              <p>
-                <span className="font-semibold text-foreground">
-                  {copy("Scheduled time", "Thời gian lên lịch")}
-                </span>
-                :{" "}
-                {selectedJobQuery.data.schedule_post
-                  ? formatDateTime(selectedJobQuery.data.schedule_post)
-                  : "--"}
-              </p>
-              <p>
-                <span className="font-semibold text-foreground">
-                  {copy("Channels", "Kênh đăng")}
-                </span>
-                : {selectedJobQuery.data.platforms.join(", ")}
-              </p>
-              <p>
-                <span className="font-semibold text-foreground">
-                  {copy("Attached media links", "Liên kết media đính kèm")}
-                </span>
-                : {selectedJobQuery.data.asset_urls.length}
-              </p>
-              <p>
-                <span className="font-semibold text-foreground">
-                  {copy("Uploaded files", "Số tệp tải lên")}
-                </span>
-                : {selectedJobQuery.data.uploaded_files.length}
+              <p className="mt-1 text-sm font-semibold text-foreground">
+                {selectedJobQuery.data.title}
               </p>
             </div>
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "Choose one task from the queue to inspect details.",
-                "Hãy chọn một tác vụ trong hàng đợi để xem chi tiết.",
-              )}
-            />
-          )}
-
-          {selectedJobQuery.error ? (
-            <InlineQueryState
-              className="mt-3"
-              state="error"
-              message={getQueryErrorMessage(
-                selectedJobQuery.error,
-                "Unable to load selected task detail.",
-              )}
-            />
-          ) : null}
-        </PanelCard>
-
-        <PanelCard
-          title={copy("Content Draft Picker", "Bộ chọn bản nháp nội dung")}
-          description={copy(
-            "Pick one draft to prefill title and context for faster publishing.",
-            "Chọn một bản nháp để điền nhanh tiêu đề và nội dung khi đăng bài.",
-          )}
-        >
-          {generatedContentsQuery.isLoading ? (
-            <PanelRowsSkeleton rows={4} />
-          ) : generatedContentsQuery.data?.items.length ? (
-            <div className="space-y-3">
-              {generatedContentsQuery.data.items.slice(0, 8).map((record) => (
-                <div
-                  key={record.id}
-                  className="rounded-2xl border border-border/65 bg-background/65 p-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-foreground">
-                      {getDisplayTitle(record)}
-                    </p>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => applyGeneratedContent(record)}
-                    >
-                      <FileStack data-icon="inline-start" />
-                      {copy("Use", "Dùng")}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {copy("Created", "Tạo lúc")}:{" "}
-                    {formatDateTime(record.created_at)}
-                  </p>
-                </div>
-              ))}
+            <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Status", "Trạng thái")}
+              </p>
+              <p className="mt-1 text-sm font-semibold text-foreground">
+                {selectedJobQuery.data.status}
+              </p>
             </div>
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No content drafts available.",
-                "Chưa có bản nháp nội dung khả dụng.",
-              )}
-            />
-          )}
-        </PanelCard>
-      </div>
+            <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Platforms", "Nền tảng")}
+              </p>
+              <p className="mt-1 text-sm text-foreground">
+                {selectedJobQuery.data.platforms.join(", ")}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+              <p className="text-xs text-muted-foreground">
+                {copy("Created", "Tạo lúc")}
+              </p>
+              <p className="mt-1 text-sm text-foreground">
+                {formatDateTime(selectedJobQuery.data.created_at)}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <InlineQueryState
+            state="empty"
+            message={copy(
+              "No detail data found for selected job.",
+              "Không tìm thấy dữ liệu chi tiết cho job đã chọn.",
+            )}
+          />
+        )}
+      </PanelCard>
+
+      <PanelCard
+        title={copy("Publish State Snapshot", "Ảnh chụp trạng thái xuất bản")}
+        description={copy(
+          "Quick summary to inspect queue state at a glance.",
+          "Tóm tắt nhanh để kiểm tra trạng thái hàng đợi.",
+        )}
+      >
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+            <p className="text-xs text-muted-foreground">
+              {copy("Pending", "Đang chờ")}
+            </p>
+            <p className="mt-1 flex items-center gap-1 text-lg font-semibold text-foreground">
+              <Clock3 className="size-4 text-amber-600" />
+              {
+                publishJobs.filter(
+                  (job) => job.status.toLowerCase() === "pending",
+                ).length
+              }
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+            <p className="text-xs text-muted-foreground">
+              {copy("Published", "Đã đăng")}
+            </p>
+            <p className="mt-1 flex items-center gap-1 text-lg font-semibold text-foreground">
+              <CheckCircle2 className="size-4 text-emerald-600" />
+              {
+                publishJobs.filter(
+                  (job) => job.status.toLowerCase() === "published",
+                ).length
+              }
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+            <p className="text-xs text-muted-foreground">
+              {copy("Total", "Tổng")}
+            </p>
+            <p className="mt-1 text-lg font-semibold text-foreground">
+              {publishJobs.length}
+            </p>
+          </div>
+        </div>
+      </PanelCard>
     </div>
   );
 }

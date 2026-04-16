@@ -139,7 +139,7 @@ export function StrategyPage() {
 
   const generalTrendQuery = useTrendGeneralQuery({
     query: GENERAL_TREND_QUERY,
-    limit: 6,
+    limit: 5,
     refetchIntervalMs: GENERAL_REFRESH_INTERVAL_MS,
   });
   const trendAnalyzeMutation = useTrendAnalyzeMutation();

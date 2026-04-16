@@ -62,14 +62,14 @@ export const router = createBrowserRouter([
           {
             index: true,
             lazy: async () => ({
-              Component: (await import("../pages/dashboard/DashboardPage"))
+              Component: (await import("@/pages/dashboard/DashboardPage"))
                 .DashboardPage,
             }),
           },
           {
             path: "dashboard",
             lazy: async () => ({
-              Component: (await import("../pages/dashboard/DashboardPage"))
+              Component: (await import("@/pages/dashboard/DashboardPage"))
                 .DashboardPage,
             }),
           },

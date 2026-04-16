@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 import { Minus, Plus, ScanSearch } from "lucide-react";
 
@@ -129,6 +129,7 @@ export function TrendForceGraph({
 }: TrendForceGraphProps) {
   const graphRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const hasAutoFittedRef = useRef(false);
   const [width, setWidth] = useState(920);
   const [zoom, setZoom] = useState(1);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
@@ -210,15 +211,50 @@ export function TrendForceGraph({
     graph.d3AlphaDecay?.(0.034);
     graph.d3VelocityDecay?.(0.26);
     graph.d3ReheatSimulation?.();
-
-    window.requestAnimationFrame(() => {
-      graph.zoomToFit?.(500, 72);
-      const nextZoom = graph.zoom?.();
-      if (typeof nextZoom === "number") {
-        setZoom(nextZoom);
-      }
-    });
   }, [graphData, width]);
+
+  const fitGraphToViewport = useCallback((durationMs = 540) => {
+    const graph = graphRef.current;
+    if (!graph) {
+      return;
+    }
+
+    graph.zoomToFit?.(durationMs, 72);
+    graph.centerAt?.(0, 0, Math.max(220, Math.floor(durationMs * 0.6)));
+
+    const nextZoom = graph.zoom?.();
+    if (typeof nextZoom === "number") {
+      setZoom(nextZoom);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (graphData.nodes.length === 0) {
+      return;
+    }
+
+    hasAutoFittedRef.current = false;
+
+    const timeout = window.setTimeout(() => {
+      if (hasAutoFittedRef.current) {
+        return;
+      }
+
+      hasAutoFittedRef.current = true;
+      fitGraphToViewport();
+    }, 1200);
+
+    return () => window.clearTimeout(timeout);
+  }, [fitGraphToViewport, graphData, width]);
+
+  const handleEngineStop = useCallback(() => {
+    if (graphData.nodes.length === 0 || hasAutoFittedRef.current) {
+      return;
+    }
+
+    hasAutoFittedRef.current = true;
+    fitGraphToViewport();
+  }, [fitGraphToViewport, graphData.nodes.length]);
 
   const applyZoom = (nextZoom: number) => {
     const safeZoom = Math.max(0.5, Math.min(6, nextZoom));
@@ -250,7 +286,7 @@ export function TrendForceGraph({
           size="sm"
           onClick={() => {
             setZoom(1);
-            graphRef.current?.zoomToFit?.(500, 72);
+            fitGraphToViewport(500);
           }}
         >
           <ScanSearch data-icon="inline-start" />
@@ -417,6 +453,7 @@ export function TrendForceGraph({
             onSelectNode?.(nodeObject as TrendGraphNode);
           }}
           onBackgroundClick={() => setHoveredNodeId(null)}
+          onEngineStop={handleEngineStop}
         />
       </div>
     </div>

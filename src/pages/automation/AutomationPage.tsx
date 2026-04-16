@@ -1,10 +1,12 @@
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import {
+  Activity,
   Bot,
   CheckCircle2,
-  Cpu,
-  MessageSquareText,
+  Clock3,
+  Loader2,
+  PlayCircle,
   Send,
   Server,
   Sparkles,
@@ -12,16 +14,12 @@ import {
 } from "lucide-react";
 
 import {
-  type ContentPlatform,
+  useAgentsOrchestrateMutation,
   useAgentsStatusQuery,
+  useGeneratedContentsQuery,
   useHealthQuery,
-  useUploadPostCommentsQuery,
-  useUploadPostHistoryQuery,
-  useUploadPostPostAnalyticsQuery,
-  useTikTokRecommendationsQuery,
-  useTikTokVideosQuery,
-  useYouTubeRecommendationsQuery,
-  useYouTubeVideosQuery,
+  useTrendHistoryQuery,
+  useUploadPostPublishJobsQuery,
 } from "@/api";
 import { BarTrendChart, DoughnutTrendChart } from "@/components/app-data-viz";
 import {
@@ -30,177 +28,136 @@ import {
   PanelRowsSkeleton,
   QueryStateCard,
 } from "@/components/app-query-state";
-import { PlatformBadge } from "@/components/platform-badge";
 import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useBilingual } from "@/hooks/use-bilingual";
 import {
   formatCompactNumber,
   formatDateTime,
   formatPercentFromRatio,
 } from "@/lib/insight-formatters";
-import { getPlatformSurfaceClassName } from "@/lib/platform-theme";
 import { getQueryErrorMessage } from "@/lib/query-error";
-import { cn } from "@/lib/utils";
 
-type CommentLookupRequest = {
-  platform: ContentPlatform;
-  user: string;
-  postId?: string;
-  postUrl?: string;
-};
-
-type RecommendationQueueItem = {
-  platform: "tiktok" | "youtube";
-  id: string;
-  idea: string;
-  confidence: number;
-  rationale: string;
-};
+const DEFAULT_AUTOMATION_PROMPT =
+  "Hãy đề xuất kế hoạch nội dung 7 ngày để tăng tương tác tự nhiên cho creator lifestyle.";
 
 export function AutomationPage() {
   const copy = useBilingual();
 
-  const [commentPlatform, setCommentPlatform] =
-    useState<ContentPlatform>("youtube");
-  const [commentUser, setCommentUser] = useState("blhoang23");
-  const [commentPostId, setCommentPostId] = useState("yt9X1aA7cLmQ0");
-  const [commentPostUrl, setCommentPostUrl] = useState("");
-  const [commentLookupRequest, setCommentLookupRequest] =
-    useState<CommentLookupRequest>();
+  const [prompt, setPrompt] = useState(DEFAULT_AUTOMATION_PROMPT);
+  const [userId, setUserId] = useState("");
+  const [saveFiles, setSaveFiles] = useState(true);
 
-  const handleCommentLookupSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const healthQuery = useHealthQuery();
+  const agentsStatusQuery = useAgentsStatusQuery();
+  const trendHistoryQuery = useTrendHistoryQuery({ limit: 20 });
+  const generatedContentsQuery = useGeneratedContentsQuery({ limit: 20 });
+  const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 30 });
+  const orchestrateMutation = useAgentsOrchestrateMutation();
+
+  const publishJobs = publishJobsQuery.data?.items ?? [];
+  const pendingCount = publishJobs.filter(
+    (job) => job.status.toLowerCase() === "pending",
+  ).length;
+  const publishedCount = publishJobs.filter(
+    (job) => job.status.toLowerCase() === "published",
+  ).length;
+  const failedCount = publishJobs.filter(
+    (job) => job.status.toLowerCase() === "failed",
+  ).length;
+
+  const doneCount = publishedCount + failedCount;
+  const successRatio = doneCount > 0 ? publishedCount / doneCount : 0;
+
+  const processes = agentsStatusQuery.data?.processes ?? [];
+  const onlineAgentsCount = processes.filter(
+    (process) => process.reachable,
+  ).length;
+
+  const queueBarData = useMemo(
+    () => ({
+      labels: [
+        copy("Pending", "Đang chờ"),
+        copy("Published", "Đã đăng"),
+        copy("Failed", "Lỗi"),
+      ],
+      datasets: [
+        {
+          label: copy("Jobs", "Công việc"),
+          data: [pendingCount, publishedCount, failedCount],
+          backgroundColor: [
+            "rgba(245, 158, 11, 0.78)",
+            "rgba(16, 185, 129, 0.82)",
+            "rgba(248, 113, 113, 0.75)",
+          ],
+          borderRadius: 10,
+        },
+      ],
+    }),
+    [copy, failedCount, pendingCount, publishedCount],
+  );
+
+  const agentsMixData = useMemo(
+    () => ({
+      labels: [copy("Online", "Hoạt động"), copy("Unavailable", "Gián đoạn")],
+      datasets: [
+        {
+          data: [
+            onlineAgentsCount,
+            Math.max(processes.length - onlineAgentsCount, 0),
+          ],
+          backgroundColor: [
+            "rgba(20, 184, 166, 0.8)",
+            "rgba(251, 146, 60, 0.75)",
+          ],
+          borderWidth: 0,
+        },
+      ],
+    }),
+    [copy, onlineAgentsCount, processes.length],
+  );
+
+  const allQueries = [
+    healthQuery,
+    agentsStatusQuery,
+    trendHistoryQuery,
+    generatedContentsQuery,
+    publishJobsQuery,
+  ];
+
+  const isInitialLoading = allQueries.some(
+    (query) => query.isLoading && !query.data,
+  );
+  const isLoading = allQueries.some((query) => query.isLoading);
+  const firstError = allQueries.find((query) => query.error)?.error;
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const user = commentUser.trim();
-    const postId = commentPostId.trim();
-    const postUrl = commentPostUrl.trim();
-
-    if (!user || (!postId && !postUrl)) {
+    const normalizedPrompt = prompt.trim();
+    if (!normalizedPrompt || orchestrateMutation.isPending) {
       return;
     }
 
-    setCommentLookupRequest({
-      platform: commentPlatform,
-      user,
-      postId: postId || undefined,
-      postUrl: postUrl || undefined,
+    await orchestrateMutation.mutateAsync({
+      prompt: normalizedPrompt,
+      save_files: saveFiles,
+      user_id: userId.trim() || undefined,
     });
   };
-
-  const healthQuery = useHealthQuery();
-  const historyQuery = useUploadPostHistoryQuery({ page: 1, limit: 20 });
-  const tikTokRecommendationsQuery = useTikTokRecommendationsQuery();
-  const youTubeRecommendationsQuery = useYouTubeRecommendationsQuery();
-  const tikTokVideosQuery = useTikTokVideosQuery();
-  const youTubeVideosQuery = useYouTubeVideosQuery();
-  const agentsStatusQuery = useAgentsStatusQuery();
-
-  const latestRequestId = historyQuery.data?.payload.history[0]?.request_id;
-  const latestPostAnalyticsQuery = useUploadPostPostAnalyticsQuery({
-    requestId: latestRequestId,
-    enabled: Boolean(latestRequestId),
-  });
-
-  const commentsLookupQuery = useUploadPostCommentsQuery({
-    platform: commentLookupRequest?.platform,
-    user: commentLookupRequest?.user,
-    postId: commentLookupRequest?.postId,
-    postUrl: commentLookupRequest?.postUrl,
-    enabled: Boolean(commentLookupRequest),
-  });
-
-  const dashboardQueries = [
-    healthQuery,
-    historyQuery,
-    tikTokRecommendationsQuery,
-    youTubeRecommendationsQuery,
-    tikTokVideosQuery,
-    youTubeVideosQuery,
-    latestPostAnalyticsQuery,
-    agentsStatusQuery,
-  ];
-
-  const isInitialLoading = dashboardQueries.some(
-    (query) => query.isLoading && !query.data,
-  );
-  const isLoading = dashboardQueries.some((query) => query.isLoading);
-  const firstError = dashboardQueries.find((query) => query.error)?.error;
-
-  const historyItems = historyQuery.data?.payload.history ?? [];
-  const successfulOperations = historyItems.filter(
-    (item) => item.success,
-  ).length;
-  const operationsSuccessRate = historyItems.length
-    ? successfulOperations / historyItems.length
-    : 0;
-
-  const contentBacklog =
-    (tikTokVideosQuery.data?.videos.length ?? 0) +
-    (youTubeVideosQuery.data?.videos.length ?? 0);
-
-  const recommendationQueue: RecommendationQueueItem[] = [
-    ...(tikTokRecommendationsQuery.data?.recommendations ?? []).map((item) => ({
-      platform: "tiktok" as const,
-      id: item.recommendation_id,
-      idea: item.content_idea,
-      confidence: item.confidence_score,
-      rationale: item.reasoning,
-    })),
-    ...(youTubeRecommendationsQuery.data?.recommendations ?? []).map(
-      (item) => ({
-        platform: "youtube" as const,
-        id: item.recommendation_id,
-        idea: item.content_idea,
-        confidence: item.confidence_score,
-        rationale: item.reasoning,
-      }),
-    ),
-  ].sort((left, right) => right.confidence - left.confidence);
-
-  const recommendationConfidenceBarData = {
-    labels: recommendationQueue
-      .slice(0, 8)
-      .map((item, index) => `${item.platform}-${index + 1}`),
-    datasets: [
-      {
-        label: copy("Confidence %", "Độ tin cậy %"),
-        data: recommendationQueue
-          .slice(0, 8)
-          .map((item) => item.confidence * 100),
-        backgroundColor: "rgba(59, 130, 246, 0.78)",
-        borderRadius: 10,
-      },
-    ],
-  };
-
-  const operationOutcomeData = {
-    labels: [copy("Success", "Thành công"), copy("Failed", "Thất bại")],
-    datasets: [
-      {
-        data: [
-          successfulOperations,
-          Math.max(historyItems.length - successfulOperations, 0),
-        ],
-        backgroundColor: ["rgba(6, 182, 212, 0.8)", "rgba(249, 115, 22, 0.78)"],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  const latestPlatforms = latestPostAnalyticsQuery.data?.payload?.platforms;
 
   return (
     <div className="grid gap-8">
       <SectionHeader
         eyebrow={copy("Automation Ops", "Vận hành tự động")}
-        title={copy("Automation Command Center", "Trung tâm tự động hóa")}
+        title={copy("Automation Command Center", "Trung tâm điều phối tự động")}
         description={copy(
-          "Operational status from health checks, recommendation queues, publishing history, and performance signals.",
-          "Trạng thái vận hành từ kiểm tra hệ thống, hàng đợi đề xuất, lịch sử đăng bài và các tín hiệu hiệu suất.",
+          "Control creator automation using health checks, agent readiness, orchestration runs, and publishing queue outcomes.",
+          "Điều phối tự động hóa cho creator dựa trên health check, trạng thái agent, phiên orchestration và kết quả hàng đợi xuất bản.",
         )}
         action={
           <Badge
@@ -208,9 +165,7 @@ export function AutomationPage() {
             className="rounded-full border-primary/25 bg-background/80 px-3 py-1.5 text-primary"
           >
             <Sparkles className="mr-2 size-3.5" />
-            {healthQuery.data?.status === "ok"
-              ? copy("API Online", "API trực tuyến")
-              : copy("API Status Unknown", "Chưa rõ trạng thái API")}
+            {copy("Docs-Compliant Runtime", "Runtime tuân thủ docs")}
           </Badge>
         }
       />
@@ -218,14 +173,10 @@ export function AutomationPage() {
       {firstError ? (
         <QueryStateCard
           state="error"
-          title={copy("Data Load Error", "Lỗi tải dữ liệu")}
+          title={copy("Automation Data Error", "Lỗi dữ liệu tự động hóa")}
           description={getQueryErrorMessage(
             firstError,
-            "Unable to load automation telemetry.",
-          )}
-          hint={copy(
-            "Some data sources may be syncing. You can continue working and refresh shortly.",
-            "Một số nguồn dữ liệu có thể đang đồng bộ. Bạn vẫn có thể làm việc và thử làm mới sau ít phút.",
+            "Unable to load automation metrics.",
           )}
         />
       ) : null}
@@ -235,317 +186,269 @@ export function AutomationPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label={copy("Operation Success Rate", "Tỷ lệ tác vụ thành công")}
-            value={
-              isLoading ? "--" : formatPercentFromRatio(operationsSuccessRate)
-            }
+            label={copy("System Health", "Sức khỏe hệ thống")}
+            value={(healthQuery.data?.status ?? "unknown").toUpperCase()}
             detail={copy(
-              "Computed from upload history outcomes",
-              "Tính từ kết quả lịch sử upload",
+              "Backend service heartbeat",
+              "Nhịp trạng thái dịch vụ backend",
             )}
-            icon={<CheckCircle2 className="size-5" />}
+            icon={<Server className="size-5" />}
           />
           <MetricCard
-            label={copy("Queue Depth", "Độ sâu hàng đợi")}
-            value={isLoading ? "--" : String(recommendationQueue.length)}
+            label={copy("Ready Agents", "Agent sẵn sàng")}
+            value={`${onlineAgentsCount}/${processes.length}`}
             detail={copy(
-              "Strategy recommendations waiting to execute",
-              "Đề xuất chiến lược chờ thực thi",
-            )}
-            icon={<Workflow className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Content Backlog", "Kho nội dung")}
-            value={isLoading ? "--" : String(contentBacklog)}
-            detail={copy(
-              "Videos currently ready in your content pipeline",
-              "Số video hiện sẵn sàng trong luồng nội dung",
+              "Agent processes responding",
+              "Số process agent phản hồi",
             )}
             icon={<Bot className="size-5" />}
           />
           <MetricCard
-            label={copy("Processed Operations", "Tác vụ đã xử lý")}
-            value={isLoading ? "--" : formatCompactNumber(historyItems.length)}
+            label={copy("Publish Success", "Tỷ lệ xuất bản thành công")}
+            value={formatPercentFromRatio(successRatio)}
             detail={copy(
-              "Based on recent publishing activity",
-              "Dựa trên hoạt động đăng bài gần đây",
+              "From finished publish jobs",
+              "Tính trên các publish job đã hoàn tất",
             )}
-            icon={<Cpu className="size-5" />}
+            icon={<CheckCircle2 className="size-5" />}
+          />
+          <MetricCard
+            label={copy("Pending Queue", "Hàng đợi chờ xử lý")}
+            value={formatCompactNumber(pendingCount)}
+            detail={copy(
+              "Jobs waiting for completion",
+              "Số công việc đang chờ hoàn tất",
+            )}
+            icon={<Clock3 className="size-5" />}
           />
         </div>
       )}
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
         <PanelCard
-          title={copy("Publish Operations Path", "Lộ trình vận hành publish")}
+          title={copy("Run Orchestration", "Chạy orchestration")}
           description={copy(
-            "Publishing is handled in a dedicated workspace to keep this page focused on monitoring and decision support.",
-            "Publish được xử lý ở một không gian chuyên biệt để trang này tập trung vào theo dõi và hỗ trợ quyết định.",
+            "Kick off one end-to-end run from prompt to trend and content outputs.",
+            "Khởi chạy một phiên end-to-end từ prompt đến đầu ra trend và nội dung.",
           )}
         >
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-primary/25 bg-primary/8 p-4 text-xs text-muted-foreground">
-              <p className="font-semibold text-foreground">
-                {copy("Canonical Publish UI", "Giao diện publish chuẩn")}
-              </p>
-              <p className="mt-1.5">
-                {copy(
-                  "Use Publish Ops to prepare channels, captions, schedule timing, and media assets in one guided flow.",
-                  "Dùng Publish Ops để chuẩn bị kênh đăng, caption, lịch đăng và media trong một luồng hướng dẫn duy nhất.",
-                )}
-              </p>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => void handleSubmit(event)}
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="automation-prompt">
+                {copy("Prompt", "Prompt")}
+              </Label>
+              <Textarea
+                id="automation-prompt"
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                rows={4}
+              />
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <Button asChild>
-                <Link to="/app/publish-ops">
-                  <Workflow className="mr-1.5 size-4" />
-                  {copy("Open Publish Ops", "Mở Publish Ops")}
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/app/finance-control">
-                  <Cpu className="mr-1.5 size-4" />
-                  {copy("Check Finance Control", "Kiểm tra Finance Control")}
-                </Link>
-              </Button>
+              <div className="space-y-1.5">
+                <Label htmlFor="automation-user-id">
+                  {copy(
+                    "Workspace User (optional)",
+                    "User workspace (tùy chọn)",
+                  )}
+                </Label>
+                <Input
+                  id="automation-user-id"
+                  value={userId}
+                  onChange={(event) => setUserId(event.target.value)}
+                  placeholder={copy("User id", "Mã user")}
+                />
+              </div>
+
+              <div className="rounded-2xl border border-border/60 bg-background/60 px-3 py-3">
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={saveFiles}
+                    onChange={(event) => setSaveFiles(event.target.checked)}
+                    className="size-4 rounded border-border"
+                  />
+                  {copy("Save run files", "Lưu file kết quả")}
+                </label>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {copy(
+                    "Keep artifacts for later review by the operations team.",
+                    "Giữ lại artifacts để đội vận hành xem lại sau.",
+                  )}
+                </p>
+              </div>
             </div>
 
-            {historyItems[0] ? (
-              <div className="rounded-2xl border border-border/55 bg-background/55 p-4 text-xs text-muted-foreground">
-                <p>
-                  {copy("Latest campaign", "Chiến dịch gần nhất")}:{" "}
-                  {historyItems[0].post_title ||
-                    copy("Untitled post", "Bài chưa đặt tiêu đề")}
-                </p>
-                <p className="mt-1">
-                  {copy("Platform", "Nền tảng")}: {historyItems[0].platform}
-                </p>
-                <p className="mt-1">
-                  {copy("Uploaded", "Tải lên")}:{" "}
-                  {formatDateTime(historyItems[0].upload_timestamp)}
-                </p>
-              </div>
-            ) : (
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={orchestrateMutation.isPending || !prompt.trim()}
+            >
+              {orchestrateMutation.isPending ? (
+                <Loader2 data-icon="inline-start" className="animate-spin" />
+              ) : (
+                <PlayCircle data-icon="inline-start" />
+              )}
+              {orchestrateMutation.isPending
+                ? copy("Running...", "Đang chạy...")
+                : copy("Run Automation", "Chạy tự động hóa")}
+            </Button>
+
+            {orchestrateMutation.error ? (
               <InlineQueryState
-                state="empty"
-                message={copy(
-                  "No publish request history found yet.",
-                  "Chưa có lịch sử request publish.",
+                state="error"
+                message={getQueryErrorMessage(
+                  orchestrateMutation.error,
+                  "Unable to complete orchestration run.",
                 )}
               />
-            )}
+            ) : null}
 
-            {latestPlatforms ? (
-              <div className="space-y-2">
-                {Object.entries(latestPlatforms).map(([platform, payload]) => (
-                  <div
-                    key={platform}
-                    className={cn(
-                      "rounded-xl border border-border/55 bg-background/55 px-3 py-2 text-xs text-muted-foreground",
-                      getPlatformSurfaceClassName(platform),
-                    )}
-                  >
-                    <p className="font-medium text-foreground">{platform}</p>
-                    <p>
-                      {copy("Views", "Lượt xem")}:{" "}
-                      {formatCompactNumber(payload.post_metrics.views)}
-                    </p>
-                    <p>
-                      {copy("Likes", "Lượt thích")}:{" "}
-                      {formatCompactNumber(payload.post_metrics.likes)}
-                    </p>
-                  </div>
-                ))}
+            {orchestrateMutation.data ? (
+              <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-4 text-xs text-muted-foreground">
+                <p className="font-semibold text-foreground">
+                  {copy(
+                    "Automation run completed",
+                    "Phiên tự động hóa đã hoàn tất",
+                  )}
+                </p>
+                <p className="mt-1.5">
+                  {copy(
+                    "Trend and content outputs were generated successfully.",
+                    "Trend và nội dung đã được tạo thành công.",
+                  )}
+                </p>
               </div>
             ) : null}
-          </div>
+          </form>
         </PanelCard>
 
         <PanelCard
-          title={copy("Recommendation Queue", "Hàng đợi đề xuất")}
+          title={copy("Quick Navigation", "Điều hướng nhanh")}
           description={copy(
-            "Queued content opportunities ordered by confidence score.",
-            "Cơ hội nội dung được xếp theo điểm độ tin cậy.",
+            "Open the next workspace based on your current operation state.",
+            "Mở nhanh workspace tiếp theo theo trạng thái vận hành hiện tại.",
           )}
         >
-          <div className="space-y-3">
-            {isInitialLoading ? (
-              <PanelRowsSkeleton rows={4} />
-            ) : recommendationQueue.length > 0 ? (
-              <>
-                <BarTrendChart
-                  data={recommendationConfidenceBarData}
-                  className="bg-linear-to-br from-blue-100/60 via-card to-violet-100/45 dark:from-blue-500/12 dark:via-card/90 dark:to-violet-500/10"
-                />
-                {recommendationQueue.slice(0, 6).map((item) => (
-                  <div
-                    key={`${item.platform}-${item.id}`}
-                    className={cn(
-                      "rounded-2xl border border-border/55 bg-background/55 p-4",
-                      getPlatformSurfaceClassName(item.platform),
-                    )}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <PlatformBadge platform={item.platform} />
-                      <p className="text-xs text-muted-foreground">
-                        {formatPercentFromRatio(item.confidence)} confidence
-                      </p>
-                    </div>
-                    <p className="mt-2 font-medium text-foreground">
-                      {item.idea}
-                    </p>
-                    <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                      {item.rationale}
-                    </p>
-                  </div>
-                ))}
-              </>
-            ) : (
-              <InlineQueryState
-                state="empty"
-                message={copy(
-                  "No recommendation queue items available.",
-                  "Chưa có mục trong hàng đợi đề xuất.",
-                )}
-              />
-            )}
+          <div className="grid gap-3">
+            <Button asChild>
+              <Link to="/app/strategy-lab">
+                <Activity data-icon="inline-start" />
+                {copy("Open Strategy Lab", "Mở Strategy Lab")}
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/app/publish-ops">
+                <Workflow data-icon="inline-start" />
+                {copy("Open Publish Ops", "Mở Publish Ops")}
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/app/ops-control">
+                <Send data-icon="inline-start" />
+                {copy("Open Ops Control", "Mở Ops Control")}
+              </Link>
+            </Button>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-border/65 bg-background/65 p-4">
+            <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+              {copy("Recent Progress", "Tiến độ gần đây")}
+            </p>
+            <p className="mt-2 text-sm text-foreground">
+              {copy("Trend sessions", "Phiên trend")}:{" "}
+              {formatCompactNumber(trendHistoryQuery.data?.items.length ?? 0)}
+            </p>
+            <p className="mt-1 text-sm text-foreground">
+              {copy("Generated content", "Nội dung đã tạo")}:{" "}
+              {formatCompactNumber(
+                generatedContentsQuery.data?.items.length ?? 0,
+              )}
+            </p>
           </div>
         </PanelCard>
       </div>
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <PanelCard
-          title={copy("Operation Outcome Mix", "Tỷ trọng kết quả tác vụ")}
+          title={copy("Queue Health", "Sức khỏe hàng đợi")}
           description={copy(
-            "Success and failure distribution from upload operations.",
-            "Phân bố thành công và thất bại từ các tác vụ upload.",
+            "Track queue pressure across pending, published, and failed jobs.",
+            "Theo dõi áp lực hàng đợi giữa các trạng thái pending, published và failed.",
           )}
         >
-          {historyItems.length > 0 ? (
-            <DoughnutTrendChart
-              data={operationOutcomeData}
-              className="bg-linear-to-br from-blue-100/60 via-card to-orange-100/45 dark:from-blue-500/12 dark:via-card/90 dark:to-orange-500/10"
+          {publishJobs.length > 0 ? (
+            <BarTrendChart
+              data={queueBarData}
+              className="bg-linear-to-br from-cyan-100/60 via-card to-emerald-100/45 dark:from-cyan-500/12 dark:via-card/90 dark:to-emerald-500/10"
             />
           ) : (
             <InlineQueryState
               state="empty"
               message={copy(
-                "No operation history available for charting.",
-                "Chưa có lịch sử tác vụ để dựng biểu đồ.",
+                "No publish jobs found.",
+                "Chưa có publish job nào.",
               )}
             />
           )}
         </PanelCard>
 
         <PanelCard
-          title={copy("Operation Timeline", "Dòng thời gian tác vụ")}
+          title={copy("Agent Readiness", "Mức sẵn sàng của agent")}
           description={copy(
-            "Chronological view from upload history records.",
-            "Góc nhìn theo thời gian từ bản ghi lịch sử upload.",
+            "Online versus recovering agent processes.",
+            "Tỷ lệ process agent đang online và đang khôi phục.",
           )}
         >
-          <div className="space-y-2">
-            {isInitialLoading ? (
-              <PanelRowsSkeleton rows={5} />
-            ) : historyItems.length > 0 ? (
-              historyItems.slice(0, 12).map((item) => (
-                <div
-                  key={`${item.request_id}-${item.platform}-${item.job_id}`}
-                  className={cn(
-                    "grid gap-2 rounded-xl border border-border/55 bg-background/55 px-4 py-3 text-xs sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center",
-                    getPlatformSurfaceClassName(item.platform),
-                  )}
-                >
-                  <PlatformBadge
-                    platform={item.platform}
-                    className="justify-self-start"
-                  />
-                  <div>
-                    <p className="font-medium text-foreground">
-                      {item.post_title}
-                    </p>
-                    <p className="text-muted-foreground">
-                      {formatDateTime(item.upload_timestamp)}
-                    </p>
-                  </div>
-                  <p
-                    className={
-                      item.success ? "text-emerald-600" : "text-rose-600"
-                    }
-                  >
-                    {item.success
-                      ? copy("Success", "Thành công")
-                      : copy("Failed", "Thất bại")}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <InlineQueryState
-                state="empty"
-                message={copy(
-                  "No operations recorded yet.",
-                  "Chưa có tác vụ nào được ghi nhận.",
-                )}
-              />
-            )}
-          </div>
+          {processes.length > 0 ? (
+            <DoughnutTrendChart
+              data={agentsMixData}
+              className="bg-linear-to-br from-indigo-100/55 via-card to-cyan-100/45 dark:from-indigo-500/12 dark:via-card/90 dark:to-cyan-500/10"
+            />
+          ) : (
+            <InlineQueryState
+              state="empty"
+              message={copy(
+                "No process state available.",
+                "Chưa có dữ liệu trạng thái process.",
+              )}
+            />
+          )}
         </PanelCard>
       </div>
 
       <PanelCard
-        title={copy("Agent Runtime Mesh", "Lưới runtime agent")}
+        title={copy("Recent Publish Queue", "Hàng đợi xuất bản gần đây")}
         description={copy(
-          "Live readiness of each assistant used in your automation workflow.",
-          "Mức sẵn sàng theo thời gian thực của từng trợ lý trong luồng tự động hóa của bạn.",
+          "Latest publish jobs with status and planned schedule.",
+          "Các publish job gần nhất với trạng thái và lịch dự kiến.",
         )}
-        action={
-          <Badge variant="outline" className="rounded-full border-primary/25">
-            <Server className="mr-2 size-3.5" />
-            {(agentsStatusQuery.data?.status ?? "unknown").toUpperCase()}
-          </Badge>
-        }
       >
-        {agentsStatusQuery.isLoading ? (
-          <PanelRowsSkeleton rows={3} />
-        ) : agentsStatusQuery.error ? (
-          <InlineQueryState
-            state="error"
-            message={getQueryErrorMessage(
-              agentsStatusQuery.error,
-              "Unable to load agents runtime status.",
-            )}
-          />
-        ) : agentsStatusQuery.data?.processes.length ? (
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {agentsStatusQuery.data.processes.map((process) => (
+        {isLoading ? (
+          <PanelRowsSkeleton rows={5} />
+        ) : publishJobs.length > 0 ? (
+          <div className="space-y-3">
+            {publishJobs.slice(0, 8).map((job) => (
               <div
-                key={process.name}
-                className="rounded-2xl border border-border/55 bg-background/55 p-4"
+                key={job.id}
+                className="rounded-2xl border border-border/65 bg-background/65 p-4"
               >
-                <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-                  {process.name}
+                <p className="text-sm font-semibold text-foreground">
+                  {job.title}
                 </p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {process.reachable
-                    ? copy(
-                        "Ready to support your workflow.",
-                        "Sẵn sàng hỗ trợ luồng làm việc của bạn.",
-                      )
-                    : copy(
-                        "Temporarily unavailable, retrying automatically.",
-                        "Tạm thời gián đoạn, hệ thống sẽ tự thử lại.",
-                      )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {copy("Status", "Trạng thái")}: {job.status}
                 </p>
-                <p
-                  className={cn(
-                    "mt-2 text-sm font-medium",
-                    process.reachable ? "text-emerald-600" : "text-rose-600",
-                  )}
-                >
-                  {process.reachable
-                    ? copy("Reachable", "Kết nối được")
-                    : copy("Unreachable", "Mất kết nối")}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {copy("Platforms", "Nền tảng")}: {job.platforms.join(", ")}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {copy("Time", "Thời gian")}:{" "}
+                  {formatDateTime(job.schedule_post ?? job.created_at)}
                 </p>
               </div>
             ))}
@@ -554,115 +457,11 @@ export function AutomationPage() {
           <InlineQueryState
             state="empty"
             message={copy(
-              "No agent process data returned.",
-              "Chưa có dữ liệu tiến trình agent.",
+              "No publish jobs available yet.",
+              "Chưa có publish job khả dụng.",
             )}
           />
         )}
-      </PanelCard>
-
-      <PanelCard
-        title={copy("Comment Relay Console", "Bảng điều khiển bình luận")}
-        description={copy(
-          "Look up comments by post code or post link to understand audience reactions quickly.",
-          "Tra cứu bình luận theo mã bài hoặc đường dẫn bài đăng để nắm phản hồi khán giả nhanh hơn.",
-        )}
-      >
-        <form className="space-y-3" onSubmit={handleCommentLookupSubmit}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label htmlFor="comment-platform">
-                {copy("Platform", "Nền tảng")}
-              </Label>
-              <select
-                id="comment-platform"
-                className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
-                value={commentPlatform}
-                onChange={(event) =>
-                  setCommentPlatform(event.target.value as ContentPlatform)
-                }
-              >
-                <option value="youtube">YouTube</option>
-                <option value="tiktok">TikTok</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="comment-user">{copy("User", "Người dùng")}</Label>
-              <Input
-                id="comment-user"
-                value={commentUser}
-                onChange={(event) => setCommentUser(event.target.value)}
-                placeholder="blhoang23"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="comment-post-id">
-              {copy("Post Code", "Mã bài đăng")}
-            </Label>
-            <Input
-              id="comment-post-id"
-              value={commentPostId}
-              onChange={(event) => setCommentPostId(event.target.value)}
-              placeholder="yt9X1aA7cLmQ0"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="comment-post-url">
-              {copy("Post Link", "Đường dẫn bài đăng")}
-            </Label>
-            <Input
-              id="comment-post-url"
-              value={commentPostUrl}
-              onChange={(event) => setCommentPostUrl(event.target.value)}
-              placeholder="https://www.tiktok.com/@blhoang23/video/..."
-            />
-          </div>
-
-          <Button type="submit" className="w-full" variant="outline">
-            <Send data-icon="inline-start" />
-            {copy("Load Comments", "Tải bình luận")}
-          </Button>
-        </form>
-
-        <div className="mt-4 space-y-2">
-          {commentsLookupQuery.isFetching ? (
-            <PanelRowsSkeleton rows={3} />
-          ) : commentsLookupQuery.data?.payload.comments.length ? (
-            commentsLookupQuery.data.payload.comments.map((comment) => (
-              <div
-                key={comment.id}
-                className="rounded-xl border border-border/55 bg-background/55 p-3"
-              >
-                <p className="text-sm leading-6 text-foreground">
-                  "{comment.text}"
-                </p>
-                <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                  <span>@{comment.user.username}</span>
-                  <span>{formatDateTime(comment.timestamp)}</span>
-                </div>
-              </div>
-            ))
-          ) : commentLookupRequest ? (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No comments found for this query.",
-                "Không có bình luận cho truy vấn này.",
-              )}
-            />
-          ) : (
-            <div className="rounded-xl border border-dashed border-border/65 bg-background/45 p-4 text-xs text-muted-foreground">
-              <MessageSquareText className="mb-2 size-4" />
-              {copy(
-                "Run a lookup to fetch comments by post id or post URL.",
-                "Thực hiện truy vấn để lấy bình luận theo post id hoặc post URL.",
-              )}
-            </div>
-          )}
-        </div>
       </PanelCard>
     </div>
   );
