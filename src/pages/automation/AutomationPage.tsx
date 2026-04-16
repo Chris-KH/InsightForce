@@ -34,6 +34,7 @@ import {
   formatDateTime,
   formatPercentFromRatio,
 } from "@/lib/insight-formatters";
+import { localizeHealthStatus, localizeStatus } from "@/lib/localized-status";
 import { getQueryErrorMessage } from "@/lib/query-error";
 import { AutomationLatestOrchestrationOutput } from "@/pages/automation/components/AutomationLatestOrchestrationOutput";
 import { AutomationOrchestrationControlSection } from "@/pages/automation/components/AutomationOrchestrationControlSection";
@@ -158,7 +159,7 @@ export function AutomationPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             label={copy("System Health", "Sức khỏe hệ thống")}
-            value={(healthQuery.data?.status ?? "unknown").toUpperCase()}
+            value={localizeHealthStatus(healthQuery.data?.status, copy)}
             detail={copy(
               "Backend service heartbeat",
               "Nhịp trạng thái dịch vụ backend",
@@ -214,7 +215,7 @@ export function AutomationPage() {
           <Button asChild variant="outline">
             <Link to="/app/audience">
               <Workflow data-icon="inline-start" />
-              {copy("Open Audience", "Mở khách hàng")}
+              {copy("Open Audience", "Mở khán giả")}
             </Link>
           </Button>
           <Button
@@ -251,7 +252,7 @@ export function AutomationPage() {
           title={copy("Queue Health", "Sức khỏe hàng đợi")}
           description={copy(
             "Track queue pressure across pending, published, and failed jobs.",
-            "Theo dõi áp lực hàng đợi giữa các trạng thái pending, published và failed.",
+            "Theo dõi áp lực hàng đợi giữa các trạng thái đang chờ, đã đăng và thất bại.",
           )}
         >
           {publishJobs.length > 0 ? (
@@ -264,7 +265,7 @@ export function AutomationPage() {
               state="empty"
               message={copy(
                 "No publish jobs found.",
-                "Chưa có publish job nào.",
+                "Chưa có job đăng bài nào.",
               )}
             />
           )}
@@ -316,7 +317,8 @@ export function AutomationPage() {
                   {job.title}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {copy("Status", "Trạng thái")}: {job.status}
+                  {copy("Status", "Trạng thái")}:{" "}
+                  {localizeStatus(job.status, copy)}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {copy("Platforms", "Nền tảng")}: {job.platforms.join(", ")}
@@ -333,7 +335,7 @@ export function AutomationPage() {
             state="empty"
             message={copy(
               "No publish jobs available yet.",
-              "Chưa có publish job khả dụng.",
+              "Chưa có job đăng bài khả dụng.",
             )}
           />
         )}

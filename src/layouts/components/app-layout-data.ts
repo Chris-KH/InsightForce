@@ -30,7 +30,7 @@ export const APP_NAV_ITEMS: NavItem[] = [
   },
   {
     key: "audience",
-    label: { en: "Audience", vi: "Khách hàng" },
+    label: { en: "Audience", vi: "Khán giả" },
     path: "/app/audience",
     icon: Users,
     group: "primary",

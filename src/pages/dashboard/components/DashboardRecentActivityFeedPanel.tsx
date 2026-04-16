@@ -13,6 +13,10 @@ import { PanelCard } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { formatDateTime } from "@/lib/insight-formatters";
+import {
+  localizePipelineEventType,
+  localizeStatus,
+} from "@/lib/localized-status";
 import { cn } from "@/lib/utils";
 
 type PipelineEvent = {
@@ -158,7 +162,7 @@ export function DashboardRecentActivityFeedPanel({
                     eventTypeClass(event.type),
                   )}
                 >
-                  {event.type}
+                  {localizePipelineEventType(event.type, copy)}
                 </Badge>
                 <p className="text-xs text-muted-foreground">
                   {formatDateTime(event.createdAt)}
@@ -168,7 +172,8 @@ export function DashboardRecentActivityFeedPanel({
                 {event.title}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {copy("Status", "Trạng thái")}: {event.status}
+                {copy("Status", "Trạng thái")}:{" "}
+                {localizeStatus(event.status, copy)}
               </p>
             </div>
           ))}

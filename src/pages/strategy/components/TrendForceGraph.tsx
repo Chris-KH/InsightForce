@@ -14,6 +14,7 @@ type TrendForceGraphProps = {
   results: TrendAnalyzeResultItem[];
   selectedNodeId?: string;
   onSelectNode?: (node: TrendGraphNode) => void;
+  copy?: (en: string, vi: string) => string;
 };
 
 type TrendGraphLinkLike = {
@@ -126,7 +127,9 @@ export function TrendForceGraph({
   results,
   selectedNodeId,
   onSelectNode,
+  copy,
 }: TrendForceGraphProps) {
+  const t = copy ?? ((en: string) => en);
   const graphRef = useRef<ForceGraphMethods | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hasAutoFittedRef = useRef(false);
@@ -310,7 +313,7 @@ export function TrendForceGraph({
           variant="outline"
           size="icon-sm"
           onClick={() => applyZoom(zoom - 0.25)}
-          aria-label="Zoom out"
+          aria-label={t("Zoom out", "Thu nhỏ")}
         >
           <Minus />
         </Button>
@@ -318,7 +321,7 @@ export function TrendForceGraph({
           variant="outline"
           size="icon-sm"
           onClick={() => applyZoom(zoom + 0.25)}
-          aria-label="Zoom in"
+          aria-label={t("Zoom in", "Phóng to")}
         >
           <Plus />
         </Button>
@@ -332,7 +335,7 @@ export function TrendForceGraph({
           }}
         >
           <ScanSearch data-icon="inline-start" />
-          Fit View
+          {t("Fit View", "Vừa khung")}
         </Button>
       </div>
 
@@ -480,7 +483,7 @@ export function TrendForceGraph({
           }}
           nodeLabel={(nodeObject) => {
             const node = nodeObject as TrendGraphNode;
-            return `${node.keyword}\nTrend score: ${node.trendScore.toFixed(1)}\nAvg views/hour: ${Math.round(node.avgViewsPerHour)}`;
+            return `${node.keyword}\n${t("Trend score", "Điểm xu hướng")}: ${node.trendScore.toFixed(1)}\n${t("Avg views/hour", "Trung bình lượt xem/giờ")}: ${Math.round(node.avgViewsPerHour)}`;
           }}
           onZoom={(transform) => {
             if (typeof transform.k === "number") {

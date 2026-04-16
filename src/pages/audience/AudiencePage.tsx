@@ -32,6 +32,7 @@ import {
   formatDateTime,
   formatPercentValue,
 } from "@/lib/insight-formatters";
+import { localizeStatus } from "@/lib/localized-status";
 import { getQueryErrorMessage } from "@/lib/query-error";
 
 type TrendSignal = {
@@ -221,7 +222,7 @@ export function AudiencePage() {
             value={formatCompactNumber(publishedJobsCount)}
             detail={copy(
               "Recent jobs marked as published",
-              "Các công việc gần đây có trạng thái published",
+              "Các công việc gần đây có trạng thái đã đăng",
             )}
             icon={<Users className="size-5" />}
           />
@@ -298,7 +299,11 @@ export function AudiencePage() {
                     {formatPercentValue(topSignal.score)}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-foreground">
-                    {topSignal.why}
+                    {topSignal.why ||
+                      copy(
+                        "Insight explanation is still being updated.",
+                        "Phần diễn giải đang được cập nhật.",
+                      )}
                   </p>
                 </div>
 
@@ -307,7 +312,11 @@ export function AudiencePage() {
                     {copy("Recommended action", "Hành động đề xuất")}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-foreground">
-                    {topSignal.recommendation}
+                    {topSignal.recommendation ||
+                      copy(
+                        "Continue monitoring this signal before scaling.",
+                        "Tiếp tục theo dõi tín hiệu này trước khi mở rộng.",
+                      )}
                   </p>
                 </div>
 
@@ -380,7 +389,8 @@ export function AudiencePage() {
                       {job.title}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {copy("Status", "Trạng thái")}: {job.status}
+                      {copy("Status", "Trạng thái")}:{" "}
+                      {localizeStatus(job.status, copy)}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {copy("Platforms", "Nền tảng")}:{" "}

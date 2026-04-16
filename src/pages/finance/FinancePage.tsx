@@ -36,6 +36,7 @@ import {
   formatPercentFromRatio,
   formatPercentValue,
 } from "@/lib/insight-formatters";
+import { localizeStatus } from "@/lib/localized-status";
 import { getQueryErrorMessage } from "@/lib/query-error";
 
 function groupJobsByDay(items: Array<{ created_at: string }>) {
@@ -206,7 +207,7 @@ export function FinancePage() {
             icon={<Coins className="size-5" />}
             detail={copy(
               "Published / completed jobs",
-              "Published trên tổng job đã hoàn tất",
+              "Đã đăng trên tổng job đã hoàn tất",
             )}
           />
           <MetricCard
@@ -258,7 +259,7 @@ export function FinancePage() {
           title={copy("Publish Outcome Mix", "Tỷ trọng kết quả xuất bản")}
           description={copy(
             "Share of published, pending, and failed jobs.",
-            "Tỷ trọng các job published, pending và failed.",
+            "Tỷ trọng các job đã đăng, đang chờ và thất bại.",
           )}
         >
           {publishJobs.length > 0 ? (
@@ -271,7 +272,7 @@ export function FinancePage() {
               state="empty"
               message={copy(
                 "No publish jobs available.",
-                "Chưa có publish job khả dụng.",
+                "Chưa có job đăng bài khả dụng.",
               )}
             />
           )}
@@ -325,7 +326,8 @@ export function FinancePage() {
                     {job.title}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Status", "Trạng thái")}: {job.status}
+                    {copy("Status", "Trạng thái")}:{" "}
+                    {localizeStatus(job.status, copy)}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {copy("Created", "Tạo lúc")}:{" "}
@@ -345,7 +347,7 @@ export function FinancePage() {
                     {record.query}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Trend session", "Phiên trend")}:{" "}
+                    {copy("Trend session", "Phiên xu hướng")}:{" "}
                     {formatDateTime(record.created_at)}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -395,7 +397,7 @@ export function FinancePage() {
               {copy("Failure Follow-up", "Theo dõi lỗi")}
             </p>
             <p className="mt-1.5">
-              {copy("Failed jobs", "Job lỗi")}:{" "}
+              {copy("Failed jobs", "Job thất bại")}:{" "}
               {formatCompactNumber(failedJobsCount)}
             </p>
             <p className="mt-1.5">

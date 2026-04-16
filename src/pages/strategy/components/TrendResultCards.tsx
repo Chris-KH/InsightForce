@@ -9,6 +9,7 @@ type TrendResultCardsProps = {
   results: TrendAnalyzeResultItem[];
   selectedKeyword?: string;
   onSelect: (result: TrendAnalyzeResultItem) => void;
+  copy?: (en: string, vi: string) => string;
 };
 
 function InterestSparkline({ values }: { values: number[] }) {
@@ -51,7 +52,10 @@ export function TrendResultCards({
   results,
   selectedKeyword,
   onSelect,
+  copy,
 }: TrendResultCardsProps) {
+  const t = copy ?? ((en: string) => en);
+
   return (
     <div className="space-y-3">
       {results.map((result) => {
@@ -83,13 +87,15 @@ export function TrendResultCards({
             </div>
 
             <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
-              {result.why_the_trend_happens}
+              {result.why_the_trend_happens ||
+                t("Insight is updating.", "Đang cập nhật phần diễn giải.")}
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <BarChart3 className="size-3.5" />
-                {Math.round(result.avg_views_per_hour).toLocaleString()} views/h
+                {Math.round(result.avg_views_per_hour).toLocaleString()}{" "}
+                {t("views/hour", "lượt xem/giờ")}
               </span>
               {result.top_hashtags.slice(0, 3).map((hashtag) => (
                 <span key={hashtag} className="inline-flex items-center gap-1">
@@ -110,7 +116,10 @@ export function TrendResultCards({
         <div className="rounded-2xl border border-dashed border-border/60 bg-background/35 p-4 text-xs text-muted-foreground">
           <p className="inline-flex items-center gap-2 text-foreground">
             <Sparkles className="size-3.5" />
-            Chưa có kết quả trend để hiển thị.
+            {t(
+              "No trend results to display yet.",
+              "Chưa có kết quả xu hướng để hiển thị.",
+            )}
           </p>
         </div>
       ) : null}

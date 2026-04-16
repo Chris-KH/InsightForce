@@ -140,7 +140,7 @@ export function AppNotificationBell() {
               variant={filter === "automation" ? "secondary" : "ghost"}
               onClick={() => setFilter("automation")}
             >
-              {copy("Automation", "Automation")}
+              {copy("Automation", "Tự động hóa")}
             </Button>
             <Button
               type="button"
@@ -148,7 +148,7 @@ export function AppNotificationBell() {
               variant={filter === "strategy" ? "secondary" : "ghost"}
               onClick={() => setFilter("strategy")}
             >
-              {copy("Strategy", "Strategy")}
+              {copy("Strategy", "Chiến lược")}
             </Button>
             <Button
               type="button"

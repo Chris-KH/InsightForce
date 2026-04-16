@@ -91,10 +91,10 @@ export function AutomationOrchestrationControlSection() {
     >
       <div className="xl:sticky xl:top-24">
         <PanelCard
-          title={copy("Run Orchestration", "Chạy orchestration")}
+          title={copy("Run Orchestration", "Chạy điều phối")}
           description={copy(
             "Kick off one end-to-end run from prompt to trend and content outputs.",
-            "Khởi chạy một phiên end-to-end từ prompt đến đầu ra trend và nội dung.",
+            "Khởi chạy một phiên end-to-end từ yêu cầu đến đầu ra xu hướng và nội dung.",
           )}
         >
           <form
@@ -103,7 +103,7 @@ export function AutomationOrchestrationControlSection() {
           >
             <div className="space-y-1.5">
               <Label htmlFor="automation-prompt">
-                {copy("Prompt", "Prompt")}
+                {copy("Prompt", "Yêu cầu")}
               </Label>
               <Textarea
                 id="automation-prompt"
@@ -120,7 +120,7 @@ export function AutomationOrchestrationControlSection() {
                 <Label htmlFor="automation-user-id">
                   {copy(
                     "Workspace User (optional)",
-                    "User workspace (tùy chọn)",
+                    "Người dùng workspace (tùy chọn)",
                   )}
                 </Label>
                 <Input
@@ -129,7 +129,7 @@ export function AutomationOrchestrationControlSection() {
                   onChange={(event) =>
                     dispatch(setAutomationUserId(event.target.value))
                   }
-                  placeholder={copy("User id", "Mã user")}
+                  placeholder={copy("User id", "Mã người dùng")}
                 />
               </div>
 
@@ -148,7 +148,7 @@ export function AutomationOrchestrationControlSection() {
                 <p className="mt-1 text-xs text-muted-foreground">
                   {copy(
                     "Keep artifacts for later review by the operations team.",
-                    "Giữ lại artifacts để đội vận hành xem lại sau.",
+                    "Giữ lại tệp đầu ra để đội vận hành xem lại sau.",
                   )}
                 </p>
               </div>
@@ -197,7 +197,7 @@ export function AutomationOrchestrationControlSection() {
       </div>
 
       <PanelCard
-        title={copy("Orchestration Reasoning", "Reasoning orchestration")}
+        title={copy("Orchestration Reasoning", "Suy luận điều phối")}
         description={copy(
           "Live simulation of planning, trend synthesis, and content assembly while the run is processing.",
           "Mô phỏng trực tiếp quá trình lập kế hoạch, tổng hợp trend và dựng nội dung trong lúc phiên chạy đang xử lý.",

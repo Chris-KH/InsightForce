@@ -37,6 +37,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { useBilingual } from "@/hooks/use-bilingual";
+import { useLocale } from "@/hooks/use-locale";
 import {
   formatCompactNumber,
   formatPercentValue,
@@ -44,7 +45,6 @@ import {
 import {
   buildSessionSuggestions,
   createTrendSessionId,
-  DEFAULT_TREND_PROMPT_SUGGESTIONS,
   sanitizeTrendResults,
   type TrendGraphNode,
 } from "@/lib/trend-intelligence";
@@ -55,25 +55,55 @@ import { ReasoningTimeline } from "@/pages/strategy/components/ReasoningTimeline
 import { TrendForceGraph } from "@/pages/strategy/components/TrendForceGraph";
 import { TrendResultCards } from "@/pages/strategy/components/TrendResultCards";
 
-const TREND_SESSION_STORAGE_KEY = "insightforce.trend.session.v1";
+const TREND_SESSION_STORAGE_KEY_PREFIX = "insightforce.trend.session.v2";
 type TrendSessionState = {
   sessionId: string;
   prompts: string[];
   suggestions: string[];
 };
 
-function loadTrendSessionState(): TrendSessionState {
+function getDefaultTrendPromptSuggestions(
+  copy: (en: string, vi: string) => string,
+) {
+  return [
+    copy(
+      "short-form video trends for Vietnamese creators",
+      "xu hướng video ngắn cho creator Việt Nam",
+    ),
+    copy(
+      "AI topics for clinics in the next 7 days",
+      "chủ đề AI cho phòng khám trong 7 ngày tới",
+    ),
+    copy(
+      "content ideas for pharmacy and health",
+      "ý tưởng nội dung cho nhà thuốc và lĩnh vực sức khỏe",
+    ),
+    copy(
+      "social media trends for the education industry",
+      "xu hướng mạng xã hội cho ngành giáo dục",
+    ),
+    copy(
+      "topics growing on TikTok today",
+      "chủ đề đang tăng trưởng trên TikTok hôm nay",
+    ),
+  ];
+}
+
+function loadTrendSessionState(
+  storageKey: string,
+  defaultSuggestions: string[],
+): TrendSessionState {
   const fallback: TrendSessionState = {
     sessionId: createTrendSessionId(),
     prompts: [],
-    suggestions: DEFAULT_TREND_PROMPT_SUGGESTIONS,
+    suggestions: defaultSuggestions,
   };
 
   if (typeof window === "undefined") {
     return fallback;
   }
 
-  const raw = window.localStorage.getItem(TREND_SESSION_STORAGE_KEY);
+  const raw = window.localStorage.getItem(storageKey);
   if (!raw) {
     return fallback;
   }
@@ -124,9 +154,15 @@ function buildGeneralTrendPlans(
   copy: (en: string, vi: string) => string,
 ) {
   const firstTag = result.top_hashtags[0] ?? "#trend";
+  const primaryAction =
+    result.recommended_action ||
+    copy(
+      "Continue monitoring the signal before execution.",
+      "Tiếp tục theo dõi tín hiệu trước khi triển khai.",
+    );
 
   return [
-    result.recommended_action,
+    primaryAction,
     copy(
       `Ship 2 formats for ${result.main_keyword}: one short explainer and one 24-hour execution case study.`,
       `Triển khai 2 format cho ${result.main_keyword}: 1 video ngắn giải thích + 1 case study thực thi trong 24 giờ.`,
@@ -178,19 +214,33 @@ function buildGeneralTrendPrompts(
 
 export function StrategyPage() {
   const copy = useBilingual();
+  const { locale } = useLocale();
+
+  return <StrategyPageContent key={locale} copy={copy} locale={locale} />;
+}
+
+type StrategyPageContentProps = {
+  copy: (en: string, vi: string) => string;
+  locale: string;
+};
+
+function StrategyPageContent({ copy, locale }: StrategyPageContentProps) {
   const dispatch = useAppDispatch();
   const trendAnalyzeTask = useAppSelector(
     (state) => state.runtimeTasks.strategy.trendAnalyze,
   );
   const promptStudioRef = useRef<HTMLDivElement | null>(null);
+  const trendSessionStorageKey = `${TREND_SESSION_STORAGE_KEY_PREFIX}.${locale}`;
+  const defaultSessionSuggestions = useMemo(
+    () => getDefaultTrendPromptSuggestions(copy),
+    [copy],
+  );
+  const [initialSessionState] = useState<TrendSessionState>(() =>
+    loadTrendSessionState(trendSessionStorageKey, defaultSessionSuggestions),
+  );
 
   const [promptInput, setPromptInput] = useState("");
   const [reasoningTick, setReasoningTick] = useState(() => Date.now());
-
-  const [initialSessionState] = useState<TrendSessionState>(() =>
-    loadTrendSessionState(),
-  );
-
   const sessionId = initialSessionState.sessionId;
   const [sessionPrompts, setSessionPrompts] = useState<string[]>(
     initialSessionState.prompts,
@@ -334,10 +384,10 @@ export function StrategyPage() {
     };
 
     window.localStorage.setItem(
-      TREND_SESSION_STORAGE_KEY,
+      trendSessionStorageKey,
       JSON.stringify(payload),
     );
-  }, [sessionId, sessionPrompts, sessionSuggestions]);
+  }, [sessionId, sessionPrompts, sessionSuggestions, trendSessionStorageKey]);
 
   useEffect(() => {
     if (!isTrendAnalyzePending || !trendAnalyzeTask.startedAt) {
@@ -402,6 +452,7 @@ export function StrategyPage() {
           nextPrompts,
           normalizedResults,
           currentSuggestions,
+          copy,
         ),
       );
 
@@ -564,6 +615,7 @@ export function StrategyPage() {
             results={generalResults}
             selectedNodeId={selectedGeneralNodeId}
             onSelectNode={handleSelectGeneralNode}
+            copy={copy}
           />
         </PanelCard>
 
@@ -597,7 +649,13 @@ export function StrategyPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm text-muted-foreground">
-                  <p>{generalSelectedResult.why_the_trend_happens}</p>
+                  <p>
+                    {generalSelectedResult.why_the_trend_happens ||
+                      copy(
+                        "Insight details are still being updated.",
+                        "Phần diễn giải chi tiết đang được cập nhật.",
+                      )}
+                  </p>
 
                   <div className="grid gap-2 sm:grid-cols-2">
                     <div className="rounded-xl border border-border/60 bg-background/65 p-3">
@@ -615,7 +673,11 @@ export function StrategyPage() {
                         {copy("Recommended action", "Hành động chính")}
                       </p>
                       <p className="mt-1 text-sm text-foreground">
-                        {generalSelectedResult.recommended_action}
+                        {generalSelectedResult.recommended_action ||
+                          copy(
+                            "Continue monitoring this signal before scaling.",
+                            "Tiếp tục theo dõi tín hiệu này trước khi mở rộng.",
+                          )}
                       </p>
                     </div>
                   </div>
@@ -739,7 +801,7 @@ export function StrategyPage() {
           <Card className="rounded-3xl border-border/75 bg-linear-to-br from-card via-card/95 to-muted/28">
             <CardHeader>
               <CardTitle>
-                {copy("Prompt Trend Studio", "Prompt Trend Studio")}
+                {copy("Prompt Trend Studio", "Studio prompt xu hướng")}
               </CardTitle>
               <CardDescription>
                 {copy(
@@ -776,11 +838,12 @@ export function StrategyPage() {
               <PromptSuggestionBar
                 suggestions={sessionSuggestions}
                 onSelect={setPromptInput}
+                copy={copy}
               />
 
               <div className="rounded-2xl border border-border/55 bg-background/45 p-3 text-xs text-muted-foreground">
                 <p>
-                  {copy("Session ID", "Session ID")}: {sessionId}
+                  {copy("Session ID", "Mã phiên")}: {sessionId}
                 </p>
                 <p className="mt-1">
                   {copy("Prompt turns", "Số lượt prompt")}:{" "}
@@ -868,6 +931,7 @@ export function StrategyPage() {
               onSelect={(result) =>
                 setSelectedPromptKeyword(result.main_keyword)
               }
+              copy={copy}
             />
 
             {promptSelectedResult ? (
@@ -882,10 +946,20 @@ export function StrategyPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm text-muted-foreground">
-                  <p>{promptSelectedResult.why_the_trend_happens}</p>
+                  <p>
+                    {promptSelectedResult.why_the_trend_happens ||
+                      copy(
+                        "Insight details are still being updated.",
+                        "Phần diễn giải chi tiết đang được cập nhật.",
+                      )}
+                  </p>
                   <p>
                     {copy("Action", "Hành động")}:{" "}
-                    {promptSelectedResult.recommended_action}
+                    {promptSelectedResult.recommended_action ||
+                      copy(
+                        "Continue monitoring this signal before scaling.",
+                        "Tiếp tục theo dõi tín hiệu này trước khi mở rộng.",
+                      )}
                   </p>
                   <p>
                     {copy("Avg views / hour", "Trung bình views / giờ")}:{" "}
