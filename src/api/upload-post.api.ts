@@ -1,6 +1,8 @@
 import { httpClient } from "@/api/http-client";
 import type {
   ContentPlatform,
+  PublishJobResponse,
+  PublishJobsListResponse,
   UploadPostAnalyticsEnvelope,
   UploadPostCreateProfileRequest,
   UploadPostCommentsEnvelope,
@@ -9,7 +11,7 @@ import type {
   UploadPostGenerateJwtRequest,
   UploadPostGenerateJwtResponse,
   UploadPostHistoryEnvelope,
-  UploadPostPublishEnvelope,
+  UploadPostPublishResponse,
   UploadPostPublishRequest,
   UploadPostPostAnalyticsEnvelope,
   UploadPostProfileResponse,
@@ -23,6 +25,12 @@ const UPLOAD_POST_BASE_PATH = "/api/v1/upload-post";
 
 export type GetUploadPostHistoryParams = {
   page?: number;
+  limit?: number;
+};
+
+export type GetPublishJobsParams = {
+  userId?: string;
+  generatedContentId?: string;
   limit?: number;
 };
 
@@ -157,9 +165,36 @@ export function publishUploadPostContent(payload: UploadPostPublishRequest) {
     formData.append("files", file);
   }
 
-  return httpClient.post<UploadPostPublishEnvelope>(
+  if (payload.user_id) {
+    formData.append("user_id", payload.user_id);
+  }
+
+  if (payload.generated_content_id) {
+    formData.append("generated_content_id", payload.generated_content_id);
+  }
+
+  return httpClient.post<UploadPostPublishResponse>(
     `${UPLOAD_POST_BASE_PATH}/publish`,
     formData,
+  );
+}
+
+export function getUploadPostPublishJobs(params: GetPublishJobsParams = {}) {
+  return httpClient.get<PublishJobsListResponse>(
+    `${UPLOAD_POST_BASE_PATH}/publish-jobs`,
+    {
+      query: {
+        user_id: params.userId,
+        generated_content_id: params.generatedContentId,
+        limit: params.limit ?? 20,
+      },
+    },
+  );
+}
+
+export function getUploadPostPublishJob(publishJobId: string) {
+  return httpClient.get<PublishJobResponse>(
+    `${UPLOAD_POST_BASE_PATH}/publish-jobs/${encodeURIComponent(publishJobId)}`,
   );
 }
 

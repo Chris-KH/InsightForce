@@ -1,23 +1,23 @@
 import { useMemo } from "react";
 import {
   Activity,
-  Eye,
+  Bot,
+  CheckCircle2,
+  Clock3,
+  Database,
   RefreshCcw,
-  TrendingUp,
-  Users,
-  Video,
+  Sparkles,
+  Workflow,
 } from "lucide-react";
 
 import {
+  type TrendAnalysisRecordResponse,
+  useAgentsStatusQuery,
+  useGeneratedContentsQuery,
   useHealthQuery,
-  useTikTokChannelStatusQuery,
-  useTikTokTrendsQuery,
-  useTikTokVideosQuery,
-  useYouTubeChannelStatusQuery,
-  useYouTubeTrendsQuery,
-  useYouTubeVideosQuery,
-  type TikTokVideo,
-  type YouTubeVideo,
+  useTrendHistoryQuery,
+  useUploadPostPublishJobsQuery,
+  useUsersQuery,
 } from "@/api";
 import { PulseDot } from "@/components/app-futuristic";
 import {
@@ -31,7 +31,6 @@ import {
   PanelRowsSkeleton,
   QueryStateCard,
 } from "@/components/app-query-state";
-import { PlatformBadge } from "@/components/platform-badge";
 import {
   MetricCard,
   PanelCard,
@@ -44,73 +43,67 @@ import { useBilingual } from "@/hooks/use-bilingual";
 import {
   formatCompactNumber,
   formatDateTime,
-  formatDuration,
   formatPercentFromRatio,
   formatPercentValue,
 } from "@/lib/insight-formatters";
-import { getPlatformSurfaceClassName } from "@/lib/platform-theme";
 import { getQueryErrorMessage } from "@/lib/query-error";
 import { cn } from "@/lib/utils";
 
-type UnifiedVideo = {
+type PipelineEvent = {
   id: string;
-  platform: "tiktok" | "youtube";
+  type: "trend" | "content" | "publish";
   title: string;
-  postedAt: string;
-  durationSeconds: number;
-  url: string;
-  views: number;
-  engagementRate: number;
-  trendScore: number;
+  createdAt: string;
+  status: string;
 };
 
-function mapTikTokVideo(video: TikTokVideo): UnifiedVideo {
-  return {
-    id: video.video_id,
-    platform: "tiktok",
-    title: video.caption,
-    postedAt: video.posted_at,
-    durationSeconds: video.duration_seconds,
-    url: video.video_url,
-    views: video.stats.views,
-    engagementRate: video.stats.engagement_rate,
-    trendScore: video.stats.trend_score,
-  };
+function toTimestamp(value: string) {
+  const timestamp = Date.parse(value);
+  return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
-function mapYouTubeVideo(video: YouTubeVideo): UnifiedVideo {
-  return {
-    id: video.video_id,
-    platform: "youtube",
-    title: video.title,
-    postedAt: video.published_at,
-    durationSeconds: video.duration_seconds,
-    url: video.video_url,
-    views: video.stats.views,
-    engagementRate: video.stats.engagement_rate,
-    trendScore: video.stats.trend_score,
-  };
+function getTrendAverageScore(record: TrendAnalysisRecordResponse) {
+  if (record.results.length === 0) {
+    return 0;
+  }
+
+  const totalScore = record.results.reduce(
+    (sum, item) => sum + item.trend_score,
+    0,
+  );
+
+  return totalScore / record.results.length;
+}
+
+function eventTypeClass(type: PipelineEvent["type"]) {
+  if (type === "trend") {
+    return "border-cyan-500/40 bg-cyan-500/10 text-cyan-700";
+  }
+
+  if (type === "content") {
+    return "border-violet-500/40 bg-violet-500/10 text-violet-700";
+  }
+
+  return "border-amber-500/40 bg-amber-500/10 text-amber-700";
 }
 
 export function DashboardPage() {
   const copy = useBilingual();
 
   const healthQuery = useHealthQuery();
-  const tikTokChannelQuery = useTikTokChannelStatusQuery();
-  const youTubeChannelQuery = useYouTubeChannelStatusQuery();
-  const tikTokVideosQuery = useTikTokVideosQuery();
-  const youTubeVideosQuery = useYouTubeVideosQuery();
-  const tikTokTrendsQuery = useTikTokTrendsQuery();
-  const youTubeTrendsQuery = useYouTubeTrendsQuery();
+  const agentsQuery = useAgentsStatusQuery();
+  const trendHistoryQuery = useTrendHistoryQuery({ limit: 30 });
+  const generatedContentsQuery = useGeneratedContentsQuery({ limit: 30 });
+  const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 30 });
+  const usersQuery = useUsersQuery();
 
   const allQueries = [
     healthQuery,
-    tikTokChannelQuery,
-    youTubeChannelQuery,
-    tikTokVideosQuery,
-    youTubeVideosQuery,
-    tikTokTrendsQuery,
-    youTubeTrendsQuery,
+    agentsQuery,
+    trendHistoryQuery,
+    generatedContentsQuery,
+    publishJobsQuery,
+    usersQuery,
   ];
 
   const isLoading = allQueries.some((query) => query.isLoading);
@@ -120,139 +113,191 @@ export function DashboardPage() {
 
   const firstError = allQueries.find((query) => query.error)?.error;
 
-  const topVideos = useMemo(() => {
-    const tikTok = (tikTokVideosQuery.data?.videos ?? []).map(mapTikTokVideo);
-    const youTube = (youTubeVideosQuery.data?.videos ?? []).map(
-      mapYouTubeVideo,
-    );
+  const processes = agentsQuery.data?.processes ?? [];
+  const reachableAgents = processes.filter(
+    (process) => process.reachable,
+  ).length;
 
-    return [...tikTok, ...youTube]
-      .sort((left, right) => right.views - left.views)
-      .slice(0, 6);
-  }, [tikTokVideosQuery.data?.videos, youTubeVideosQuery.data?.videos]);
+  const trendRecords = trendHistoryQuery.data?.items ?? [];
+  const generatedContents = generatedContentsQuery.data?.items ?? [];
+  const publishJobs = publishJobsQuery.data?.items ?? [];
+  const users = usersQuery.data?.users ?? [];
 
-  const tikTokChannel = tikTokChannelQuery.data?.channel;
-  const youTubeChannel = youTubeChannelQuery.data?.channel;
+  const publishedJobs = publishJobs.filter(
+    (job) => job.status.toLowerCase() === "published",
+  ).length;
+  const failedJobs = publishJobs.filter(
+    (job) => job.status.toLowerCase() === "failed",
+  ).length;
+  const pendingJobs = publishJobs.filter(
+    (job) => job.status.toLowerCase() === "pending",
+  ).length;
 
-  const audienceSize =
-    (tikTokChannel?.followers ?? 0) + (youTubeChannel?.subscribers ?? 0);
+  const completedPublishJobs = publishedJobs + failedJobs;
+  const publishSuccessRatio =
+    completedPublishJobs > 0 ? publishedJobs / completedPublishJobs : 0;
 
-  const totalViews =
-    (tikTokChannel?.total_views ?? 0) + (youTubeChannel?.total_views ?? 0);
+  const trendMomentumChartData = useMemo(() => {
+    const points = [...trendRecords]
+      .sort(
+        (left, right) =>
+          toTimestamp(left.created_at) - toTimestamp(right.created_at),
+      )
+      .slice(-10);
 
-  const avgContentPerformance =
-    (tikTokVideosQuery.data?.averages.average_views ?? 0) +
-    (youTubeVideosQuery.data?.averages.average_views ?? 0);
-
-  const blendedEngagement =
-    ((tikTokChannel?.engagement_rate ?? 0) +
-      (youTubeChannel?.engagement_rate ?? 0)) /
-    2;
-
-  const trendHighlights = [
-    tikTokTrendsQuery.data?.overview_summary,
-    youTubeTrendsQuery.data?.overview_summary,
-  ].filter((item): item is NonNullable<typeof item> => Boolean(item));
-
-  const opportunityTopics = [
-    ...(tikTokTrendsQuery.data?.trend_topics ?? []),
-    ...(youTubeTrendsQuery.data?.trend_topics ?? []),
-  ]
-    .sort((left, right) => right.trend_score - left.trend_score)
-    .slice(0, 8);
-
-  const topVideoViewChartData = useMemo(
-    () => ({
-      labels: topVideos.slice(0, 6).map((_, index) => `${index + 1}`),
+    return {
+      labels: points.map((point) => {
+        const date = new Date(point.created_at);
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+      }),
       datasets: [
         {
-          label: copy("Views", "Lượt xem"),
-          data: topVideos.slice(0, 6).map((video) => video.views),
-          backgroundColor: "rgba(37, 99, 235, 0.8)",
-          borderRadius: 10,
-        },
-      ],
-    }),
-    [copy, topVideos],
-  );
-
-  const opportunityGrowthChartData = useMemo(
-    () => ({
-      labels: opportunityTopics.map((topic) => topic.keyword),
-      datasets: [
-        {
-          label: copy("Growth %", "Tăng trưởng %"),
-          data: opportunityTopics.map((topic) => topic.increase_percentage),
-          borderColor: "rgba(234, 88, 12, 0.95)",
-          backgroundColor: "rgba(234, 88, 12, 0.2)",
-          tension: 0.35,
+          label: copy("Average Trend Score", "Điểm trend trung bình"),
+          data: points.map((point) => getTrendAverageScore(point)),
+          borderColor: "rgba(14, 165, 233, 0.92)",
+          backgroundColor: "rgba(14, 165, 233, 0.22)",
+          tension: 0.38,
           fill: true,
           pointRadius: 3,
         },
       ],
+    };
+  }, [copy, trendRecords]);
+
+  const publishStatusChartData = useMemo(
+    () => ({
+      labels: [
+        copy("Pending", "Đang chờ"),
+        copy("Published", "Đã đăng"),
+        copy("Failed", "Thất bại"),
+      ],
+      datasets: [
+        {
+          label: copy("Publish Jobs", "Publish jobs"),
+          data: [pendingJobs, publishedJobs, failedJobs],
+          backgroundColor: [
+            "rgba(245, 158, 11, 0.78)",
+            "rgba(16, 185, 129, 0.78)",
+            "rgba(244, 63, 94, 0.78)",
+          ],
+          borderRadius: 10,
+        },
+      ],
     }),
-    [copy, opportunityTopics],
+    [copy, failedJobs, pendingJobs, publishedJobs],
   );
 
-  const topVideoHeatMap = useMemo(() => {
-    const items = topVideos.slice(0, 5);
-    const maxViews = Math.max(...items.map((video) => video.views), 1);
+  const keywordPulse = useMemo(() => {
+    const collector = new Map<string, { score: number; count: number }>();
+
+    for (const record of trendRecords) {
+      for (const result of record.results) {
+        const current = collector.get(result.main_keyword);
+
+        if (current) {
+          current.count += 1;
+          current.score = Math.max(current.score, result.trend_score);
+        } else {
+          collector.set(result.main_keyword, {
+            count: 1,
+            score: result.trend_score,
+          });
+        }
+      }
+    }
+
+    return [...collector.entries()]
+      .map(([keyword, stats]) => ({ keyword, ...stats }))
+      .sort(
+        (left, right) => right.score - left.score || right.count - left.count,
+      )
+      .slice(0, 8);
+  }, [trendRecords]);
+
+  const userHeatMatrix = useMemo(() => {
+    const limitedUsers = users.slice(0, 6);
+
+    if (limitedUsers.length === 0) {
+      return {
+        rows: [copy("No User", "Chưa có user")],
+        columns: [
+          copy("Trend", "Trend"),
+          copy("Content", "Nội dung"),
+          copy("Publish", "Publish"),
+        ],
+        values: [[0, 0, 0]],
+      };
+    }
 
     return {
-      rows: items.map((video) =>
-        video.title.length > 28
-          ? `${video.title.slice(0, 28)}...`
-          : video.title,
-      ),
+      rows: limitedUsers.map((user) => user.email),
       columns: [
-        copy("Reach", "Độ phủ"),
-        copy("Engagement", "Tương tác"),
-        copy("Trend", "Xu hướng"),
+        copy("Trend", "Trend"),
+        copy("Content", "Nội dung"),
+        copy("Publish", "Publish"),
       ],
-      values: items.map((video) => [
-        (video.views / maxViews) * 100,
-        video.engagementRate * 100,
-        video.trendScore,
+      values: limitedUsers.map((user) => [
+        user.trend_analysis_count,
+        user.generated_content_count,
+        user.publish_job_count,
       ]),
     };
-  }, [copy, topVideos]);
+  }, [copy, users]);
+
+  const pipelineEvents = useMemo(() => {
+    const trendEvents: PipelineEvent[] = trendRecords
+      .slice(0, 8)
+      .map((item) => ({
+        id: item.analysis_id ?? `${item.query}-${item.created_at}`,
+        type: "trend",
+        title: item.query,
+        createdAt: item.created_at,
+        status: item.status,
+      }));
+
+    const contentEvents: PipelineEvent[] = generatedContents
+      .slice(0, 8)
+      .map((item) => ({
+        id: item.id,
+        type: "content",
+        title: item.main_title || item.selected_keyword || item.id,
+        createdAt: item.created_at,
+        status: item.status,
+      }));
+
+    const publishEvents: PipelineEvent[] = publishJobs
+      .slice(0, 8)
+      .map((item) => ({
+        id: item.id,
+        type: "publish",
+        title: item.title,
+        createdAt: item.created_at,
+        status: item.status,
+      }));
+
+    return [...trendEvents, ...contentEvents, ...publishEvents]
+      .sort(
+        (left, right) =>
+          toTimestamp(right.createdAt) - toTimestamp(left.createdAt),
+      )
+      .slice(0, 14);
+  }, [generatedContents, publishJobs, trendRecords]);
 
   const handleRefresh = async () => {
     await Promise.all(allQueries.map((query) => query.refetch()));
   };
 
-  const signalRunway = [
-    {
-      label: copy("Audience Velocity", "Van toc audience"),
-      value: audienceSize,
-      max: Math.max(audienceSize, totalViews, avgContentPerformance, 1),
-      trackClass:
-        "from-sky-500 via-blue-500 to-indigo-500 dark:from-sky-400 dark:via-blue-400 dark:to-indigo-400",
-    },
-    {
-      label: copy("View Pressure", "Ap luc view"),
-      value: totalViews,
-      max: Math.max(audienceSize, totalViews, avgContentPerformance, 1),
-      trackClass:
-        "from-indigo-500 via-violet-500 to-blue-500 dark:from-indigo-400 dark:via-violet-400 dark:to-blue-400",
-    },
-    {
-      label: copy("Reach Throughput", "Thong luong reach"),
-      value: avgContentPerformance,
-      max: Math.max(audienceSize, totalViews, avgContentPerformance, 1),
-      trackClass:
-        "from-blue-500 via-cyan-500 to-sky-400 dark:from-blue-400 dark:via-cyan-400 dark:to-sky-300",
-    },
-  ];
-
   return (
     <div className="grid gap-8">
       <SectionHeader
-        eyebrow={copy("Control Center", "Trung tâm điều phối")}
-        title={copy("Live Channel Overview", "Tổng quan kênh thời gian thực")}
+        eyebrow={copy("Backend Runtime", "Runtime backend")}
+        title={copy(
+          "Unified Intelligence Dashboard",
+          "Dashboard intelligence hợp nhất",
+        )}
         description={copy(
-          "Operational view powered by FastAPI endpoints across TikTok, YouTube, and Upload-Post analytics.",
-          "Giao diện vận hành lấy dữ liệu trực tiếp từ FastAPI cho TikTok, YouTube và phân tích Upload-Post.",
+          "Overview built from active FastAPI modules: health, agents, trends history, generated contents, users, and publish jobs.",
+          "Tổng quan xây trên các module FastAPI đang hoạt động: health, agents, trends history, generated contents, users và publish jobs.",
         )}
         action={
           <div className="flex flex-wrap items-center gap-3">
@@ -262,8 +307,8 @@ export function DashboardPage() {
             >
               <PulseDot className="mr-2" />
               {healthQuery.data?.status === "ok"
-                ? copy("Backend Healthy", "Backend hoạt động tốt")
-                : copy("Health Unknown", "Chưa xác định trạng thái")}
+                ? copy("Backend Healthy", "Backend ổn định")
+                : copy("Health Unknown", "Chưa rõ trạng thái")}
             </Badge>
             <Button
               type="button"
@@ -286,11 +331,11 @@ export function DashboardPage() {
           title={copy("Data Load Error", "Lỗi tải dữ liệu")}
           description={getQueryErrorMessage(
             firstError,
-            "Unable to load dashboard data.",
+            "Unable to load dashboard runtime data.",
           )}
           hint={copy(
-            "Check that the backend is running and the Vite proxy points to the API service.",
-            "Kiểm tra backend đã chạy và cấu hình proxy Vite đang trỏ đúng API.",
+            "Check that FastAPI is running and frontend API base URL points to backend app.main service.",
+            "Kiểm tra FastAPI đang chạy và API base URL frontend trỏ đúng service app.main của backend.",
           )}
         />
       ) : null}
@@ -300,266 +345,226 @@ export function DashboardPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label={copy("Audience Footprint", "Quy mô khán giả")}
-            value={isLoading ? "--" : formatCompactNumber(audienceSize)}
-            detail={copy(
-              "TikTok followers + YouTube subscribers",
-              "Follower TikTok + subscriber YouTube",
-            )}
-            icon={<Users className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Total Channel Views", "Tổng lượt xem kênh")}
-            value={isLoading ? "--" : formatCompactNumber(totalViews)}
-            detail={copy("Cross-platform lifetime", "Lũy kế đa nền tảng")}
-            icon={<Eye className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Average Video Reach", "Độ phủ video trung bình")}
-            value={
-              isLoading ? "--" : formatCompactNumber(avgContentPerformance)
-            }
-            detail={copy(
-              "Combined mean views per published video",
-              "Lượt xem trung bình trên mỗi video đã xuất bản",
-            )}
-            icon={<Video className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Blended Engagement", "Tương tác tổng hợp")}
-            value={isLoading ? "--" : formatPercentFromRatio(blendedEngagement)}
-            detail={copy(
-              "Average engagement rate from both channels",
-              "Tỷ lệ tương tác trung bình của 2 kênh",
-            )}
+            label={copy("Service Health", "Sức khỏe dịch vụ")}
+            value={(healthQuery.data?.status ?? "unknown").toUpperCase()}
+            detail={healthQuery.data?.service ?? "InsightForce API"}
             icon={<Activity className="size-5" />}
+          />
+          <MetricCard
+            label={copy("Reachable Agents", "Agent khả dụng")}
+            value={`${reachableAgents}/${processes.length}`}
+            detail={copy(
+              "From /api/v1/agents/status",
+              "Từ /api/v1/agents/status",
+            )}
+            icon={<Bot className="size-5" />}
+          />
+          <MetricCard
+            label={copy("Persisted Records", "Record đã lưu")}
+            value={formatCompactNumber(
+              trendRecords.length + generatedContents.length,
+            )}
+            detail={copy(
+              "Trend analyses + generated contents",
+              "Trend analyses + generated contents",
+            )}
+            icon={<Database className="size-5" />}
+          />
+          <MetricCard
+            label={copy("Publish Success", "Tỉ lệ publish")}
+            value={formatPercentFromRatio(publishSuccessRatio)}
+            detail={copy("Completed jobs only", "Tính trên jobs đã hoàn tất")}
+            icon={<Workflow className="size-5" />}
           />
         </div>
       )}
 
-      <PanelCard
-        title={copy("Signal Runway", "Duong bang tin hieu")}
-        description={copy(
-          "A runway-style overview that highlights momentum before deep-dive analytics.",
-          "Tong quan dang duong bang de nhin nhip tang truong truoc khi dao sau analytics.",
-        )}
-        className="border-blue-500/28 bg-linear-to-br from-sky-100/55 via-card to-indigo-100/45 dark:from-sky-500/12 dark:via-card/92 dark:to-indigo-500/10"
-      >
-        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-2xl border border-blue-500/24 bg-background/70 p-4">
-            <div className="space-y-3">
-              {signalRunway.map((lane) => {
-                const width = Math.min((lane.value / lane.max) * 100, 100);
-                return (
-                  <div key={lane.label}>
-                    <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{lane.label}</span>
-                      <span>{formatCompactNumber(lane.value)}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-muted/70">
-                      <div
-                        className={cn(
-                          "h-full rounded-full bg-linear-to-r transition-all",
-                          lane.trackClass,
-                        )}
-                        style={{ width: `${Math.max(width, 8)}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-            <div className="rounded-2xl border border-sky-500/24 bg-background/70 p-4">
-              <p className="text-xs text-muted-foreground">
-                {copy("Health", "Suc khoe")}
-              </p>
-              <p className="mt-2 text-xl font-semibold text-foreground">
-                {healthQuery.data?.status?.toUpperCase() ?? "UNKNOWN"}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-indigo-500/24 bg-background/70 p-4">
-              <p className="text-xs text-muted-foreground">
-                {copy("Trend Topics", "Chu de trend")}
-              </p>
-              <p className="mt-2 text-xl font-semibold text-foreground">
-                {opportunityTopics.length}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-cyan-500/24 bg-background/70 p-4">
-              <p className="text-xs text-muted-foreground">
-                {copy("Top Videos", "Video noi bat")}
-              </p>
-              <p className="mt-2 text-xl font-semibold text-foreground">
-                {topVideos.length}
-              </p>
-            </div>
-          </div>
-        </div>
-      </PanelCard>
-
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.5fr)_minmax(340px,1fr)]">
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <PanelCard
-          title={copy("Channel Health Snapshot", "Ảnh chụp sức khỏe kênh")}
+          title={copy("Trend Momentum", "Đà tăng trend")}
           description={copy(
-            "Real metrics from /channel/status endpoints.",
-            "Chỉ số thực lấy từ endpoint /channel/status.",
+            "Average trend score from recent analyses in /api/v1/trends/history.",
+            "Điểm trend trung bình từ các phân tích gần đây trong /api/v1/trends/history.",
           )}
         >
-          <div className="grid gap-5 lg:grid-cols-2">
-            <div className="rounded-2xl border border-border/55 bg-background/55 p-4">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-                  TikTok
-                </p>
-                <Badge variant="outline" className="rounded-full text-xs">
-                  {tikTokChannel?.handle ?? "--"}
-                </Badge>
-              </div>
-              <div className="space-y-3 text-sm">
-                <p className="font-heading text-2xl font-semibold text-foreground">
-                  {tikTokChannel
-                    ? formatCompactNumber(tikTokChannel.followers)
-                    : "--"}
-                </p>
-                <p className="text-muted-foreground">
-                  {copy("Followers", "Follower")}
-                </p>
-                <ProgressBar
-                  value={(tikTokChannel?.engagement_rate ?? 0) * 100}
-                  tone="primary"
-                />
-                <p className="text-xs text-muted-foreground">
-                  {copy("Engagement", "Tương tác")}:{" "}
-                  {tikTokChannel
-                    ? formatPercentFromRatio(tikTokChannel.engagement_rate)
-                    : "--"}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border/55 bg-background/55 p-4">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-                  YouTube
-                </p>
-                <Badge variant="outline" className="rounded-full text-xs">
-                  {youTubeChannel?.handle ?? "--"}
-                </Badge>
-              </div>
-              <div className="space-y-3 text-sm">
-                <p className="font-heading text-2xl font-semibold text-foreground">
-                  {youTubeChannel
-                    ? formatCompactNumber(youTubeChannel.subscribers)
-                    : "--"}
-                </p>
-                <p className="text-muted-foreground">
-                  {copy("Subscribers", "Người đăng ký")}
-                </p>
-                <ProgressBar
-                  value={(youTubeChannel?.engagement_rate ?? 0) * 100}
-                  tone="secondary"
-                />
-                <p className="text-xs text-muted-foreground">
-                  {copy("Engagement", "Tương tác")}:{" "}
-                  {youTubeChannel
-                    ? formatPercentFromRatio(youTubeChannel.engagement_rate)
-                    : "--"}
-                </p>
-              </div>
-            </div>
-          </div>
+          {trendRecords.length > 0 ? (
+            <LineTrendChart data={trendMomentumChartData} />
+          ) : (
+            <InlineQueryState
+              state="empty"
+              message={copy(
+                "No trend analysis records available yet.",
+                "Chưa có record trend analysis.",
+              )}
+            />
+          )}
         </PanelCard>
 
         <PanelCard
-          title={copy("Trend Pulse", "Nhịp xu hướng")}
+          title={copy(
+            "Publish Status Distribution",
+            "Phân bố trạng thái publish",
+          )}
           description={copy(
-            "Summaries from /trends for fast strategic checks.",
-            "Tóm tắt từ /trends để kiểm tra chiến lược nhanh.",
+            "Current queue distribution from /api/v1/upload-post/publish-jobs.",
+            "Phân bố queue hiện tại từ /api/v1/upload-post/publish-jobs.",
           )}
         >
-          <div className="space-y-4">
-            {isInitialLoading ? (
-              <PanelRowsSkeleton rows={2} />
-            ) : trendHighlights.length > 0 ? (
-              trendHighlights.map((summary, index) => (
-                <div
-                  key={`${summary.hottest_topic}-${index}`}
-                  className="rounded-2xl border border-border/55 bg-background/55 p-4"
-                >
-                  <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-                    {index === 0 ? "TikTok" : "YouTube"}
-                  </p>
-                  <p className="mt-2 font-heading text-lg font-semibold text-foreground">
-                    {summary.hottest_topic}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Avg potential views", "Lượt xem tiềm năng TB")}:{" "}
-                    {formatCompactNumber(summary.average_potential_views)}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Rising topics", "Chủ đề tăng trưởng")}:{" "}
-                    {summary.rising_topic_count}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <InlineQueryState
-                state="empty"
-                message={copy(
-                  "No trend summary available.",
-                  "Chưa có tóm tắt xu hướng khả dụng.",
-                )}
-              />
-            )}
-          </div>
+          {publishJobs.length > 0 ? (
+            <BarTrendChart data={publishStatusChartData} />
+          ) : (
+            <InlineQueryState
+              state="empty"
+              message={copy("No publish jobs found.", "Không có publish jobs.")}
+            />
+          )}
         </PanelCard>
       </div>
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <PanelCard
-          title={copy("Top Video Reach Chart", "Biểu đồ độ phủ video")}
+          title={copy("Keyword Pulse", "Nhịp keyword")}
           description={copy(
-            "Visual ranking of top videos by view count.",
-            "Xếp hạng trực quan video nổi bật theo lượt xem.",
+            "Most recurring high-score keywords extracted from trend history results.",
+            "Các keyword có điểm cao xuất hiện lặp lại từ kết quả trend history.",
           )}
         >
-          {topVideos.length > 0 ? (
-            <BarTrendChart
-              data={topVideoViewChartData}
-              className="bg-linear-to-br from-sky-100/60 via-card to-indigo-100/45 dark:from-sky-500/12 dark:via-card/90 dark:to-indigo-500/10"
-            />
+          {keywordPulse.length > 0 ? (
+            <div className="space-y-4">
+              {keywordPulse.map((item, index) => (
+                <div key={item.keyword}>
+                  <div className="mb-1 flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-foreground">
+                      {item.keyword}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatPercentValue(item.score)} • {item.count}x
+                    </p>
+                  </div>
+                  <ProgressBar
+                    value={Math.min(item.score, 100)}
+                    tone={index % 2 === 0 ? "primary" : "secondary"}
+                  />
+                </div>
+              ))}
+            </div>
           ) : (
             <InlineQueryState
               state="empty"
               message={copy(
-                "No video data available for charting.",
-                "Chưa có dữ liệu video để dựng biểu đồ.",
+                "No keyword pulse data available.",
+                "Không có dữ liệu keyword pulse.",
               )}
             />
           )}
         </PanelCard>
 
         <PanelCard
-          title={copy("Opportunity Growth Curve", "Đường tăng trưởng cơ hội")}
+          title={copy("User Activity Matrix", "Ma trận hoạt động user")}
           description={copy(
-            "Growth trajectory across ranked trend keywords.",
-            "Đường xu hướng tăng trưởng theo các keyword xếp hạng.",
+            "Per-user activity counters from /api/v1/users.",
+            "Chỉ số hoạt động theo user từ /api/v1/users.",
           )}
         >
-          {opportunityTopics.length > 0 ? (
-            <LineTrendChart
-              data={opportunityGrowthChartData}
-              className="bg-linear-to-br from-indigo-100/55 via-card to-orange-100/45 dark:from-indigo-500/12 dark:via-card/90 dark:to-orange-500/10"
-            />
+          <HeatMatrix
+            rows={userHeatMatrix.rows}
+            columns={userHeatMatrix.columns}
+            values={userHeatMatrix.values}
+            valueFormatter={(value) => formatCompactNumber(value)}
+          />
+        </PanelCard>
+      </div>
+
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+        <PanelCard
+          title={copy("Recent Pipeline Events", "Sự kiện pipeline gần đây")}
+          description={copy(
+            "Merged event stream across trends, generated contents, and publish jobs.",
+            "Luồng sự kiện hợp nhất từ trends, generated contents và publish jobs.",
+          )}
+        >
+          {isLoading && pipelineEvents.length === 0 ? (
+            <PanelRowsSkeleton rows={6} />
+          ) : pipelineEvents.length > 0 ? (
+            <div className="space-y-3">
+              {pipelineEvents.map((event) => (
+                <div
+                  key={`${event.type}-${event.id}`}
+                  className="rounded-2xl border border-border/65 bg-background/65 p-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "rounded-full capitalize",
+                        eventTypeClass(event.type),
+                      )}
+                    >
+                      {event.type}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDateTime(event.createdAt)}
+                    </p>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-foreground">
+                    {event.title}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Status: {event.status}
+                  </p>
+                </div>
+              ))}
+            </div>
           ) : (
             <InlineQueryState
               state="empty"
               message={copy(
-                "No growth data available for charting.",
-                "Chưa có dữ liệu tăng trưởng để dựng biểu đồ.",
+                "No events in current runtime window.",
+                "Không có sự kiện trong cửa sổ runtime hiện tại.",
+              )}
+            />
+          )}
+        </PanelCard>
+
+        <PanelCard
+          title={copy("Agent Reachability", "Khả năng kết nối agent")}
+          description={copy(
+            "Connectivity status for configured agent runtimes.",
+            "Trạng thái kết nối của các runtime agent cấu hình sẵn.",
+          )}
+        >
+          {agentsQuery.isLoading ? (
+            <PanelRowsSkeleton rows={4} />
+          ) : processes.length > 0 ? (
+            <div className="space-y-3">
+              {processes.map((process) => (
+                <div
+                  key={process.name}
+                  className="rounded-2xl border border-border/65 bg-background/65 p-4"
+                >
+                  <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    {process.reachable ? (
+                      <CheckCircle2 className="size-4 text-emerald-600" />
+                    ) : (
+                      <Clock3 className="size-4 text-amber-600" />
+                    )}
+                    {process.name}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {process.url}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {process.detail}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <InlineQueryState
+              state="empty"
+              message={copy(
+                "No agent process status reported.",
+                "Không có trạng thái process agent.",
               )}
             />
           )}
@@ -567,162 +572,49 @@ export function DashboardPage() {
       </div>
 
       <PanelCard
-        title={copy("Top Videos Across Platforms", "Video nổi bật đa nền tảng")}
+        title={copy("Runtime Snapshot", "Snapshot runtime")}
         description={copy(
-          "Unified ranking from /api/v1/tiktok/videos and /api/v1/youtube/videos.",
-          "Bảng xếp hạng hợp nhất từ /api/v1/tiktok/videos và /api/v1/youtube/videos.",
+          "One-line pulse of backend persistence and queue execution health.",
+          "Nhịp nhanh một dòng về dữ liệu lưu trữ backend và sức khỏe queue thực thi.",
         )}
       >
-        <div className="space-y-3">
-          {isInitialLoading ? (
-            <PanelRowsSkeleton rows={4} />
-          ) : topVideos.length > 0 ? (
-            topVideos.map((video) => (
-              <a
-                key={`${video.platform}-${video.id}`}
-                href={video.url}
-                target="_blank"
-                rel="noreferrer"
-                className={cn(
-                  "grid gap-2 rounded-2xl border border-border/55 bg-background/55 p-4 transition-colors hover:border-primary/35",
-                  getPlatformSurfaceClassName(video.platform),
-                )}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <PlatformBadge platform={video.platform} />
-                  <p className="text-xs text-muted-foreground">
-                    {formatDateTime(video.postedAt)}
-                  </p>
-                </div>
-
-                <p className="font-medium text-foreground">{video.title}</p>
-
-                <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-4">
-                  <p>
-                    {copy("Views", "Lượt xem")}:{" "}
-                    {formatCompactNumber(video.views)}
-                  </p>
-                  <p>
-                    {copy("Engagement", "Tương tác")}:{" "}
-                    {formatPercentFromRatio(video.engagementRate)}
-                  </p>
-                  <p>
-                    {copy("Trend score", "Điểm xu hướng")}:{" "}
-                    {formatPercentValue(video.trendScore)}
-                  </p>
-                  <p>
-                    {copy("Duration", "Thời lượng")}:{" "}
-                    {formatDuration(video.durationSeconds)}
-                  </p>
-                </div>
-              </a>
-            ))
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No videos available yet from backend feeds.",
-                "Chưa có video khả dụng từ feed backend.",
-              )}
-            />
-          )}
-        </div>
-      </PanelCard>
-
-      <PanelCard
-        title={copy("Strategist Notes", "Ghi chú chiến lược")}
-        description={copy(
-          "Actionable hints generated by each platform trend summary.",
-          "Gợi ý hành động từ phần tóm tắt xu hướng theo từng nền tảng.",
-        )}
-      >
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div
-            className={cn(
-              "rounded-2xl border border-border/55 bg-background/55 p-4",
-              getPlatformSurfaceClassName("tiktok"),
-            )}
-          >
-            <div className="mb-3">
-              <PlatformBadge platform="tiktok" />
-            </div>
-            <p className="text-sm leading-6 text-foreground">
-              {tikTokTrendsQuery.data?.overview_summary.strategist_note ??
-                copy(
-                  "Waiting for trend summary.",
-                  "Đang chờ tóm tắt xu hướng.",
-                )}
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+            <p className="text-xs text-muted-foreground">
+              {copy("Trend Analyses", "Trend analyses")}
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-foreground">
+              {formatCompactNumber(trendRecords.length)}
             </p>
           </div>
-          <div
-            className={cn(
-              "rounded-2xl border border-border/55 bg-background/55 p-4",
-              getPlatformSurfaceClassName("youtube"),
-            )}
-          >
-            <div className="mb-3">
-              <PlatformBadge platform="youtube" />
-            </div>
-            <p className="text-sm leading-6 text-foreground">
-              {youTubeTrendsQuery.data?.overview_summary.strategist_note ??
-                copy(
-                  "Waiting for trend summary.",
-                  "Đang chờ tóm tắt xu hướng.",
-                )}
+          <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+            <p className="text-xs text-muted-foreground">
+              {copy("Generated Contents", "Generated contents")}
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-foreground">
+              {formatCompactNumber(generatedContents.length)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+            <p className="text-xs text-muted-foreground">
+              {copy("Publish Jobs", "Publish jobs")}
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-foreground">
+              {formatCompactNumber(publishJobs.length)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+            <p className="text-xs text-muted-foreground">
+              {copy("Top Keyword Score", "Điểm keyword cao nhất")}
+            </p>
+            <p className="mt-2 flex items-center gap-2 text-2xl font-semibold text-foreground">
+              <Sparkles className="size-5 text-amber-500" />
+              {keywordPulse[0]
+                ? formatPercentValue(keywordPulse[0].score)
+                : "0%"}
             </p>
           </div>
         </div>
-      </PanelCard>
-
-      <PanelCard
-        title={copy("Opportunity Signals", "Tín hiệu cơ hội")}
-        description={copy(
-          "Cross-platform trend topics ranked by trend score.",
-          "Chủ đề xu hướng đa nền tảng được xếp theo điểm xu hướng.",
-        )}
-      >
-        {isInitialLoading ? <PanelRowsSkeleton rows={4} /> : null}
-
-        {!isInitialLoading && opportunityTopics.length > 0 ? (
-          <div className="space-y-4">
-            <HeatMatrix
-              rows={topVideoHeatMap.rows}
-              columns={topVideoHeatMap.columns}
-              values={topVideoHeatMap.values}
-              valueFormatter={(value) => `${Math.round(value)}%`}
-              className="bg-linear-to-br from-blue-100/60 via-card to-cyan-100/45 dark:from-blue-500/12 dark:via-card/90 dark:to-cyan-500/10"
-            />
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {opportunityTopics.slice(0, 4).map((topic) => (
-                <div
-                  key={topic.topic_id}
-                  className="rounded-2xl border border-border/55 bg-background/55 p-4"
-                >
-                  <p className="text-xs text-muted-foreground">
-                    {topic.keyword}
-                  </p>
-                  <p className="mt-1 font-medium text-foreground">
-                    {topic.topic}
-                  </p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    <TrendingUp className="mr-1 inline-flex size-3" />+
-                    {topic.increase_percentage}%
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        {!isInitialLoading && opportunityTopics.length === 0 ? (
-          <InlineQueryState
-            state="empty"
-            message={copy(
-              "No opportunity signals available.",
-              "Chưa có tín hiệu cơ hội khả dụng.",
-            )}
-          />
-        ) : null}
       </PanelCard>
     </div>
   );

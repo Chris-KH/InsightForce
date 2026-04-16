@@ -5,6 +5,8 @@ import {
   withApiMockFallback,
 } from "@/api/mock-fallback";
 import type {
+  TrendAnalysesListResponse,
+  TrendAnalysisRecordResponse,
   TrendAnalyzeRequest,
   TrendAnalyzeResponse,
   TrendOverviewResponse,
@@ -16,6 +18,11 @@ export type GetTrendOverviewParams = {
   keyword?: string;
   region?: string;
   hashtag?: string;
+};
+
+export type GetTrendHistoryParams = {
+  userId?: string;
+  limit?: number;
 };
 
 export function analyzeTrend(payload: TrendAnalyzeRequest) {
@@ -45,5 +52,23 @@ export function getTrendOverview(params: GetTrendOverviewParams = {}) {
         },
       ),
     () => getMockTrendOverview(params),
+  );
+}
+
+export function getTrendHistory(params: GetTrendHistoryParams = {}) {
+  return httpClient.get<TrendAnalysesListResponse>(
+    `${TRENDS_BASE_PATH}/history`,
+    {
+      query: {
+        user_id: params.userId,
+        limit: params.limit ?? 20,
+      },
+    },
+  );
+}
+
+export function getTrendAnalysisDetail(analysisId: string) {
+  return httpClient.get<TrendAnalysisRecordResponse>(
+    `${TRENDS_BASE_PATH}/${encodeURIComponent(analysisId)}`,
   );
 }

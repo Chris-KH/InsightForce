@@ -389,26 +389,41 @@ export type UploadPostPublishRequest = {
   subreddit?: string | null;
   asset_urls?: string[];
   files?: File[];
+  user_id?: string | null;
+  generated_content_id?: string | null;
 };
 
-export type UploadPostPublishProviderPayload = {
-  success?: boolean;
-  message?: string;
-  request_id?: string;
-  total_platforms?: number;
-  job_id?: string;
-};
-
-export type UploadPostPublishPayload = {
-  success: boolean;
-  post_kind: string;
+export type PublishJobResponse = {
+  id: string;
+  user_id?: string | null;
+  generated_content_id?: string | null;
+  profile_username: string;
   platforms: string[];
-  payload: UploadPostPublishProviderPayload;
+  title: string;
+  description?: string | null;
+  tags: string[];
+  first_comment?: string | null;
+  schedule_post?: string | null;
+  link_url?: string | null;
+  subreddit?: string | null;
+  asset_urls: string[];
+  uploaded_files: Array<Record<string, unknown>>;
+  post_kind: string;
+  provider_request_id?: string | null;
+  provider_job_id?: string | null;
+  provider_response: Record<string, unknown>;
+  status: string;
+  created_at: string;
 };
 
-export type UploadPostPublishEnvelope = {
+export type PublishJobsListResponse = {
+  items: PublishJobResponse[];
+};
+
+export type UploadPostPublishResponse = {
   source: string;
-  payload: UploadPostPublishPayload;
+  publish_job: PublishJobResponse;
+  provider_payload: Record<string, unknown>;
 };
 
 export type UploadPostHistoryItem = {
@@ -578,6 +593,7 @@ export type UploadPostPostAnalyticsEnvelope = {
 export type TrendAnalyzeRequest = {
   query: string;
   limit?: number;
+  user_id?: string | null;
 };
 
 export type TrendInterestPoint = {
@@ -594,13 +610,27 @@ export type TrendAnalyzeResultItem = {
   avg_views_per_hour: number;
   recommended_action: string;
   top_hashtags: string[];
+  google?: Record<string, unknown> | null;
+  tiktok?: Record<string, unknown> | null;
+  threads?: Record<string, unknown> | null;
 };
 
 export type TrendAnalyzeResponse = {
+  analysis_id?: string | null;
   query: string;
   results: TrendAnalyzeResultItem[];
   markdown_summary: string;
   error?: Record<string, unknown> | null;
+};
+
+export type TrendAnalysisRecordResponse = TrendAnalyzeResponse & {
+  status: string;
+  user_id?: string | null;
+  created_at: string;
+};
+
+export type TrendAnalysesListResponse = {
+  items: TrendAnalysisRecordResponse[];
 };
 
 export type TrendOverviewResponse = {
@@ -608,4 +638,75 @@ export type TrendOverviewResponse = {
   region: string;
   hashtag: string;
   overview: Record<string, unknown>;
+};
+
+export type ContentGenerateRequest = {
+  user_id?: string | null;
+  trend_analysis_id?: string | null;
+  selected_keyword?: string | null;
+  prompt?: string | null;
+};
+
+export type GeneratedContentResponse = {
+  id: string;
+  user_id?: string | null;
+  trend_analysis_id?: string | null;
+  selected_keyword?: string | null;
+  main_title?: string | null;
+  video_script: Record<string, unknown> | Array<unknown>;
+  platform_posts: Record<string, unknown>;
+  thumbnail?: Record<string, unknown> | null;
+  music_background?: string | null;
+  raw_output: Record<string, unknown>;
+  status: string;
+  created_at: string;
+};
+
+export type GeneratedContentsListResponse = {
+  items: GeneratedContentResponse[];
+};
+
+export type OrchestratorRequest = {
+  prompt: string;
+  save_files?: boolean;
+  user_id?: string | null;
+};
+
+export type OrchestratedOutput = {
+  trend_analysis: TrendAnalyzeResponse;
+  generated_content: Record<string, unknown>;
+};
+
+export type OrchestratorResponse = {
+  status: string;
+  output: OrchestratedOutput;
+  trend_analysis_id?: string | null;
+  generated_content_id?: string | null;
+  raw_response?: Record<string, unknown> | null;
+  raw_response_file?: string | null;
+  output_file?: string | null;
+};
+
+export type UserCreateRequest = {
+  email: string;
+  name?: string | null;
+  plan?: string | null;
+};
+
+export type UserResponse = {
+  id: string;
+  email: string;
+  name?: string | null;
+  plan?: string | null;
+  created_at: string;
+};
+
+export type UserSummaryResponse = UserResponse & {
+  trend_analysis_count: number;
+  generated_content_count: number;
+  publish_job_count: number;
+};
+
+export type UsersListResponse = {
+  users: UserSummaryResponse[];
 };
