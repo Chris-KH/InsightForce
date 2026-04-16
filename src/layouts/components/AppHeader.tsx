@@ -1,5 +1,6 @@
 import { Link, NavLink } from "react-router";
-import { Bell, UserCircle2 } from "lucide-react";
+import { ShieldCheck, UserCircle2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,11 +8,35 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { MobileSidebarSheet } from "@/layouts/components/MobileSidebarSheet";
 import { APP_NAV_ITEMS } from "@/layouts/components/app-layout-data";
 import { useBilingual } from "@/hooks/use-bilingual";
+import { isPerformanceSafeModeActive } from "@/lib/performance-mode";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
+import { AppNotificationBell } from "@/layouts/components/AppNotificationBell";
 
 export function AppHeader() {
   const copy = useBilingual();
+  const [isSafeMode, setIsSafeMode] = useState(() =>
+    isPerformanceSafeModeActive(),
+  );
+
+  useEffect(() => {
+    const updateSafeMode = () => {
+      setIsSafeMode(isPerformanceSafeModeActive());
+    };
+
+    const timer = window.setInterval(updateSafeMode, 30_000);
+    const handleStorage = () => {
+      updateSafeMode();
+    };
+
+    window.addEventListener("storage", handleStorage);
+    updateSafeMode();
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-xl">
@@ -62,12 +87,16 @@ export function AppHeader() {
             <span className="size-1.5 rounded-full bg-primary" />
             {copy("3 agents online", "3 bot đang hoạt động")}
           </Badge>
-          <Button variant="ghost" size="icon-sm">
-            <Bell />
-            <span className="sr-only">
-              {copy("Notifications", "Thông báo")}
-            </span>
-          </Button>
+          {isSafeMode ? (
+            <Badge
+              variant="outline"
+              className="hidden rounded-full border-emerald-500/25 bg-emerald-500/10 text-emerald-700 lg:inline-flex dark:text-emerald-300"
+            >
+              <ShieldCheck className="mr-1.5 size-3.5" />
+              {copy("Stable mode", "Chế độ ổn định")}
+            </Badge>
+          ) : null}
+          <AppNotificationBell />
           <Button variant="ghost" size="icon-sm">
             <UserCircle2 />
             <span className="sr-only">{copy("Account", "Tài khoản")}</span>

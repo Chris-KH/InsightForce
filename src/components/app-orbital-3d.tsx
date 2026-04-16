@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Float, Sparkles } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { motion } from "motion/react";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import type { Group, Mesh } from "three";
 
 import { cn } from "@/lib/utils";
@@ -286,11 +286,35 @@ const PANEL_GLOW_CLASS: Record<PanelOrbital3DVariant, string> = {
     "bg-[radial-gradient(circle_at_20%_18%,rgba(16,185,129,0.22),transparent_40%),radial-gradient(circle_at_84%_80%,rgba(56,189,248,0.24),transparent_36%)] dark:bg-[radial-gradient(circle_at_20%_18%,rgba(45,212,191,0.2),transparent_40%),radial-gradient(circle_at_84%_80%,rgba(56,189,248,0.18),transparent_36%)]",
 };
 
+function canRenderOrbitalScene() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+
+  if (prefersReducedMotion) {
+    return false;
+  }
+
+  const navigatorInfo = window.navigator as Navigator & {
+    deviceMemory?: number;
+  };
+
+  const deviceMemory = navigatorInfo.deviceMemory ?? 8;
+  const cpuCores = navigatorInfo.hardwareConcurrency ?? 8;
+
+  return deviceMemory >= 6 && cpuCores >= 6;
+}
+
 export function PanelOrbital3D({
   className,
   variant = "crystal",
 }: PanelOrbital3DProps) {
   const SceneComponent = PANEL_SCENE[variant];
+  const shouldRender3D = useMemo(() => canRenderOrbitalScene(), []);
 
   return (
     <div
@@ -319,17 +343,19 @@ export function PanelOrbital3D({
         }}
       />
 
-      <Canvas
-        dpr={[1, 1.2]}
-        camera={{ position: [0, 0.2, 4.2], fov: 36 }}
-        gl={{
-          antialias: true,
-          alpha: true,
-          powerPreference: "high-performance",
-        }}
-      >
-        <SceneComponent />
-      </Canvas>
+      {shouldRender3D ? (
+        <Canvas
+          dpr={[1, 1]}
+          camera={{ position: [0, 0.2, 4.2], fov: 36 }}
+          gl={{
+            antialias: false,
+            alpha: true,
+            powerPreference: "default",
+          }}
+        >
+          <SceneComponent />
+        </Canvas>
+      ) : null}
     </div>
   );
 }

@@ -13,12 +13,8 @@ import {
   WandSparkles,
 } from "lucide-react";
 
-import {
-  type TrendAnalyzeResponse,
-  type TrendAnalyzeResultItem,
-  useTrendAnalyzeMutation,
-  useTrendGeneralQuery,
-} from "@/api";
+import { type TrendAnalyzeResultItem, useTrendGeneralQuery } from "@/api";
+import { runStrategyTrendAnalyze } from "@/app/slices/runtime-tasks.slice";
 import {
   InlineQueryState,
   MetricCardsSkeleton,
@@ -35,6 +31,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import { useBilingual } from "@/hooks/use-bilingual";
 import {
   formatCompactNumber,
@@ -62,6 +59,43 @@ type TrendSessionState = {
   prompts: string[];
   suggestions: string[];
 };
+
+function loadTrendSessionState(): TrendSessionState {
+  const fallback: TrendSessionState = {
+    sessionId: createTrendSessionId(),
+    prompts: [],
+    suggestions: DEFAULT_TREND_PROMPT_SUGGESTIONS,
+  };
+
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+
+  const raw = window.localStorage.getItem(TREND_SESSION_STORAGE_KEY);
+  if (!raw) {
+    return fallback;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<TrendSessionState>;
+
+    return {
+      sessionId:
+        typeof parsed.sessionId === "string" && parsed.sessionId
+          ? parsed.sessionId
+          : fallback.sessionId,
+      prompts: Array.isArray(parsed.prompts)
+        ? parsed.prompts.slice(-20)
+        : fallback.prompts,
+      suggestions:
+        Array.isArray(parsed.suggestions) && parsed.suggestions.length > 0
+          ? parsed.suggestions.slice(0, 10)
+          : fallback.suggestions,
+    };
+  } catch {
+    return fallback;
+  }
+}
 
 function computeAverageScore(results: TrendAnalyzeResultItem[]) {
   if (results.length === 0) {
@@ -142,19 +176,27 @@ function buildGeneralTrendPrompts(
 
 export function StrategyPage() {
   const copy = useBilingual();
+  const dispatch = useAppDispatch();
+  const trendAnalyzeTask = useAppSelector(
+    (state) => state.runtimeTasks.strategy.trendAnalyze,
+  );
   const promptStudioRef = useRef<HTMLDivElement | null>(null);
 
-  const [nowTick, setNowTick] = useState(Date.now());
+  const [nowTick, setNowTick] = useState(() => Date.now());
   const [promptInput, setPromptInput] = useState("");
-  const [promptResponse, setPromptResponse] =
-    useState<TrendAnalyzeResponse | null>(null);
+  const [reasoningTick, setReasoningTick] = useState(() => Date.now());
 
-  const [sessionId, setSessionId] = useState(createTrendSessionId());
-  const [sessionPrompts, setSessionPrompts] = useState<string[]>([]);
-  const [sessionSuggestions, setSessionSuggestions] = useState<string[]>(
-    DEFAULT_TREND_PROMPT_SUGGESTIONS,
+  const [initialSessionState] = useState<TrendSessionState>(() =>
+    loadTrendSessionState(),
   );
-  const [sessionReady, setSessionReady] = useState(false);
+
+  const sessionId = initialSessionState.sessionId;
+  const [sessionPrompts, setSessionPrompts] = useState<string[]>(
+    initialSessionState.prompts,
+  );
+  const [sessionSuggestions, setSessionSuggestions] = useState<string[]>(
+    initialSessionState.suggestions,
+  );
 
   const [selectedGeneralKeyword, setSelectedGeneralKeyword] = useState<
     string | undefined
@@ -163,16 +205,12 @@ export function StrategyPage() {
     string | undefined
   >();
 
-  const [reasoningStartedAt, setReasoningStartedAt] = useState<number | null>(
-    null,
-  );
-  const [reasoningElapsedMs, setReasoningElapsedMs] = useState(0);
-
   const generalTrendQuery = useTrendGeneralQuery({
     limit: 5,
     refetchIntervalMs: GENERAL_REFRESH_INTERVAL_MS,
   });
-  const trendAnalyzeMutation = useTrendAnalyzeMutation();
+  const isTrendAnalyzePending = trendAnalyzeTask.status === "pending";
+  const promptResponse = trendAnalyzeTask.data;
 
   const generalResults = useMemo(
     () => sanitizeTrendResults(generalTrendQuery.data?.results),
@@ -188,12 +226,24 @@ export function StrategyPage() {
   const averageGeneralScore = computeAverageScore(generalResults);
   const averageGeneralViewsPerHour = computeAverageViewsPerHour(generalResults);
 
+  const effectiveSelectedGeneralKeyword = useMemo(() => {
+    if (!selectedGeneralKeyword) {
+      return undefined;
+    }
+
+    return generalResults.some(
+      (result) => result.main_keyword === selectedGeneralKeyword,
+    )
+      ? selectedGeneralKeyword
+      : undefined;
+  }, [generalResults, selectedGeneralKeyword]);
+
   const generalSelectedResult = useMemo(
     () =>
       generalResults.find(
-        (result) => result.main_keyword === selectedGeneralKeyword,
+        (result) => result.main_keyword === effectiveSelectedGeneralKeyword,
       ),
-    [generalResults, selectedGeneralKeyword],
+    [effectiveSelectedGeneralKeyword, generalResults],
   );
 
   const generalPlanSuggestions = useMemo(
@@ -212,13 +262,44 @@ export function StrategyPage() {
     [copy, generalSelectedResult],
   );
 
+  const effectiveSelectedPromptKeyword = useMemo(() => {
+    if (
+      selectedPromptKeyword &&
+      promptResults.some(
+        (result) => result.main_keyword === selectedPromptKeyword,
+      )
+    ) {
+      return selectedPromptKeyword;
+    }
+
+    return promptResults[0]?.main_keyword;
+  }, [promptResults, selectedPromptKeyword]);
+
   const promptSelectedResult = useMemo(
     () =>
       promptResults.find(
-        (result) => result.main_keyword === selectedPromptKeyword,
+        (result) => result.main_keyword === effectiveSelectedPromptKeyword,
       ) ?? promptResults[0],
-    [promptResults, selectedPromptKeyword],
+    [effectiveSelectedPromptKeyword, promptResults],
   );
+
+  const reasoningElapsedMs = useMemo(() => {
+    if (!trendAnalyzeTask.startedAt) {
+      return 0;
+    }
+
+    if (isTrendAnalyzePending) {
+      return Math.max(0, reasoningTick - trendAnalyzeTask.startedAt);
+    }
+
+    const completedAt = trendAnalyzeTask.completedAt ?? reasoningTick;
+    return Math.max(0, completedAt - trendAnalyzeTask.startedAt);
+  }, [
+    isTrendAnalyzePending,
+    reasoningTick,
+    trendAnalyzeTask.completedAt,
+    trendAnalyzeTask.startedAt,
+  ]);
 
   const selectedGeneralNodeId = useMemo(() => {
     if (!generalSelectedResult) {
@@ -242,37 +323,6 @@ export function StrategyPage() {
   }, []);
 
   useEffect(() => {
-    const raw = window.localStorage.getItem(TREND_SESSION_STORAGE_KEY);
-
-    if (!raw) {
-      setSessionReady(true);
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(raw) as TrendSessionState;
-
-      if (parsed.sessionId) {
-        setSessionId(parsed.sessionId);
-      }
-      if (Array.isArray(parsed.prompts)) {
-        setSessionPrompts(parsed.prompts.slice(-20));
-      }
-      if (Array.isArray(parsed.suggestions) && parsed.suggestions.length > 0) {
-        setSessionSuggestions(parsed.suggestions.slice(0, 10));
-      }
-    } catch {
-      // Ignore corrupted local session payload and fallback to defaults.
-    }
-
-    setSessionReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!sessionReady) {
-      return;
-    }
-
     const payload: TrendSessionState = {
       sessionId,
       prompts: sessionPrompts,
@@ -283,48 +333,19 @@ export function StrategyPage() {
       TREND_SESSION_STORAGE_KEY,
       JSON.stringify(payload),
     );
-  }, [sessionReady, sessionId, sessionPrompts, sessionSuggestions]);
+  }, [sessionId, sessionPrompts, sessionSuggestions]);
 
   useEffect(() => {
-    if (!trendAnalyzeMutation.isPending || !reasoningStartedAt) {
+    if (!isTrendAnalyzePending || !trendAnalyzeTask.startedAt) {
       return;
     }
 
     const timer = window.setInterval(() => {
-      setReasoningElapsedMs(Date.now() - reasoningStartedAt);
+      setReasoningTick(Date.now());
     }, 180);
 
     return () => window.clearInterval(timer);
-  }, [trendAnalyzeMutation.isPending, reasoningStartedAt]);
-
-  useEffect(() => {
-    if (!selectedGeneralKeyword) {
-      return;
-    }
-
-    if (
-      !generalResults.some(
-        (result) => result.main_keyword === selectedGeneralKeyword,
-      )
-    ) {
-      setSelectedGeneralKeyword(undefined);
-    }
-  }, [generalResults, selectedGeneralKeyword]);
-
-  useEffect(() => {
-    if (promptResults.length === 0) {
-      return;
-    }
-
-    if (
-      !selectedPromptKeyword ||
-      !promptResults.some(
-        (result) => result.main_keyword === selectedPromptKeyword,
-      )
-    ) {
-      setSelectedPromptKeyword(promptResults[0].main_keyword);
-    }
-  }, [promptResults, selectedPromptKeyword]);
+  }, [isTrendAnalyzePending, trendAnalyzeTask.startedAt]);
 
   const runTrendPromptAnalyze = async (
     rawPrompt: string,
@@ -338,7 +359,7 @@ export function StrategyPage() {
       return;
     }
 
-    if (trendAnalyzeMutation.isPending) {
+    if (isTrendAnalyzePending) {
       return;
     }
 
@@ -357,17 +378,16 @@ export function StrategyPage() {
       return nextPrompts;
     });
 
-    setReasoningStartedAt(Date.now());
-    setReasoningElapsedMs(0);
-
-    try {
-      const response = await trendAnalyzeMutation.mutateAsync({
+    const action = await dispatch(
+      runStrategyTrendAnalyze({
         query: normalizedPrompt,
         limit: 5,
-      });
+      }),
+    );
 
+    if (runStrategyTrendAnalyze.fulfilled.match(action)) {
+      const response = action.payload;
       const normalizedResults = sanitizeTrendResults(response.results);
-      setPromptResponse(response);
 
       if (!options.keepInput) {
         setPromptInput("");
@@ -384,8 +404,6 @@ export function StrategyPage() {
       if (normalizedResults[0]) {
         setSelectedPromptKeyword(normalizedResults[0].main_keyword);
       }
-    } finally {
-      setReasoningStartedAt(null);
     }
   };
 
@@ -632,7 +650,7 @@ export function StrategyPage() {
                       variant="outline"
                       size="sm"
                       className="max-w-full truncate"
-                      disabled={trendAnalyzeMutation.isPending}
+                      disabled={isTrendAnalyzePending}
                       onClick={() =>
                         handleGeneralPromptSuggestionClick(suggestion)
                       }
@@ -687,7 +705,11 @@ export function StrategyPage() {
       </div>
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-        <div ref={promptStudioRef}>
+        <div
+          ref={promptStudioRef}
+          id="prompt-trend-studio"
+          className="scroll-mt-28"
+        >
           <Card className="rounded-3xl border-border/75 bg-linear-to-br from-card via-card/95 to-muted/28">
             <CardHeader>
               <CardTitle>
@@ -718,9 +740,7 @@ export function StrategyPage() {
                 />
                 <Button
                   onClick={() => void handleAnalyzeSubmit()}
-                  disabled={
-                    trendAnalyzeMutation.isPending || !promptInput.trim()
-                  }
+                  disabled={isTrendAnalyzePending || !promptInput.trim()}
                 >
                   <SendHorizontal data-icon="inline-start" />
                   {copy("Analyze", "Phân tích")}
@@ -742,13 +762,10 @@ export function StrategyPage() {
                 </p>
               </div>
 
-              {trendAnalyzeMutation.error ? (
+              {trendAnalyzeTask.errorMessage ? (
                 <InlineQueryState
                   state="error"
-                  message={getQueryErrorMessage(
-                    trendAnalyzeMutation.error,
-                    "Unable to analyze trend prompt.",
-                  )}
+                  message={trendAnalyzeTask.errorMessage}
                 />
               ) : null}
             </CardContent>
@@ -769,19 +786,26 @@ export function StrategyPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <ReasoningTimeline
-              isPending={trendAnalyzeMutation.isPending}
+              isPending={isTrendAnalyzePending}
               elapsedMs={reasoningElapsedMs}
+              mode="trend"
+              promptPreview={
+                promptInput.trim() ||
+                sessionPrompts[sessionPrompts.length - 1] ||
+                promptResponse?.query
+              }
+              copy={copy}
             />
 
             <div
               className={cn(
                 "rounded-2xl border border-border/55 bg-background/50 p-4 text-xs",
-                trendAnalyzeMutation.isPending
+                isTrendAnalyzePending
                   ? "text-primary"
                   : "text-muted-foreground",
               )}
             >
-              {trendAnalyzeMutation.isPending
+              {isTrendAnalyzePending
                 ? copy("Agent is reasoning...", "Agent đang reasoning...")
                 : copy(
                     "Waiting for next prompt.",
@@ -803,65 +827,71 @@ export function StrategyPage() {
         </Card>
       </div>
 
-      <PanelCard
-        title={copy("Prompt Trend Results", "Kết quả trend từ prompt")}
-        description={copy(
-          "Ranked opportunities from your prompt-driven analysis flow.",
-          "Các cơ hội được xếp hạng từ luồng phân tích dựa trên prompt của bạn.",
-        )}
-      >
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)]">
-          <TrendResultCards
-            results={promptResults}
-            selectedKeyword={promptSelectedResult?.main_keyword}
-            onSelect={(result) => setSelectedPromptKeyword(result.main_keyword)}
-          />
-
-          {promptSelectedResult ? (
-            <Card
-              className="h-fit rounded-2xl border-primary/22 bg-primary/6"
-              size="sm"
-            >
-              <CardHeader>
-                <CardTitle>{promptSelectedResult.main_keyword}</CardTitle>
-                <CardDescription>
-                  {copy("Deep-dive insight", "Phân tích chi tiết")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <p>{promptSelectedResult.why_the_trend_happens}</p>
-                <p>
-                  {copy("Action", "Hành động")}:{" "}
-                  {promptSelectedResult.recommended_action}
-                </p>
-                <p>
-                  {copy("Avg views / hour", "Trung bình views / giờ")}:{" "}
-                  {formatCompactNumber(promptSelectedResult.avg_views_per_hour)}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {promptSelectedResult.top_hashtags.map((hashtag) => (
-                    <Badge
-                      key={hashtag}
-                      variant="outline"
-                      className="rounded-full"
-                    >
-                      {hashtag}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "Submit a prompt to generate ranked trend opportunities.",
-                "Hãy gửi prompt để tạo danh sách cơ hội trend được xếp hạng.",
-              )}
-            />
+      <section id="prompt-trend-results" className="scroll-mt-28">
+        <PanelCard
+          title={copy("Prompt Trend Results", "Kết quả trend từ prompt")}
+          description={copy(
+            "Ranked opportunities from your prompt-driven analysis flow.",
+            "Các cơ hội được xếp hạng từ luồng phân tích dựa trên prompt của bạn.",
           )}
-        </div>
-      </PanelCard>
+        >
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)]">
+            <TrendResultCards
+              results={promptResults}
+              selectedKeyword={promptSelectedResult?.main_keyword}
+              onSelect={(result) =>
+                setSelectedPromptKeyword(result.main_keyword)
+              }
+            />
+
+            {promptSelectedResult ? (
+              <Card
+                className="h-fit rounded-2xl border-primary/22 bg-primary/6"
+                size="sm"
+              >
+                <CardHeader>
+                  <CardTitle>{promptSelectedResult.main_keyword}</CardTitle>
+                  <CardDescription>
+                    {copy("Deep-dive insight", "Phân tích chi tiết")}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm text-muted-foreground">
+                  <p>{promptSelectedResult.why_the_trend_happens}</p>
+                  <p>
+                    {copy("Action", "Hành động")}:{" "}
+                    {promptSelectedResult.recommended_action}
+                  </p>
+                  <p>
+                    {copy("Avg views / hour", "Trung bình views / giờ")}:{" "}
+                    {formatCompactNumber(
+                      promptSelectedResult.avg_views_per_hour,
+                    )}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {promptSelectedResult.top_hashtags.map((hashtag) => (
+                      <Badge
+                        key={hashtag}
+                        variant="outline"
+                        className="rounded-full"
+                      >
+                        {hashtag}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <InlineQueryState
+                state="empty"
+                message={copy(
+                  "Submit a prompt to generate ranked trend opportunities.",
+                  "Hãy gửi prompt để tạo danh sách cơ hội trend được xếp hạng.",
+                )}
+              />
+            )}
+          </div>
+        </PanelCard>
+      </section>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
 
 import HERO_IMAGE from "@/assets/hero-section.png";
 import {
@@ -9,8 +10,40 @@ import {
   SketchFlowLines,
 } from "@/components/app-futuristic";
 import { PanelOrbital3D } from "@/components/app-orbital-3d";
+import { useAppSelector } from "@/hooks";
+import { isPerformanceSafeModeActive } from "@/lib/performance-mode";
 
 export function AppBackdrop() {
+  const isLongRunPending = useAppSelector(
+    (state) =>
+      state.runtimeTasks.automation.orchestration.status === "pending" ||
+      state.runtimeTasks.strategy.trendAnalyze.status === "pending",
+  );
+  const [isSafeMode, setIsSafeMode] = useState(() =>
+    isPerformanceSafeModeActive(),
+  );
+
+  useEffect(() => {
+    const updateSafeMode = () => {
+      setIsSafeMode(isPerformanceSafeModeActive());
+    };
+
+    const timer = window.setInterval(updateSafeMode, 30_000);
+    const handleStorage = () => {
+      updateSafeMode();
+    };
+
+    window.addEventListener("storage", handleStorage);
+    updateSafeMode();
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
+  const shouldRenderHeavyBackdrop = !isLongRunPending && !isSafeMode;
+
   return (
     <div
       aria-hidden
@@ -48,42 +81,62 @@ export function AppBackdrop() {
         }}
       />
 
-      <SignalWaveCanvas
-        className="opacity-40 dark:opacity-18"
-        cell={30}
-        speed={0.018}
-      />
-      <SketchFlowLines className="opacity-40 dark:opacity-22" tone="mixed" />
-      <SketchFlowLines className="opacity-24 dark:opacity-14" tone="primary" />
-      <CometRailOverlay className="opacity-64 dark:opacity-34" density="high" />
-      <FloatingShardField
-        className="opacity-58 dark:opacity-26"
-        density="high"
-      />
+      {shouldRenderHeavyBackdrop ? (
+        <>
+          <SignalWaveCanvas
+            className="opacity-40 dark:opacity-18"
+            cell={30}
+            speed={0.018}
+          />
+          <SketchFlowLines
+            className="opacity-40 dark:opacity-22"
+            tone="mixed"
+          />
+          <SketchFlowLines
+            className="opacity-24 dark:opacity-14"
+            tone="primary"
+          />
+          <CometRailOverlay
+            className="opacity-64 dark:opacity-34"
+            density="high"
+          />
+          <FloatingShardField
+            className="opacity-58 dark:opacity-26"
+            density="high"
+          />
+        </>
+      ) : (
+        <>
+          <SketchFlowLines
+            className="opacity-20 dark:opacity-10"
+            tone="mixed"
+          />
+          <CometRailOverlay
+            className="opacity-32 dark:opacity-14"
+            density="low"
+          />
+        </>
+      )}
 
       <OrbitHalo
         className="top-14 right-8 hidden h-96 w-96 opacity-42 lg:block dark:opacity-28"
         tone="mixed"
         spin="slow"
       />
-      <OrbitHalo
-        className="-bottom-10 -left-8 hidden h-84 w-84 opacity-34 xl:block dark:opacity-22"
-        tone="primary"
-        spin="medium"
-      />
+      {shouldRenderHeavyBackdrop ? (
+        <OrbitHalo
+          className="-bottom-10 -left-8 hidden h-84 w-84 opacity-34 xl:block dark:opacity-22"
+          tone="primary"
+          spin="medium"
+        />
+      ) : null}
 
-      <PanelOrbital3D
-        variant="satellite"
-        className="top-auto -right-28 -bottom-24 left-auto hidden size-160 opacity-50 xl:block"
-      />
-      <PanelOrbital3D
-        variant="tetra"
-        className="-top-22 right-auto bottom-auto -left-26 hidden size-132 opacity-42 xl:block"
-      />
-      <PanelOrbital3D
-        variant="crystal"
-        className="top-[34%] -right-16 bottom-auto left-auto hidden size-116 opacity-34 2xl:block"
-      />
+      {shouldRenderHeavyBackdrop ? (
+        <PanelOrbital3D
+          variant="satellite"
+          className="top-auto -right-28 -bottom-24 left-auto hidden size-160 opacity-50 xl:block"
+        />
+      ) : null}
 
       <div
         className="absolute h-[64vh] w-[56vw] max-w-245 rounded-full opacity-36 blur-[1px] dark:opacity-14"

@@ -647,15 +647,68 @@ export type ContentGenerateRequest = {
   prompt?: string | null;
 };
 
+export type GeneratedContentThumbnail = {
+  prompt: string;
+  style: string;
+  size: string;
+  output_path: string;
+};
+
+export type GeneratedContentVideoScriptSection = {
+  timestamp: string;
+  label: string;
+  narration: string;
+  notes: string;
+  thumbnail?: GeneratedContentThumbnail | null;
+};
+
+export type GeneratedContentVideoScript = {
+  title: string;
+  duration_estimate: string;
+  hook: string;
+  sections: GeneratedContentVideoScriptSection[];
+  call_to_action: string;
+  captions_style: string;
+  music_mood: string;
+};
+
+export type GeneratedContentPlatformPost = {
+  caption: string;
+  hashtags: string[];
+  cta: string;
+  best_post_time: string;
+  thumbnail_description: string;
+};
+
+export type GeneratedContentPlatformPosts = {
+  tiktok?: GeneratedContentPlatformPost;
+  facebook?: GeneratedContentPlatformPost;
+  instagram?: GeneratedContentPlatformPost;
+  [platform: string]: GeneratedContentPlatformPost | undefined;
+};
+
+export type OrchestratorGeneratedContent = {
+  selected_keyword: string;
+  main_title: string;
+  video_script: GeneratedContentVideoScript;
+  platform_posts: GeneratedContentPlatformPosts;
+  thumbnail?: GeneratedContentThumbnail | null;
+  music_background: string;
+  error?: Record<string, unknown> | null;
+};
+
 export type GeneratedContentResponse = {
   id: string;
   user_id?: string | null;
   trend_analysis_id?: string | null;
   selected_keyword?: string | null;
   main_title?: string | null;
-  video_script: Record<string, unknown> | Array<unknown>;
-  platform_posts: Record<string, unknown>;
-  thumbnail?: Record<string, unknown> | null;
+  video_script:
+    | GeneratedContentVideoScript
+    | Record<string, unknown>
+    | Array<unknown>;
+  platform_posts: GeneratedContentPlatformPosts | Record<string, unknown>;
+  thumbnail?: GeneratedContentThumbnail | Record<string, unknown> | null;
   music_background?: string | null;
   raw_output: Record<string, unknown>;
   status: string;
@@ -674,7 +727,7 @@ export type OrchestratorRequest = {
 
 export type OrchestratedOutput = {
   trend_analysis: TrendAnalyzeResponse;
-  generated_content: Record<string, unknown>;
+  generated_content: OrchestratorGeneratedContent;
 };
 
 export type OrchestratorResponse = {
