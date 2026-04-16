@@ -13,7 +13,11 @@ import {
   WandSparkles,
 } from "lucide-react";
 
-import { type TrendAnalyzeResultItem, useTrendGeneralQuery } from "@/api";
+import {
+  type TrendAnalyzeResultItem,
+  useTrendGeneralQuery,
+  useTrendHistoryQuery,
+} from "@/api";
 import { runStrategyTrendAnalyze } from "@/app/slices/runtime-tasks.slice";
 import {
   InlineQueryState,
@@ -52,8 +56,6 @@ import { TrendForceGraph } from "@/pages/strategy/components/TrendForceGraph";
 import { TrendResultCards } from "@/pages/strategy/components/TrendResultCards";
 
 const TREND_SESSION_STORAGE_KEY = "insightforce.trend.session.v1";
-const GENERAL_REFRESH_INTERVAL_MS = 180_000;
-
 type TrendSessionState = {
   sessionId: string;
   prompts: string[];
@@ -182,7 +184,6 @@ export function StrategyPage() {
   );
   const promptStudioRef = useRef<HTMLDivElement | null>(null);
 
-  const [nowTick, setNowTick] = useState(() => Date.now());
   const [promptInput, setPromptInput] = useState("");
   const [reasoningTick, setReasoningTick] = useState(() => Date.now());
 
@@ -207,14 +208,25 @@ export function StrategyPage() {
 
   const generalTrendQuery = useTrendGeneralQuery({
     limit: 5,
-    refetchIntervalMs: GENERAL_REFRESH_INTERVAL_MS,
+    enabled: false,
   });
+  const trendHistoryQuery = useTrendHistoryQuery({ limit: 12 });
   const isTrendAnalyzePending = trendAnalyzeTask.status === "pending";
   const promptResponse = trendAnalyzeTask.data;
 
+  const latestGeneralTrendRecord = useMemo(
+    () =>
+      (trendHistoryQuery.data?.items ?? []).find(
+        (record) => record.results.length > 0,
+      ),
+    [trendHistoryQuery.data?.items],
+  );
+
+  const generalTrendData = generalTrendQuery.data ?? latestGeneralTrendRecord;
+
   const generalResults = useMemo(
-    () => sanitizeTrendResults(generalTrendQuery.data?.results),
-    [generalTrendQuery.data?.results],
+    () => sanitizeTrendResults(generalTrendData?.results),
+    [generalTrendData?.results],
   );
 
   const promptResults = useMemo(
@@ -313,14 +325,6 @@ export function StrategyPage() {
       ? `${generalSelectedResult.main_keyword}-${index}`
       : undefined;
   }, [generalResults, generalSelectedResult]);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setNowTick(Date.now());
-    }, 1000);
-
-    return () => window.clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     const payload: TrendSessionState = {
@@ -422,17 +426,11 @@ export function StrategyPage() {
     setSelectedGeneralKeyword(node.keyword);
   };
 
-  const refreshInSeconds = generalTrendQuery.dataUpdatedAt
-    ? Math.max(
-        0,
-        Math.ceil(
-          (generalTrendQuery.dataUpdatedAt +
-            GENERAL_REFRESH_INTERVAL_MS -
-            nowTick) /
-            1000,
-        ),
-      )
-    : null;
+  const hasGeneralTrendData = generalResults.length > 0;
+  const isGeneralTrendLoading =
+    !hasGeneralTrendData &&
+    (trendHistoryQuery.isLoading || generalTrendQuery.isFetching);
+  const generalTrendError = generalTrendQuery.error ?? trendHistoryQuery.error;
 
   return (
     <div className="grid gap-8">
@@ -443,21 +441,41 @@ export function StrategyPage() {
           "Đồ thị xu hướng trực tiếp và Prompt Studio",
         )}
         description={copy(
-          "A dedicated strategy workspace with auto-refresh general trend mapping and interactive prompt-driven trend discovery.",
-          "Không gian chiến lược chuyên biệt với bản đồ trend chung tự làm mới và luồng khám phá trend theo prompt tương tác.",
+          "A dedicated strategy workspace with a saved trend snapshot and on-demand live trend refresh.",
+          "Không gian chiến lược chuyên biệt với snapshot trend đã lưu và làm mới trend trực tiếp theo yêu cầu.",
         )}
         action={
-          <Badge
-            variant="outline"
-            className="rounded-full border-primary/25 bg-background/80 px-3 py-1.5 text-primary"
-          >
-            <RefreshCw className="mr-2 size-3.5" />
-            {copy("Auto Refresh 3m", "Tự làm mới 3 phút")}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge
+              variant="outline"
+              className="rounded-full border-primary/25 bg-background/80 px-3 py-1.5 text-primary"
+            >
+              {generalTrendQuery.data
+                ? copy("Live analysis", "Phân tích trực tiếp")
+                : copy("Saved snapshot", "Snapshot đã lưu")}
+            </Badge>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                void generalTrendQuery.refetch();
+              }}
+              disabled={generalTrendQuery.isFetching}
+            >
+              <RefreshCw
+                data-icon="inline-start"
+                className={cn(generalTrendQuery.isFetching && "animate-spin")}
+              />
+              {generalTrendQuery.isFetching
+                ? copy("Refreshing", "Đang làm mới")
+                : copy("Refresh live trend", "Làm mới trend trực tiếp")}
+            </Button>
+          </div>
         }
       />
 
-      {generalTrendQuery.isLoading && !generalTrendQuery.data ? (
+      {isGeneralTrendLoading ? (
         <MetricCardsSkeleton />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -465,8 +483,8 @@ export function StrategyPage() {
             label={copy("General Trend Entries", "Số entry trend chung")}
             value={String(generalResults.length)}
             detail={copy(
-              "From periodic trend polling",
-              "Lấy từ polling trend định kỳ",
+              "From latest available trend snapshot",
+              "Lấy từ snapshot trend khả dụng gần nhất",
             )}
             icon={<Compass className="size-5" />}
           />
@@ -493,29 +511,37 @@ export function StrategyPage() {
             label={copy("Avg Trend Score", "Điểm trend trung bình")}
             value={formatPercentValue(averageGeneralScore)}
             detail={
-              refreshInSeconds !== null
+              generalTrendQuery.data
                 ? copy(
-                    `Refresh in ${refreshInSeconds}s`,
-                    `Làm mới sau ${refreshInSeconds}s`,
+                    "Live result from manual refresh",
+                    "Kết quả live từ lần làm mới thủ công",
                   )
-                : copy("Waiting first refresh", "Đang chờ lần làm mới đầu")
+                : latestGeneralTrendRecord
+                  ? copy(
+                      "Loaded from latest saved analysis",
+                      "Lấy từ phiên phân tích đã lưu gần nhất",
+                    )
+                  : copy(
+                      "No snapshot yet. Run a live refresh.",
+                      "Chưa có snapshot. Hãy làm mới live.",
+                    )
             }
             icon={<Clock3 className="size-5" />}
           />
         </div>
       )}
 
-      {generalTrendQuery.error ? (
+      {!hasGeneralTrendData && generalTrendError ? (
         <QueryStateCard
           state="error"
           title={copy("Trend Load Error", "Lỗi tải trend")}
           description={getQueryErrorMessage(
-            generalTrendQuery.error,
+            generalTrendError,
             "Unable to fetch general trend data.",
           )}
           hint={copy(
-            "Trend data is syncing. Please try again in a moment.",
-            "Dữ liệu xu hướng đang đồng bộ. Vui lòng thử lại sau ít phút.",
+            "Try using the live refresh button after backend is ready.",
+            "Hãy thử nút làm mới live khi backend sẵn sàng.",
           )}
         />
       ) : null}

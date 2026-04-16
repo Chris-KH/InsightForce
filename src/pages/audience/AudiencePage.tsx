@@ -10,11 +10,13 @@ import {
 
 import {
   useGeneratedContentsQuery,
-  useTrendGeneralQuery,
   useTrendHistoryQuery,
   useUploadPostPublishJobsQuery,
 } from "@/api";
-import type { TrendAnalyzeResponse, TrendAnalyzeResultItem } from "@/api/types";
+import type {
+  TrendAnalysisRecordResponse,
+  TrendAnalyzeResultItem,
+} from "@/api/types";
 import { BarTrendChart, DoughnutTrendChart } from "@/components/app-data-viz";
 import {
   InlineQueryState,
@@ -41,7 +43,7 @@ type TrendSignal = {
   avgViewsPerHour: number;
 };
 
-function normalizeTrendSignals(raw: TrendAnalyzeResponse | undefined) {
+function normalizeTrendSignals(raw: TrendAnalysisRecordResponse | undefined) {
   const source: TrendAnalyzeResultItem[] = raw?.results ?? [];
 
   return source.map<TrendSignal>((item) => ({
@@ -57,16 +59,21 @@ function normalizeTrendSignals(raw: TrendAnalyzeResponse | undefined) {
 export function AudiencePage() {
   const copy = useBilingual();
 
-  const trendGeneralQuery = useTrendGeneralQuery({
-    limit: 5,
-  });
   const trendHistoryQuery = useTrendHistoryQuery({ limit: 20 });
   const generatedContentsQuery = useGeneratedContentsQuery({ limit: 20 });
   const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 20 });
 
+  const latestTrendRecord = useMemo(
+    () =>
+      (trendHistoryQuery.data?.items ?? []).find(
+        (record) => record.results.length > 0,
+      ),
+    [trendHistoryQuery.data?.items],
+  );
+
   const trendSignals = useMemo(
-    () => normalizeTrendSignals(trendGeneralQuery.data),
-    [trendGeneralQuery.data],
+    () => normalizeTrendSignals(latestTrendRecord),
+    [latestTrendRecord],
   );
 
   const topSignal = trendSignals[0];
@@ -110,33 +117,29 @@ export function AudiencePage() {
     (job) => job.status.toLowerCase() === "failed",
   ).length;
 
-  const publishMixData = useMemo(
-    () => ({
-      labels: [
-        copy("Published", "Đã đăng"),
-        copy("Pending", "Đang chờ"),
-        copy("Failed", "Lỗi"),
-      ],
-      datasets: [
-        {
-          data: [publishedJobsCount, pendingJobsCount, failedJobsCount],
-          backgroundColor: [
-            "rgba(16, 185, 129, 0.82)",
-            "rgba(245, 158, 11, 0.78)",
-            "rgba(248, 113, 113, 0.75)",
-          ],
-          borderWidth: 0,
-        },
-      ],
-    }),
-    [copy, failedJobsCount, pendingJobsCount, publishedJobsCount],
-  );
+  const publishMixData = {
+    labels: [
+      copy("Published", "Đã đăng"),
+      copy("Pending", "Đang chờ"),
+      copy("Failed", "Lỗi"),
+    ],
+    datasets: [
+      {
+        data: [publishedJobsCount, pendingJobsCount, failedJobsCount],
+        backgroundColor: [
+          "rgba(16, 185, 129, 0.82)",
+          "rgba(245, 158, 11, 0.78)",
+          "rgba(248, 113, 113, 0.75)",
+        ],
+        borderWidth: 0,
+      },
+    ],
+  };
 
   const trendHistoryItems = trendHistoryQuery.data?.items ?? [];
   const generatedContents = generatedContentsQuery.data?.items ?? [];
 
   const allQueries = [
-    trendGeneralQuery,
     trendHistoryQuery,
     generatedContentsQuery,
     publishJobsQuery,

@@ -9,7 +9,10 @@ import {
 } from "lucide-react";
 
 import {
+  type GeneratedContentResponse,
+  type PublishJobResponse,
   type TrendAnalysisRecordResponse,
+  type UserSummaryResponse,
   useAgentsStatusQuery,
   useGeneratedContentsQuery,
   useHealthQuery,
@@ -58,6 +61,11 @@ type PipelineEvent = {
 type EventFilter = "all" | PipelineEvent["type"];
 type KeywordSortMode = "score" | "frequency";
 
+const EMPTY_TREND_RECORDS: TrendAnalysisRecordResponse[] = [];
+const EMPTY_GENERATED_CONTENTS: GeneratedContentResponse[] = [];
+const EMPTY_PUBLISH_JOBS: PublishJobResponse[] = [];
+const EMPTY_USERS: UserSummaryResponse[] = [];
+
 function toTimestamp(value: string) {
   const timestamp = Date.parse(value);
   return Number.isNaN(timestamp) ? 0 : timestamp;
@@ -97,9 +105,9 @@ export function DashboardPage() {
 
   const healthQuery = useHealthQuery();
   const agentsQuery = useAgentsStatusQuery();
-  const trendHistoryQuery = useTrendHistoryQuery({ limit: 30 });
-  const generatedContentsQuery = useGeneratedContentsQuery({ limit: 30 });
-  const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 30 });
+  const trendHistoryQuery = useTrendHistoryQuery({ limit: 12 });
+  const generatedContentsQuery = useGeneratedContentsQuery({ limit: 12 });
+  const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 12 });
   const usersQuery = useUsersQuery();
 
   const allQueries = [
@@ -123,10 +131,11 @@ export function DashboardPage() {
     (process) => process.reachable,
   ).length;
 
-  const trendRecords = trendHistoryQuery.data?.items ?? [];
-  const generatedContents = generatedContentsQuery.data?.items ?? [];
-  const publishJobs = publishJobsQuery.data?.items ?? [];
-  const users = usersQuery.data?.users ?? [];
+  const trendRecords = trendHistoryQuery.data?.items ?? EMPTY_TREND_RECORDS;
+  const generatedContents =
+    generatedContentsQuery.data?.items ?? EMPTY_GENERATED_CONTENTS;
+  const publishJobs = publishJobsQuery.data?.items ?? EMPTY_PUBLISH_JOBS;
+  const users = usersQuery.data?.users ?? EMPTY_USERS;
 
   const publishedJobs = publishJobs.filter(
     (job) => job.status.toLowerCase() === "published",
@@ -311,7 +320,13 @@ export function DashboardPage() {
   }, [eventFilter, pipelineEvents]);
 
   const handleRefresh = async () => {
-    await Promise.all(allQueries.map((query) => query.refetch()));
+    await Promise.all([
+      healthQuery.refetch(),
+      agentsQuery.refetch(),
+      trendHistoryQuery.refetch(),
+      generatedContentsQuery.refetch(),
+      publishJobsQuery.refetch(),
+    ]);
   };
 
   return (

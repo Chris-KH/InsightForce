@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ForceGraph2D from "react-force-graph-2d";
+import ForceGraph2D, { type ForceGraphMethods } from "react-force-graph-2d";
 import { Minus, Plus, ScanSearch } from "lucide-react";
 
 import type { TrendAnalyzeResultItem } from "@/api/types";
@@ -127,9 +127,11 @@ export function TrendForceGraph({
   selectedNodeId,
   onSelectNode,
 }: TrendForceGraphProps) {
-  const graphRef = useRef<any>(null);
+  const graphRef = useRef<ForceGraphMethods | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hasAutoFittedRef = useRef(false);
+  const zoomSyncFrameRef = useRef<number | null>(null);
+  const latestZoomRef = useRef(1);
   const [width, setWidth] = useState(920);
   const [zoom, setZoom] = useState(1);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
@@ -174,10 +176,45 @@ export function TrendForceGraph({
   }, []);
 
   useEffect(() => {
+    return () => {
+      if (zoomSyncFrameRef.current !== null) {
+        window.cancelAnimationFrame(zoomSyncFrameRef.current);
+      }
+    };
+  }, []);
+
+  const syncZoomState = useCallback((nextZoom: number) => {
+    if (!Number.isFinite(nextZoom)) {
+      return;
+    }
+
+    latestZoomRef.current = nextZoom;
+    if (zoomSyncFrameRef.current !== null) {
+      return;
+    }
+
+    zoomSyncFrameRef.current = window.requestAnimationFrame(() => {
+      zoomSyncFrameRef.current = null;
+      setZoom((currentZoom) => {
+        if (Math.abs(currentZoom - latestZoomRef.current) < 0.001) {
+          return currentZoom;
+        }
+
+        return latestZoomRef.current;
+      });
+    });
+  }, []);
+
+  useEffect(() => {
     const graph = graphRef.current;
     if (!graph || graphData.nodes.length === 0) {
       return;
     }
+
+    const graphWithTuning = graph as ForceGraphMethods & {
+      d3AlphaDecay?: (value: number) => void;
+      d3VelocityDecay?: (value: number) => void;
+    };
 
     const nodeCount = graphData.nodes.length;
     const baseDistance = nodeCount <= 4 ? 180 : 136;
@@ -208,25 +245,28 @@ export function TrendForceGraph({
     chargeForce?.distanceMax?.(680);
     chargeForce?.distanceMin?.(40);
 
-    graph.d3AlphaDecay?.(0.034);
-    graph.d3VelocityDecay?.(0.26);
+    graphWithTuning.d3AlphaDecay?.(0.034);
+    graphWithTuning.d3VelocityDecay?.(0.26);
     graph.d3ReheatSimulation?.();
   }, [graphData, width]);
 
-  const fitGraphToViewport = useCallback((durationMs = 540) => {
-    const graph = graphRef.current;
-    if (!graph) {
-      return;
-    }
+  const fitGraphToViewport = useCallback(
+    (durationMs = 540) => {
+      const graph = graphRef.current;
+      if (!graph) {
+        return;
+      }
 
-    graph.zoomToFit?.(durationMs, 72);
-    graph.centerAt?.(0, 0, Math.max(220, Math.floor(durationMs * 0.6)));
+      graph.zoomToFit?.(durationMs, 72);
+      graph.centerAt?.(0, 0, Math.max(220, Math.floor(durationMs * 0.6)));
 
-    const nextZoom = graph.zoom?.();
-    if (typeof nextZoom === "number") {
-      setZoom(nextZoom);
-    }
-  }, []);
+      const nextZoom = graph.zoom?.();
+      if (typeof nextZoom === "number") {
+        syncZoomState(nextZoom);
+      }
+    },
+    [syncZoomState],
+  );
 
   useEffect(() => {
     if (graphData.nodes.length === 0) {
@@ -258,6 +298,7 @@ export function TrendForceGraph({
 
   const applyZoom = (nextZoom: number) => {
     const safeZoom = Math.max(0.5, Math.min(6, nextZoom));
+    latestZoomRef.current = safeZoom;
     setZoom(safeZoom);
     graphRef.current?.zoom?.(safeZoom, 300);
   };
@@ -285,6 +326,7 @@ export function TrendForceGraph({
           variant="outline"
           size="sm"
           onClick={() => {
+            latestZoomRef.current = 1;
             setZoom(1);
             fitGraphToViewport(500);
           }}
@@ -442,7 +484,7 @@ export function TrendForceGraph({
           }}
           onZoom={(transform) => {
             if (typeof transform.k === "number") {
-              setZoom(transform.k);
+              syncZoomState(transform.k);
             }
           }}
           onNodeHover={(nodeObject) => {

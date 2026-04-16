@@ -11,11 +11,11 @@ import {
 
 import {
   useGeneratedContentsQuery,
-  useTrendGeneralQuery,
   useTrendHistoryQuery,
   useUploadPostPublishJobsQuery,
   useUsersQuery,
 } from "@/api";
+import type { TrendAnalysisRecordResponse } from "@/api/types";
 import {
   BarTrendChart,
   DoughnutTrendChart,
@@ -51,20 +51,26 @@ function groupJobsByDay(items: Array<{ created_at: string }>) {
   );
 }
 
+const EMPTY_TREND_SIGNALS: TrendAnalysisRecordResponse["results"] = [];
+
 export function FinancePage() {
   const copy = useBilingual();
 
   const usersQuery = useUsersQuery();
-  const trendGeneralQuery = useTrendGeneralQuery({
-    limit: 5,
-  });
   const trendHistoryQuery = useTrendHistoryQuery({ limit: 20 });
   const generatedContentsQuery = useGeneratedContentsQuery({ limit: 40 });
   const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 60 });
 
+  const latestTrendRecord = useMemo<TrendAnalysisRecordResponse | undefined>(
+    () =>
+      (trendHistoryQuery.data?.items ?? []).find(
+        (record) => record.results.length > 0,
+      ),
+    [trendHistoryQuery.data?.items],
+  );
+
   const allQueries = [
     usersQuery,
-    trendGeneralQuery,
     trendHistoryQuery,
     generatedContentsQuery,
     publishJobsQuery,
@@ -78,7 +84,7 @@ export function FinancePage() {
 
   const publishJobs = publishJobsQuery.data?.items ?? [];
   const generatedContents = generatedContentsQuery.data?.items ?? [];
-  const trendSignals = trendGeneralQuery.data?.results ?? [];
+  const trendSignals = latestTrendRecord?.results ?? EMPTY_TREND_SIGNALS;
 
   const publishedJobsCount = publishJobs.filter(
     (job) => job.status.toLowerCase() === "published",
@@ -101,45 +107,39 @@ export function FinancePage() {
 
   const jobsTimeline = groupJobsByDay(publishJobs).slice(-10);
 
-  const jobsTimelineData = useMemo(
-    () => ({
-      labels: jobsTimeline.map(([date]) => date.slice(5)),
-      datasets: [
-        {
-          label: copy("Jobs", "Công việc"),
-          data: jobsTimeline.map(([, value]) => value),
-          borderColor: "rgba(6, 182, 212, 0.9)",
-          backgroundColor: "rgba(6, 182, 212, 0.2)",
-          tension: 0.36,
-          fill: true,
-          pointRadius: 3,
-        },
-      ],
-    }),
-    [copy, jobsTimeline],
-  );
+  const jobsTimelineData = {
+    labels: jobsTimeline.map(([date]) => date.slice(5)),
+    datasets: [
+      {
+        label: copy("Jobs", "Công việc"),
+        data: jobsTimeline.map(([, value]) => value),
+        borderColor: "rgba(6, 182, 212, 0.9)",
+        backgroundColor: "rgba(6, 182, 212, 0.2)",
+        tension: 0.36,
+        fill: true,
+        pointRadius: 3,
+      },
+    ],
+  };
 
-  const publishMixData = useMemo(
-    () => ({
-      labels: [
-        copy("Published", "Đã đăng"),
-        copy("Pending", "Đang chờ"),
-        copy("Failed", "Lỗi"),
-      ],
-      datasets: [
-        {
-          data: [publishedJobsCount, pendingJobsCount, failedJobsCount],
-          backgroundColor: [
-            "rgba(16, 185, 129, 0.82)",
-            "rgba(245, 158, 11, 0.78)",
-            "rgba(248, 113, 113, 0.74)",
-          ],
-          borderWidth: 0,
-        },
-      ],
-    }),
-    [copy, failedJobsCount, pendingJobsCount, publishedJobsCount],
-  );
+  const publishMixData = {
+    labels: [
+      copy("Published", "Đã đăng"),
+      copy("Pending", "Đang chờ"),
+      copy("Failed", "Lỗi"),
+    ],
+    datasets: [
+      {
+        data: [publishedJobsCount, pendingJobsCount, failedJobsCount],
+        backgroundColor: [
+          "rgba(16, 185, 129, 0.82)",
+          "rgba(245, 158, 11, 0.78)",
+          "rgba(248, 113, 113, 0.74)",
+        ],
+        borderWidth: 0,
+      },
+    ],
+  };
 
   const trendBarData = useMemo(
     () => ({
