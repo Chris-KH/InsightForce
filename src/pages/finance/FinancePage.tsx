@@ -506,7 +506,7 @@ export function FinancePage() {
                   {uploadPostProfiles.length} {copy("profiles", "hồ sơ")}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {copy("Profile limit", "Giới hạn hồ sơ")}: {" "}
+                  {copy("Profile limit", "Giới hạn hồ sơ")}:{" "}
                   {profilesQuery.data?.limit ?? "--"}
                 </p>
               </div>
@@ -1020,8 +1020,12 @@ export function FinancePage() {
                 ) : null}
                 <div className="rounded-2xl border border-border/55 bg-background/55 p-4">
                   <p className="text-xs text-muted-foreground">
-                    {copy("Channels measured", "Số kênh được đo")}: {" "}
-                    {Object.keys(latestPostAnalyticsQuery.data.payload.platforms).length}
+                    {copy("Channels measured", "Số kênh được đo")}:{" "}
+                    {
+                      Object.keys(
+                        latestPostAnalyticsQuery.data.payload.platforms,
+                      ).length
+                    }
                   </p>
                   <p className="mt-1 font-medium text-foreground">
                     {latestPostAnalyticsQuery.data.payload.post.post_title}

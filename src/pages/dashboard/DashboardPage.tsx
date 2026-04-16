@@ -114,9 +114,8 @@ export function DashboardPage() {
   const copy = useBilingual();
 
   const [eventFilter, setEventFilter] = useState<EventFilter>("all");
-  const [keywordSortMode, setKeywordSortMode] = useState<KeywordSortMode>(
-    "score",
-  );
+  const [keywordSortMode, setKeywordSortMode] =
+    useState<KeywordSortMode>("score");
 
   const healthQuery = useHealthQuery();
   const agentsQuery = useAgentsStatusQuery();
@@ -142,7 +141,9 @@ export function DashboardPage() {
   const firstError = allQueries.find((query) => query.error)?.error;
 
   const processes = agentsQuery.data?.processes ?? [];
-  const reachableAgents = processes.filter((process) => process.reachable).length;
+  const reachableAgents = processes.filter(
+    (process) => process.reachable,
+  ).length;
 
   const trendRecords = trendHistoryQuery.data?.items ?? [];
   const generatedContents = generatedContentsQuery.data?.items ?? [];
@@ -242,9 +243,13 @@ export function DashboardPage() {
     const items = [...keywordPulseRaw];
 
     if (keywordSortMode === "frequency") {
-      items.sort((left, right) => right.count - left.count || right.score - left.score);
+      items.sort(
+        (left, right) => right.count - left.count || right.score - left.score,
+      );
     } else {
-      items.sort((left, right) => right.score - left.score || right.count - left.count);
+      items.sort(
+        (left, right) => right.score - left.score || right.count - left.count,
+      );
     }
 
     return items.slice(0, 8);
@@ -281,13 +286,15 @@ export function DashboardPage() {
   }, [copy, users]);
 
   const pipelineEvents = useMemo(() => {
-    const trendEvents: PipelineEvent[] = trendRecords.slice(0, 8).map((item) => ({
-      id: item.analysis_id ?? `${item.query}-${item.created_at}`,
-      type: "trend",
-      title: item.query,
-      createdAt: item.created_at,
-      status: item.status,
-    }));
+    const trendEvents: PipelineEvent[] = trendRecords
+      .slice(0, 8)
+      .map((item) => ({
+        id: item.analysis_id ?? `${item.query}-${item.created_at}`,
+        type: "trend",
+        title: item.query,
+        createdAt: item.created_at,
+        status: item.status,
+      }));
 
     const contentEvents: PipelineEvent[] = generatedContents
       .slice(0, 8)
@@ -299,13 +306,15 @@ export function DashboardPage() {
         status: item.status,
       }));
 
-    const publishEvents: PipelineEvent[] = publishJobs.slice(0, 8).map((item) => ({
-      id: item.id,
-      type: "publish",
-      title: item.title,
-      createdAt: item.created_at,
-      status: item.status,
-    }));
+    const publishEvents: PipelineEvent[] = publishJobs
+      .slice(0, 8)
+      .map((item) => ({
+        id: item.id,
+        type: "publish",
+        title: item.title,
+        createdAt: item.created_at,
+        status: item.status,
+      }));
 
     return [...trendEvents, ...contentEvents, ...publishEvents]
       .sort(
@@ -476,10 +485,15 @@ export function DashboardPage() {
           )}
         >
           <div className="mb-4 flex flex-wrap gap-2">
-            {([
-              { key: "score", label: copy("By Strength", "Theo độ mạnh") },
-              { key: "frequency", label: copy("By Frequency", "Theo tần suất") },
-            ] as const).map((mode) => {
+            {(
+              [
+                { key: "score", label: copy("By Strength", "Theo độ mạnh") },
+                {
+                  key: "frequency",
+                  label: copy("By Frequency", "Theo tần suất"),
+                },
+              ] as const
+            ).map((mode) => {
               const active = keywordSortMode === mode.key;
               return (
                 <button
@@ -554,12 +568,14 @@ export function DashboardPage() {
           )}
         >
           <div className="mb-4 flex flex-wrap gap-2">
-            {([
-              { key: "all", label: copy("All", "Tất cả") },
-              { key: "trend", label: copy("Trend", "Xu hướng") },
-              { key: "content", label: copy("Content", "Nội dung") },
-              { key: "publish", label: copy("Publish", "Đăng bài") },
-            ] as const).map((filter) => {
+            {(
+              [
+                { key: "all", label: copy("All", "Tất cả") },
+                { key: "trend", label: copy("Trend", "Xu hướng") },
+                { key: "content", label: copy("Content", "Nội dung") },
+                { key: "publish", label: copy("Publish", "Đăng bài") },
+              ] as const
+            ).map((filter) => {
               const active = eventFilter === filter.key;
               return (
                 <button
@@ -710,7 +726,9 @@ export function DashboardPage() {
             </p>
             <p className="mt-2 flex items-center gap-2 text-2xl font-semibold text-foreground">
               <Sparkles className="size-5 text-amber-500" />
-              {keywordPulse[0] ? formatPercentValue(keywordPulse[0].score) : "0%"}
+              {keywordPulse[0]
+                ? formatPercentValue(keywordPulse[0].score)
+                : "0%"}
             </p>
           </div>
         </div>

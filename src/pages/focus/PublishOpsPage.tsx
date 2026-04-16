@@ -281,7 +281,10 @@ export function PublishOpsPage() {
                   id="publish-ops-title"
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
-                  placeholder={copy("Ex: 3 tips to boost reach", "Ví dụ: 3 cách tăng độ phủ")}
+                  placeholder={copy(
+                    "Ex: 3 tips to boost reach",
+                    "Ví dụ: 3 cách tăng độ phủ",
+                  )}
                 />
               </div>
             </div>
@@ -345,9 +348,7 @@ export function PublishOpsPage() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
-                <Label htmlFor="publish-ops-tags">
-                  {copy("Tags", "Tags")}
-                </Label>
+                <Label htmlFor="publish-ops-tags">{copy("Tags", "Tags")}</Label>
                 <Input
                   id="publish-ops-tags"
                   value={tags}
@@ -377,7 +378,10 @@ export function PublishOpsPage() {
                   id="publish-ops-comment"
                   value={firstComment}
                   onChange={(event) => setFirstComment(event.target.value)}
-                  placeholder={copy("Optional starter comment", "Bình luận mở đầu tùy chọn")}
+                  placeholder={copy(
+                    "Optional starter comment",
+                    "Bình luận mở đầu tùy chọn",
+                  )}
                 />
               </div>
               <div className="space-y-1">
@@ -413,7 +417,9 @@ export function PublishOpsPage() {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="publish-ops-files">{copy("Media Files", "Tệp media")}</Label>
+              <Label htmlFor="publish-ops-files">
+                {copy("Media Files", "Tệp media")}
+              </Label>
               <Input
                 id="publish-ops-files"
                 type="file"
@@ -445,7 +451,9 @@ export function PublishOpsPage() {
                     value={userId}
                     onChange={(event) => setUserId(event.target.value)}
                   >
-                    <option value="">{copy("No link", "Không liên kết")}</option>
+                    <option value="">
+                      {copy("No link", "Không liên kết")}
+                    </option>
                     {(usersQuery.data?.users ?? []).map((appUser) => (
                       <option key={appUser.id} value={appUser.id}>
                         {appUser.email}
@@ -462,9 +470,13 @@ export function PublishOpsPage() {
                     id="publish-ops-generated-content"
                     className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
                     value={generatedContentId}
-                    onChange={(event) => setGeneratedContentId(event.target.value)}
+                    onChange={(event) =>
+                      setGeneratedContentId(event.target.value)
+                    }
                   >
-                    <option value="">{copy("No link", "Không liên kết")}</option>
+                    <option value="">
+                      {copy("No link", "Không liên kết")}
+                    </option>
                     {(generatedContentsQuery.data?.items ?? []).map((item) => (
                       <option key={item.id} value={item.id}>
                         {getDisplayTitle(item)}
@@ -528,10 +540,12 @@ export function PublishOpsPage() {
                   )}
                 </p>
                 <p className="mt-2">
-                  {copy("Current status", "Trạng thái hiện tại")}: {publishMutation.data.publish_job.status}
+                  {copy("Current status", "Trạng thái hiện tại")}:{" "}
+                  {publishMutation.data.publish_job.status}
                 </p>
                 <p>
-                  {copy("Channels", "Kênh đăng")}: {publishMutation.data.publish_job.platforms.join(", ")}
+                  {copy("Channels", "Kênh đăng")}:{" "}
+                  {publishMutation.data.publish_job.platforms.join(", ")}
                 </p>
               </div>
             ) : null}
@@ -585,7 +599,9 @@ export function PublishOpsPage() {
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-foreground">{job.title}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {job.title}
+                    </p>
                     <Badge
                       variant="outline"
                       className={cn(
@@ -646,7 +662,10 @@ export function PublishOpsPage() {
                 <span className="font-semibold text-foreground">
                   {copy("Scheduled time", "Thời gian lên lịch")}
                 </span>
-                : {selectedJobQuery.data.schedule_post ? formatDateTime(selectedJobQuery.data.schedule_post) : "--"}
+                :{" "}
+                {selectedJobQuery.data.schedule_post
+                  ? formatDateTime(selectedJobQuery.data.schedule_post)
+                  : "--"}
               </p>
               <p>
                 <span className="font-semibold text-foreground">
@@ -720,7 +739,8 @@ export function PublishOpsPage() {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {copy("Created", "Tạo lúc")}: {formatDateTime(record.created_at)}
+                    {copy("Created", "Tạo lúc")}:{" "}
+                    {formatDateTime(record.created_at)}
                   </p>
                 </div>
               ))}

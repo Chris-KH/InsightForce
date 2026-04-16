@@ -84,7 +84,9 @@ export function OpsControlPage() {
     publishJobsQuery.error;
 
   const processes = agentsQuery.data?.processes ?? [];
-  const reachableCount = processes.filter((process) => process.reachable).length;
+  const reachableCount = processes.filter(
+    (process) => process.reachable,
+  ).length;
 
   const trendRecords = trendHistoryQuery.data?.items ?? [];
   const generatedContents = generatedContentsQuery.data?.items ?? [];
@@ -109,7 +111,9 @@ export function OpsControlPage() {
       return publishJobs;
     }
 
-    return publishJobs.filter((job) => job.status.toLowerCase() === statusFilter);
+    return publishJobs.filter(
+      (job) => job.status.toLowerCase() === statusFilter,
+    );
   }, [publishJobs, statusFilter]);
 
   return (
@@ -272,24 +276,26 @@ export function OpsControlPage() {
           )}
         >
           <div className="mb-3 flex flex-wrap gap-2">
-            {(["all", "pending", "published", "failed"] as const).map((status) => {
-              const active = statusFilter === status;
-              return (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => setStatusFilter(status)}
-                  className={cn(
-                    "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                    active
-                      ? "border-primary/45 bg-primary/10 text-primary"
-                      : "border-border/70 bg-background/70 text-muted-foreground",
-                  )}
-                >
-                  {status}
-                </button>
-              );
-            })}
+            {(["all", "pending", "published", "failed"] as const).map(
+              (status) => {
+                const active = statusFilter === status;
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setStatusFilter(status)}
+                    className={cn(
+                      "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                      active
+                        ? "border-primary/45 bg-primary/10 text-primary"
+                        : "border-border/70 bg-background/70 text-muted-foreground",
+                    )}
+                  >
+                    {status}
+                  </button>
+                );
+              },
+            )}
           </div>
 
           {publishJobsQuery.isLoading ? (
@@ -305,7 +311,10 @@ export function OpsControlPage() {
                     <p className="text-sm font-semibold text-foreground">
                       {job.title}
                     </p>
-                    <Badge variant="outline" className="rounded-full capitalize">
+                    <Badge
+                      variant="outline"
+                      className="rounded-full capitalize"
+                    >
                       {job.status}
                     </Badge>
                   </div>
@@ -313,7 +322,8 @@ export function OpsControlPage() {
                     {copy("Channel", "Kênh")}: {job.platforms.join(", ")}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Time", "Thời gian")}: {formatDateTime(job.schedule_post ?? job.created_at)}
+                    {copy("Time", "Thời gian")}:{" "}
+                    {formatDateTime(job.schedule_post ?? job.created_at)}
                   </p>
                 </div>
               ))}
@@ -344,12 +354,17 @@ export function OpsControlPage() {
             <div className="space-y-3">
               {trendRecords.slice(0, 6).map((record) => (
                 <div
-                  key={record.analysis_id ?? `${record.query}-${record.created_at}`}
+                  key={
+                    record.analysis_id ?? `${record.query}-${record.created_at}`
+                  }
                   className="rounded-2xl border border-border/65 bg-background/65 p-4"
                 >
-                  <p className="text-sm font-semibold text-foreground">{record.query}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {record.query}
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Created", "Khởi tạo")}: {formatDateTime(record.created_at)}
+                    {copy("Created", "Khởi tạo")}:{" "}
+                    {formatDateTime(record.created_at)}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {copy("Insights", "Số insight")}: {record.results.length}
@@ -385,10 +400,13 @@ export function OpsControlPage() {
                   className="rounded-2xl border border-border/65 bg-background/65 p-4"
                 >
                   <p className="text-sm font-semibold text-foreground">
-                    {record.main_title || record.selected_keyword || copy("Untitled", "Chưa đặt tiêu đề")}
+                    {record.main_title ||
+                      record.selected_keyword ||
+                      copy("Untitled", "Chưa đặt tiêu đề")}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Created", "Khởi tạo")}: {formatDateTime(record.created_at)}
+                    {copy("Created", "Khởi tạo")}:{" "}
+                    {formatDateTime(record.created_at)}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {copy("Status", "Trạng thái")}: {record.status}

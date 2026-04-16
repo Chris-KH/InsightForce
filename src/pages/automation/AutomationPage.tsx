@@ -314,8 +314,9 @@ export function AutomationPage() {
             {historyItems[0] ? (
               <div className="rounded-2xl border border-border/55 bg-background/55 p-4 text-xs text-muted-foreground">
                 <p>
-                  {copy("Latest campaign", "Chiến dịch gần nhất")}: {" "}
-                  {historyItems[0].post_title || copy("Untitled post", "Bài chưa đặt tiêu đề")}
+                  {copy("Latest campaign", "Chiến dịch gần nhất")}:{" "}
+                  {historyItems[0].post_title ||
+                    copy("Untitled post", "Bài chưa đặt tiêu đề")}
                 </p>
                 <p className="mt-1">
                   {copy("Platform", "Nền tảng")}: {historyItems[0].platform}
@@ -527,8 +528,14 @@ export function AutomationPage() {
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">
                   {process.reachable
-                    ? copy("Ready to support your workflow.", "Sẵn sàng hỗ trợ luồng làm việc của bạn.")
-                    : copy("Temporarily unavailable, retrying automatically.", "Tạm thời gián đoạn, hệ thống sẽ tự thử lại.")}
+                    ? copy(
+                        "Ready to support your workflow.",
+                        "Sẵn sàng hỗ trợ luồng làm việc của bạn.",
+                      )
+                    : copy(
+                        "Temporarily unavailable, retrying automatically.",
+                        "Tạm thời gián đoạn, hệ thống sẽ tự thử lại.",
+                      )}
                 </p>
                 <p
                   className={cn(
@@ -591,7 +598,9 @@ export function AutomationPage() {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="comment-post-id">{copy("Post Code", "Mã bài đăng")}</Label>
+            <Label htmlFor="comment-post-id">
+              {copy("Post Code", "Mã bài đăng")}
+            </Label>
             <Input
               id="comment-post-id"
               value={commentPostId}
@@ -601,7 +610,9 @@ export function AutomationPage() {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="comment-post-url">{copy("Post Link", "Đường dẫn bài đăng")}</Label>
+            <Label htmlFor="comment-post-url">
+              {copy("Post Link", "Đường dẫn bài đăng")}
+            </Label>
             <Input
               id="comment-post-url"
               value={commentPostUrl}

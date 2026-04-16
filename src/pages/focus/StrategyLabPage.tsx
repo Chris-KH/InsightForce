@@ -151,7 +151,10 @@ export function StrategyLabPage() {
           en: "Turn one idea into clear trend insights and actionable content suggestions for your next campaign.",
           vi: "Biến một ý tưởng thành insight xu hướng rõ ràng và gợi ý nội dung có thể triển khai ngay cho chiến dịch tiếp theo.",
         }}
-        badge={{ en: "Creative Strategy Studio", vi: "Studio chiến lược sáng tạo" }}
+        badge={{
+          en: "Creative Strategy Studio",
+          vi: "Studio chiến lược sáng tạo",
+        }}
         icon={FlaskConical}
       />
 
@@ -262,7 +265,10 @@ export function StrategyLabPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="orchestrator-user-id">
-                  {copy("Workspace Account (optional)", "Tài khoản làm việc (tùy chọn)")}
+                  {copy(
+                    "Workspace Account (optional)",
+                    "Tài khoản làm việc (tùy chọn)",
+                  )}
                 </Label>
                 <Input
                   id="orchestrator-user-id"
@@ -373,7 +379,8 @@ export function StrategyLabPage() {
                     <Button
                       key={result.main_keyword}
                       variant={
-                        selectedTrendResult?.main_keyword === result.main_keyword
+                        selectedTrendResult?.main_keyword ===
+                        result.main_keyword
                           ? "default"
                           : "outline"
                       }
@@ -393,12 +400,18 @@ export function StrategyLabPage() {
                     {selectedTrendResult.main_keyword}
                   </p>
                   <p className="mt-1">
-                    {copy("Momentum", "Độ nóng")}: {formatPercentValue(selectedTrendResult.trend_score)}
+                    {copy("Momentum", "Độ nóng")}:{" "}
+                    {formatPercentValue(selectedTrendResult.trend_score)}
                   </p>
                   <p className="mt-1">
-                    {copy("Estimated views/hour", "Ước tính views/giờ")}: {formatCompactNumber(selectedTrendResult.avg_views_per_hour)}
+                    {copy("Estimated views/hour", "Ước tính views/giờ")}:{" "}
+                    {formatCompactNumber(
+                      selectedTrendResult.avg_views_per_hour,
+                    )}
                   </p>
-                  <p className="mt-2">{selectedTrendResult.why_the_trend_happens}</p>
+                  <p className="mt-2">
+                    {selectedTrendResult.why_the_trend_happens}
+                  </p>
                 </div>
               ) : null}
 
@@ -407,16 +420,22 @@ export function StrategyLabPage() {
                   {copy("Content Direction", "Định hướng nội dung")}
                 </p>
                 <p className="mt-2">
-                  {copy("Focus keyword", "Keyword trọng tâm")}: {selectedOutputKeyword ?? "--"}
+                  {copy("Focus keyword", "Keyword trọng tâm")}:{" "}
+                  {selectedOutputKeyword ?? "--"}
                 </p>
                 <p className="mt-1">
                   {copy("Main title", "Tiêu đề chính")}: {mainTitle ?? "--"}
                 </p>
                 <p className="mt-1">
-                  {copy("Mood suggestion", "Gợi ý cảm hứng nhạc")}: {musicBackground ?? "--"}
+                  {copy("Mood suggestion", "Gợi ý cảm hứng nhạc")}:{" "}
+                  {musicBackground ?? "--"}
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {copy("Channel-specific post drafts", "Bản nháp theo từng kênh")}: {Object.keys(platformPosts).length}
+                  {copy(
+                    "Channel-specific post drafts",
+                    "Bản nháp theo từng kênh",
+                  )}
+                  : {Object.keys(platformPosts).length}
                 </p>
               </div>
             </div>
@@ -495,7 +514,8 @@ export function StrategyLabPage() {
                     {copy("Status", "Trạng thái")}: {item.status}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {copy("Keyword", "Keyword")}: {item.selected_keyword ?? "--"}
+                    {copy("Keyword", "Keyword")}:{" "}
+                    {item.selected_keyword ?? "--"}
                   </p>
                 </div>
               ))}
