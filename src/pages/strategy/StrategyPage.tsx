@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import {
   Bot,
   Clock3,
@@ -479,9 +480,18 @@ function StrategyPageContent({ copy, locale }: StrategyPageContentProps) {
     !hasGeneralTrendData &&
     (trendHistoryQuery.isLoading || generalTrendQuery.isFetching);
   const generalTrendError = generalTrendQuery.error ?? trendHistoryQuery.error;
+  const sectionTransition = {
+    duration: 0.45,
+    ease: [0.22, 1, 0.36, 1] as const,
+  };
 
   return (
-    <div className="grid gap-8">
+    <motion.div
+      className="grid gap-8"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+    >
       <SectionHeader
         eyebrow={copy("Trend Intelligence", "Trí tuệ xu hướng")}
         title={copy(
@@ -579,220 +589,247 @@ function StrategyPageContent({ copy, locale }: StrategyPageContentProps) {
         </div>
       )}
 
-      {!hasGeneralTrendData && generalTrendError ? (
-        <QueryStateCard
-          state="error"
-          title={copy("Trend Load Error", "Lỗi tải trend")}
-          description={getQueryErrorMessage(
-            generalTrendError,
-            "Unable to fetch general trend data.",
-          )}
-          hint={copy(
-            "Try using the live refresh button after backend is ready.",
-            "Hãy thử nút làm mới live khi backend sẵn sàng.",
-          )}
-        />
-      ) : null}
+      <AnimatePresence initial={false} mode="wait">
+        {!hasGeneralTrendData && generalTrendError ? (
+          <motion.div
+            key="strategy-trend-error"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <QueryStateCard
+              state="error"
+              title={copy("Trend Load Error", "Lỗi tải trend")}
+              description={getQueryErrorMessage(
+                generalTrendError,
+                "Unable to fetch general trend data.",
+              )}
+              hint={copy(
+                "Try using the live refresh button after backend is ready.",
+                "Hãy thử nút làm mới live khi backend sẵn sàng.",
+              )}
+            />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <PanelCard
-          title={copy("General Trend Graph", "Đồ thị trend tổng quát")}
-          description={copy(
-            "Each node is one trend result; higher trend score means larger node. You can zoom, pan, and drag nodes.",
-            "Mỗi node là một trend result; điểm càng cao node càng to. Bạn có thể zoom, pan và kéo node.",
-          )}
-          action={
-            <Badge variant="outline" className="rounded-full border-primary/25">
-              <Sparkles className="mr-1.5 size-3.5" />
-              {copy("Interactive Graph", "Đồ thị tương tác")}
-            </Badge>
-          }
-        >
-          <TrendForceGraph
-            results={generalResults}
-            selectedNodeId={selectedGeneralNodeId}
-            onSelectNode={handleSelectGeneralNode}
-            copy={copy}
-          />
-        </PanelCard>
+      <motion.div
+        className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]"
+        initial={{ opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ ...sectionTransition, delay: 0.05 }}
+      >
+        <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
+          <PanelCard
+            title={copy("General Trend Graph", "Đồ thị trend tổng quát")}
+            description={copy(
+              "Each node is one trend result; higher trend score means larger node. You can zoom, pan, and drag nodes.",
+              "Mỗi node là một trend result; điểm càng cao node càng to. Bạn có thể zoom, pan và kéo node.",
+            )}
+            action={
+              <Badge
+                variant="outline"
+                className="rounded-full border-primary/25"
+              >
+                <Sparkles className="mr-1.5 size-3.5" />
+                {copy("Interactive Graph", "Đồ thị tương tác")}
+              </Badge>
+            }
+          >
+            <TrendForceGraph
+              results={generalResults}
+              selectedNodeId={selectedGeneralNodeId}
+              onSelectNode={handleSelectGeneralNode}
+              copy={copy}
+            />
+          </PanelCard>
+        </motion.div>
 
-        <PanelCard
-          title={copy("General Trend Feed", "Danh sách trend tổng quát")}
-          description={copy(
-            "Select one node on the graph to reveal full insight, action plans, and one-click prompts.",
-            "Hãy chọn một node trên đồ thị để mở phân tích chi tiết, kế hoạch gợi ý và prompt 1 chạm.",
-          )}
-        >
-          {generalSelectedResult ? (
-            <div className="space-y-4">
-              <Card className="border-primary/22 bg-primary/7" size="sm">
-                <CardHeader>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <CardTitle>
-                        {copy("Selected Opportunity", "Cơ hội đang chọn")}
-                      </CardTitle>
-                      <CardDescription>
-                        {generalSelectedResult.main_keyword}
-                      </CardDescription>
+        <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
+          <PanelCard
+            title={copy("General Trend Feed", "Danh sách trend tổng quát")}
+            description={copy(
+              "Select one node on the graph to reveal full insight, action plans, and one-click prompts.",
+              "Hãy chọn một node trên đồ thị để mở phân tích chi tiết, kế hoạch gợi ý và prompt 1 chạm.",
+            )}
+          >
+            {generalSelectedResult ? (
+              <div className="space-y-4">
+                <Card className="border-primary/22 bg-primary/7" size="sm">
+                  <CardHeader>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <CardTitle>
+                          {copy("Selected Opportunity", "Cơ hội đang chọn")}
+                        </CardTitle>
+                        <CardDescription>
+                          {generalSelectedResult.main_keyword}
+                        </CardDescription>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className="rounded-full border-primary/30 bg-background/80"
+                      >
+                        <Target className="mr-1.5 size-3.5" />
+                        {formatPercentValue(generalSelectedResult.trend_score)}
+                      </Badge>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className="rounded-full border-primary/30 bg-background/80"
-                    >
-                      <Target className="mr-1.5 size-3.5" />
-                      {formatPercentValue(generalSelectedResult.trend_score)}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm text-muted-foreground">
-                  <p>
-                    {generalSelectedResult.why_the_trend_happens ||
-                      copy(
-                        "Insight details are still being updated.",
-                        "Phần diễn giải chi tiết đang được cập nhật.",
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm text-muted-foreground">
+                    <p>
+                      {generalSelectedResult.why_the_trend_happens ||
+                        copy(
+                          "Insight details are still being updated.",
+                          "Phần diễn giải chi tiết đang được cập nhật.",
+                        )}
+                    </p>
+
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div className="rounded-xl border border-border/60 bg-background/65 p-3">
+                        <p className="text-[10px] font-semibold tracking-[0.14em] uppercase">
+                          {copy("Avg views / hour", "Trung bình views / giờ")}
+                        </p>
+                        <p className="mt-1 text-base font-semibold text-foreground">
+                          {formatCompactNumber(
+                            generalSelectedResult.avg_views_per_hour,
+                          )}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-border/60 bg-background/65 p-3">
+                        <p className="text-[10px] font-semibold tracking-[0.14em] uppercase">
+                          {copy("Recommended action", "Hành động chính")}
+                        </p>
+                        <p className="mt-1 text-sm text-foreground">
+                          {generalSelectedResult.recommended_action ||
+                            copy(
+                              "Continue monitoring this signal before scaling.",
+                              "Tiếp tục theo dõi tín hiệu này trước khi mở rộng.",
+                            )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {generalSelectedResult.top_hashtags.map((hashtag) => (
+                        <Badge
+                          key={hashtag}
+                          variant="outline"
+                          className="rounded-full"
+                        >
+                          {hashtag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/70 bg-background/55" size="sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <ListChecks className="size-4 text-primary" />
+                      {copy("Suggested Plan", "Kế hoạch gợi ý")}
+                    </CardTitle>
+                    <CardDescription>
+                      {copy(
+                        "Execution checklist generated from the selected trend signal.",
+                        "Checklist triển khai được tạo từ tín hiệu trend đang chọn.",
                       )}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    {generalPlanSuggestions.map((plan, index) => (
+                      <div
+                        key={`${generalSelectedResult.main_keyword}-plan-${index}`}
+                        className="rounded-xl border border-border/60 bg-background/70 px-3 py-2 text-muted-foreground"
+                      >
+                        <span className="mr-2 text-primary">{index + 1}.</span>
+                        {plan}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <div className="space-y-2 rounded-2xl border border-border/65 bg-background/55 p-4">
+                  <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                    <WandSparkles className="size-3.5 text-primary" />
+                    {copy(
+                      "Prompt Suggestions For This Trend",
+                      "Prompt Gợi Ý Cho Trend Này",
+                    )}
                   </p>
 
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <div className="rounded-xl border border-border/60 bg-background/65 p-3">
-                      <p className="text-[10px] font-semibold tracking-[0.14em] uppercase">
-                        {copy("Avg views / hour", "Trung bình views / giờ")}
-                      </p>
-                      <p className="mt-1 text-base font-semibold text-foreground">
-                        {formatCompactNumber(
-                          generalSelectedResult.avg_views_per_hour,
-                        )}
-                      </p>
-                    </div>
-                    <div className="rounded-xl border border-border/60 bg-background/65 p-3">
-                      <p className="text-[10px] font-semibold tracking-[0.14em] uppercase">
-                        {copy("Recommended action", "Hành động chính")}
-                      </p>
-                      <p className="mt-1 text-sm text-foreground">
-                        {generalSelectedResult.recommended_action ||
-                          copy(
-                            "Continue monitoring this signal before scaling.",
-                            "Tiếp tục theo dõi tín hiệu này trước khi mở rộng.",
-                          )}
-                      </p>
-                    </div>
+                  <div className="flex flex-wrap gap-2">
+                    {generalPromptSuggestions.map((suggestion) => (
+                      <Button
+                        key={suggestion}
+                        variant="outline"
+                        size="sm"
+                        className="max-w-full truncate"
+                        disabled={isTrendAnalyzePending}
+                        onClick={() =>
+                          handleGeneralPromptSuggestionClick(suggestion)
+                        }
+                      >
+                        <Rocket data-icon="inline-start" />
+                        {suggestion}
+                      </Button>
+                    ))}
                   </div>
 
+                  <p className="text-xs text-muted-foreground">
+                    {copy(
+                      "Click one prompt to jump to Prompt Trend Studio and run analysis immediately.",
+                      "Bấm một prompt để nhảy xuống Prompt Trend Studio và chạy phân tích ngay.",
+                    )}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="relative overflow-hidden rounded-2xl border border-dashed border-border/70 bg-linear-to-br from-background/75 via-background/40 to-muted/28 px-5 py-7">
+                <div className="pointer-events-none absolute -top-16 -right-12 size-40 rounded-full bg-primary/10 blur-3xl" />
+                <div className="pointer-events-none absolute -bottom-16 -left-10 size-44 rounded-full bg-chart-2/10 blur-3xl" />
+
+                <div className="relative space-y-4">
+                  <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+                    <MousePointerClick className="size-3.5" />
+                    {copy("Awaiting Node Selection", "Đang chờ bạn chọn node")}
+                  </p>
+
+                  <p className="max-w-xl text-sm text-muted-foreground">
+                    {copy(
+                      "General Trend Feed stays in preview mode until you click a node in the graph. Once selected, this panel will reveal detailed insight, action plans, and one-click prompts.",
+                      "General Trend Feed sẽ để chế độ trang trí cho tới khi bạn click vào một node trên đồ thị. Sau khi chọn, panel này sẽ hiện phân tích chi tiết, kế hoạch hành động và prompt 1 chạm.",
+                    )}
+                  </p>
+
                   <div className="flex flex-wrap gap-2">
-                    {generalSelectedResult.top_hashtags.map((hashtag) => (
+                    {generalResults.slice(0, 4).map((item) => (
                       <Badge
-                        key={hashtag}
+                        key={`decor-${item.main_keyword}`}
                         variant="outline"
-                        className="rounded-full"
+                        className="rounded-full border-border/65 bg-background/75 text-muted-foreground"
                       >
-                        {hashtag}
+                        {item.main_keyword}
                       </Badge>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-border/70 bg-background/55" size="sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <ListChecks className="size-4 text-primary" />
-                    {copy("Suggested Plan", "Kế hoạch gợi ý")}
-                  </CardTitle>
-                  <CardDescription>
-                    {copy(
-                      "Execution checklist generated from the selected trend signal.",
-                      "Checklist triển khai được tạo từ tín hiệu trend đang chọn.",
-                    )}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  {generalPlanSuggestions.map((plan, index) => (
-                    <div
-                      key={`${generalSelectedResult.main_keyword}-plan-${index}`}
-                      className="rounded-xl border border-border/60 bg-background/70 px-3 py-2 text-muted-foreground"
-                    >
-                      <span className="mr-2 text-primary">{index + 1}.</span>
-                      {plan}
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              <div className="space-y-2 rounded-2xl border border-border/65 bg-background/55 p-4">
-                <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                  <WandSparkles className="size-3.5 text-primary" />
-                  {copy(
-                    "Prompt Suggestions For This Trend",
-                    "Prompt Gợi Ý Cho Trend Này",
-                  )}
-                </p>
-
-                <div className="flex flex-wrap gap-2">
-                  {generalPromptSuggestions.map((suggestion) => (
-                    <Button
-                      key={suggestion}
-                      variant="outline"
-                      size="sm"
-                      className="max-w-full truncate"
-                      disabled={isTrendAnalyzePending}
-                      onClick={() =>
-                        handleGeneralPromptSuggestionClick(suggestion)
-                      }
-                    >
-                      <Rocket data-icon="inline-start" />
-                      {suggestion}
-                    </Button>
-                  ))}
-                </div>
-
-                <p className="text-xs text-muted-foreground">
-                  {copy(
-                    "Click one prompt to jump to Prompt Trend Studio and run analysis immediately.",
-                    "Bấm một prompt để nhảy xuống Prompt Trend Studio và chạy phân tích ngay.",
-                  )}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="relative overflow-hidden rounded-2xl border border-dashed border-border/70 bg-linear-to-br from-background/75 via-background/40 to-muted/28 px-5 py-7">
-              <div className="pointer-events-none absolute -top-16 -right-12 size-40 rounded-full bg-primary/10 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-16 -left-10 size-44 rounded-full bg-chart-2/10 blur-3xl" />
-
-              <div className="relative space-y-4">
-                <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
-                  <MousePointerClick className="size-3.5" />
-                  {copy("Awaiting Node Selection", "Đang chờ bạn chọn node")}
-                </p>
-
-                <p className="max-w-xl text-sm text-muted-foreground">
-                  {copy(
-                    "General Trend Feed stays in preview mode until you click a node in the graph. Once selected, this panel will reveal detailed insight, action plans, and one-click prompts.",
-                    "General Trend Feed sẽ để chế độ trang trí cho tới khi bạn click vào một node trên đồ thị. Sau khi chọn, panel này sẽ hiện phân tích chi tiết, kế hoạch hành động và prompt 1 chạm.",
-                  )}
-                </p>
-
-                <div className="flex flex-wrap gap-2">
-                  {generalResults.slice(0, 4).map((item) => (
-                    <Badge
-                      key={`decor-${item.main_keyword}`}
-                      variant="outline"
-                      className="rounded-full border-border/65 bg-background/75 text-muted-foreground"
-                    >
-                      {item.main_keyword}
-                    </Badge>
-                  ))}
                 </div>
               </div>
-            </div>
-          )}
-        </PanelCard>
-      </div>
+            )}
+          </PanelCard>
+        </motion.div>
+      </motion.div>
 
-      <div
+      <motion.div
         ref={promptStudioRef}
         id="prompt-trend-studio"
         className="scroll-mt-28"
+        initial={{ opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ ...sectionTransition, delay: 0.08 }}
       >
         <TrendPromptCommandDeck
           copy={copy}
@@ -817,9 +854,16 @@ function StrategyPageContent({ copy, locale }: StrategyPageContentProps) {
           resultCount={promptResults.length}
           topKeyword={promptSelectedResult?.main_keyword}
         />
-      </div>
+      </motion.div>
 
-      <section id="prompt-trend-results" className="scroll-mt-28">
+      <motion.section
+        id="prompt-trend-results"
+        className="scroll-mt-28"
+        initial={{ opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ ...sectionTransition, delay: 0.12 }}
+      >
         <PanelCard
           title={copy("Prompt Trend Results", "Kết quả trend từ prompt")}
           description={copy(
@@ -837,64 +881,82 @@ function StrategyPageContent({ copy, locale }: StrategyPageContentProps) {
               copy={copy}
             />
 
-            {promptSelectedResult ? (
-              <Card
-                className="h-fit rounded-2xl border-primary/22 bg-primary/6"
-                size="sm"
-              >
-                <CardHeader>
-                  <CardTitle>{promptSelectedResult.main_keyword}</CardTitle>
-                  <CardDescription>
-                    {copy("Deep-dive insight", "Phân tích chi tiết")}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm text-muted-foreground">
-                  <p>
-                    {promptSelectedResult.why_the_trend_happens ||
-                      copy(
-                        "Insight details are still being updated.",
-                        "Phần diễn giải chi tiết đang được cập nhật.",
-                      )}
-                  </p>
-                  <p>
-                    {copy("Action", "Hành động")}:{" "}
-                    {promptSelectedResult.recommended_action ||
-                      copy(
-                        "Continue monitoring this signal before scaling.",
-                        "Tiếp tục theo dõi tín hiệu này trước khi mở rộng.",
-                      )}
-                  </p>
-                  <p>
-                    {copy("Avg views / hour", "Trung bình views / giờ")}:{" "}
-                    {formatCompactNumber(
-                      promptSelectedResult.avg_views_per_hour,
+            <AnimatePresence mode="wait">
+              {promptSelectedResult ? (
+                <motion.div
+                  key={promptSelectedResult.main_keyword}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <Card
+                    className="h-fit rounded-2xl border-primary/22 bg-primary/6"
+                    size="sm"
+                  >
+                    <CardHeader>
+                      <CardTitle>{promptSelectedResult.main_keyword}</CardTitle>
+                      <CardDescription>
+                        {copy("Deep-dive insight", "Phân tích chi tiết")}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-muted-foreground">
+                      <p>
+                        {promptSelectedResult.why_the_trend_happens ||
+                          copy(
+                            "Insight details are still being updated.",
+                            "Phần diễn giải chi tiết đang được cập nhật.",
+                          )}
+                      </p>
+                      <p>
+                        {copy("Action", "Hành động")}:{" "}
+                        {promptSelectedResult.recommended_action ||
+                          copy(
+                            "Continue monitoring this signal before scaling.",
+                            "Tiếp tục theo dõi tín hiệu này trước khi mở rộng.",
+                          )}
+                      </p>
+                      <p>
+                        {copy("Avg views / hour", "Trung bình views / giờ")}:{" "}
+                        {formatCompactNumber(
+                          promptSelectedResult.avg_views_per_hour,
+                        )}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {promptSelectedResult.top_hashtags.map((hashtag) => (
+                          <Badge
+                            key={hashtag}
+                            variant="outline"
+                            className="rounded-full"
+                          >
+                            {hashtag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="prompt-empty"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <InlineQueryState
+                    state="empty"
+                    message={copy(
+                      "Submit a prompt to generate ranked trend opportunities.",
+                      "Hãy gửi prompt để tạo danh sách cơ hội trend được xếp hạng.",
                     )}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {promptSelectedResult.top_hashtags.map((hashtag) => (
-                      <Badge
-                        key={hashtag}
-                        variant="outline"
-                        className="rounded-full"
-                      >
-                        {hashtag}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <InlineQueryState
-                state="empty"
-                message={copy(
-                  "Submit a prompt to generate ranked trend opportunities.",
-                  "Hãy gửi prompt để tạo danh sách cơ hội trend được xếp hạng.",
-                )}
-              />
-            )}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </PanelCard>
-      </section>
-    </div>
+      </motion.section>
+    </motion.div>
   );
 }

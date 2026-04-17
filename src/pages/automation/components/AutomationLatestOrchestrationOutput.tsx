@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { motion } from "motion/react";
 
 import type { TrendAnalyzeResultItem } from "@/api";
 import { useAppSelector } from "@/hooks";
@@ -15,7 +16,8 @@ import {
 
 import { LatestOutputMetadataPanel } from "./latest-output/LatestOutputMetadataPanel";
 import { LatestOutputOverviewPanel } from "./latest-output/LatestOutputOverviewPanel";
-import { LatestOutputPlatformScriptPanels } from "./latest-output/LatestOutputPlatformScriptPanels";
+import { LatestOutputPlatformPostMixPanel } from "./latest-output/LatestOutputPlatformPostMixPanel";
+import { LatestOutputScriptBlueprintPanel } from "./latest-output/LatestOutputScriptBlueprintPanel";
 import { LatestOutputStoryboardPanel } from "./latest-output/LatestOutputStoryboardPanel";
 import { LatestOutputTrendCharts } from "./latest-output/LatestOutputTrendCharts";
 
@@ -197,9 +199,13 @@ export function AutomationLatestOrchestrationOutput() {
 
   return (
     <>
-      <section
+      <motion.section
         id="latest-orchestration-output"
         className="grid scroll-mt-28 gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]"
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
         <LatestOutputOverviewPanel
           copy={copy}
@@ -218,24 +224,52 @@ export function AutomationLatestOrchestrationOutput() {
           latestOrchestrationResponse={latestOrchestrationResponse}
           latestGeneratedContent={latestGeneratedContent}
         />
-      </section>
+      </motion.section>
 
-      <LatestOutputPlatformScriptPanels
-        copy={copy}
-        latestGeneratedContent={latestGeneratedContent}
-        latestPlatformMixData={latestPlatformMixData}
-        latestPublishingWindows={latestPublishingWindows}
-      />
-      <LatestOutputStoryboardPanel
-        copy={copy}
-        sections={latestGeneratedContent.sections}
-      />
-      <LatestOutputTrendCharts
-        copy={copy}
-        latestTrendResults={latestTrendResults}
-        latestTrendBarData={latestTrendBarData}
-        latestInterestLineData={latestInterestLineData}
-      />
+      <motion.div
+        className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+        initial={{ opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.5, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <LatestOutputPlatformPostMixPanel
+          copy={copy}
+          latestGeneratedContent={latestGeneratedContent}
+          latestPlatformMixData={latestPlatformMixData}
+        />
+        <LatestOutputStoryboardPanel
+          copy={copy}
+          sections={latestGeneratedContent.sections}
+        />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 22 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.52, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <LatestOutputScriptBlueprintPanel
+          copy={copy}
+          latestGeneratedContent={latestGeneratedContent}
+          latestPublishingWindows={latestPublishingWindows}
+        />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.46, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <LatestOutputTrendCharts
+          copy={copy}
+          latestTrendResults={latestTrendResults}
+          latestTrendBarData={latestTrendBarData}
+          latestInterestLineData={latestInterestLineData}
+        />
+      </motion.div>
     </>
   );
 }

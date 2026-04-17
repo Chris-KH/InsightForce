@@ -1,6 +1,7 @@
 import { InlineQueryState } from "@/components/app-query-state";
 import { PanelCard } from "@/components/app-section";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { motion } from "motion/react";
 import type { StoryboardFrame } from "@/lib/orchestrator-intelligence";
 
 type CopyFn = (en: string, vi: string) => string;
@@ -24,13 +25,23 @@ export function LatestOutputStoryboardPanel({
         "Visual references generated for each script segment.",
         "Bộ khung hình tham chiếu tương ứng với từng phân đoạn kịch bản.",
       )}
+      className="h-fit"
     >
       {sections.length > 0 ? (
-        <ScrollArea className="h-120 pr-3">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {sections.map((section) => (
-              <article
+        <ScrollArea className="h-160 pr-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
+            {sections.map((section, index) => (
+              <motion.article
                 key={`storyboard-${section.id}`}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{
+                  duration: 0.35,
+                  delay: index * 0.04,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                whileHover={{ scale: 1.01 }}
                 className="overflow-hidden rounded-2xl border border-border/65 bg-background/70"
               >
                 <img
@@ -58,7 +69,7 @@ export function LatestOutputStoryboardPanel({
                       copy("(mock-only)", "(chỉ mô phỏng)")}
                   </p>
                 </div>
-              </article>
+              </motion.article>
             ))}
           </div>
         </ScrollArea>

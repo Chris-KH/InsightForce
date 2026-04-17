@@ -8,6 +8,7 @@ import {
   Users,
   Workflow,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 
 import {
   type GeneratedContentResponse,
@@ -146,8 +147,18 @@ export function DashboardPage() {
     ]);
   };
 
+  const sectionTransition = {
+    duration: 0.45,
+    ease: [0.22, 1, 0.36, 1] as const,
+  };
+
   return (
-    <div className="grid gap-8">
+    <motion.div
+      className="grid gap-8"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+    >
       <SectionHeader
         eyebrow={copy("Daily Creator View", "Góc nhìn creator mỗi ngày")}
         title={copy(
@@ -184,175 +195,274 @@ export function DashboardPage() {
         }
       />
 
-      {firstError ? (
-        <QueryStateCard
-          state="error"
-          title={copy("Data Load Error", "Lỗi tải dữ liệu")}
-          description={getQueryErrorMessage(
-            firstError,
-            "Unable to load dashboard data right now.",
-          )}
-          hint={copy(
-            "You can keep working, then refresh this page in a moment.",
-            "Bạn vẫn có thể làm việc, sau đó thử làm mới lại trang sau ít phút.",
-          )}
-        />
-      ) : null}
+      <AnimatePresence initial={false} mode="wait">
+        {firstError ? (
+          <motion.div
+            key="dashboard-error"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <QueryStateCard
+              state="error"
+              title={copy("Data Load Error", "Lỗi tải dữ liệu")}
+              description={getQueryErrorMessage(
+                firstError,
+                "Unable to load dashboard data right now.",
+              )}
+              hint={copy(
+                "You can keep working, then refresh this page in a moment.",
+                "Bạn vẫn có thể làm việc, sau đó thử làm mới lại trang sau ít phút.",
+              )}
+            />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       {isInitialLoading ? (
         <MetricCardsSkeleton />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label={copy("System Readiness", "Mức sẵn sàng hệ thống")}
-            value={(healthQuery.data?.status ?? "unknown").toUpperCase()}
-            detail={copy(
-              "Core services for your daily flow",
-              "Các thành phần cốt lõi cho luồng làm việc hằng ngày",
-            )}
-            icon={<Activity className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Ready Assistants", "Trợ lý sẵn sàng")}
-            value={`${reachableAgents}/${processes.length}`}
-            detail={copy(
-              "Support team currently online",
-              "Đội trợ lý đang trực tuyến",
-            )}
-            icon={<Bot className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Idea Inventory", "Kho ý tưởng")}
-            value={formatCompactNumber(
-              trendRecords.length + generatedContents.length,
-            )}
-            detail={copy(
-              "Trend insights and generated drafts",
-              "Insight xu hướng và bản nháp đã tạo",
-            )}
-            icon={<Database className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Publishing Health", "Sức khỏe đăng bài")}
-            value={formatPercentFromRatio(publishSuccessRatio)}
-            detail={copy(
-              "Quality of recent publishing tasks",
-              "Chất lượng các tác vụ đăng gần đây",
-            )}
-            icon={<Workflow className="size-5" />}
-          />
-        </div>
+        <motion.div
+          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.35 }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ ...sectionTransition, delay: 0.02 }}
+            whileHover={{ y: -3 }}
+          >
+            <MetricCard
+              label={copy("System Readiness", "Mức sẵn sàng hệ thống")}
+              value={(healthQuery.data?.status ?? "unknown").toUpperCase()}
+              detail={copy(
+                "Core services for your daily flow",
+                "Các thành phần cốt lõi cho luồng làm việc hằng ngày",
+              )}
+              icon={<Activity className="size-5" />}
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ ...sectionTransition, delay: 0.06 }}
+            whileHover={{ y: -3 }}
+          >
+            <MetricCard
+              label={copy("Ready Assistants", "Trợ lý sẵn sàng")}
+              value={`${reachableAgents}/${processes.length}`}
+              detail={copy(
+                "Support team currently online",
+                "Đội trợ lý đang trực tuyến",
+              )}
+              icon={<Bot className="size-5" />}
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ ...sectionTransition, delay: 0.1 }}
+            whileHover={{ y: -3 }}
+          >
+            <MetricCard
+              label={copy("Idea Inventory", "Kho ý tưởng")}
+              value={formatCompactNumber(
+                trendRecords.length + generatedContents.length,
+              )}
+              detail={copy(
+                "Trend insights and generated drafts",
+                "Insight xu hướng và bản nháp đã tạo",
+              )}
+              icon={<Database className="size-5" />}
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ ...sectionTransition, delay: 0.14 }}
+            whileHover={{ y: -3 }}
+          >
+            <MetricCard
+              label={copy("Publishing Health", "Sức khỏe đăng bài")}
+              value={formatPercentFromRatio(publishSuccessRatio)}
+              detail={copy(
+                "Quality of recent publishing tasks",
+                "Chất lượng các tác vụ đăng gần đây",
+              )}
+              icon={<Workflow className="size-5" />}
+            />
+          </motion.div>
+        </motion.div>
       )}
 
-      <PanelCard
-        title={copy("Campaign Focus Board", "Bảng điều phối ưu tiên")}
-        description={copy(
-          "A fast decision layer combining strongest trend signal, execution backlog, and top operator activity.",
-          "Lớp ra quyết định nhanh kết hợp tín hiệu trend mạnh nhất, backlog thực thi và tài khoản vận hành tích cực nhất.",
-        )}
-        className="border-primary/25 bg-linear-to-br from-primary/8 via-card/96 to-chart-2/12"
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ ...sectionTransition, delay: 0.04 }}
       >
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
-          <div className="rounded-2xl border border-primary/25 bg-background/70 p-4">
-            <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-              {copy("Primary Signal", "Tín hiệu ưu tiên")}
-            </p>
-            <p className="mt-2 font-heading text-2xl font-semibold text-foreground sm:text-3xl">
-              {topTrendSignal.keyword ||
-                copy("Awaiting trend signal", "Đang chờ tín hiệu xu hướng")}
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {topTrendSignal.keyword
-                ? copy(
-                    "Use this keyword as today's lead angle for your next publishing sprint.",
-                    "Dùng keyword này làm góc khai thác chính cho sprint xuất bản kế tiếp trong hôm nay.",
-                  )
-                : copy(
-                    "Run a trend analysis to reveal the strongest opportunity for this cycle.",
-                    "Hãy chạy phân tích trend để mở ra cơ hội mạnh nhất cho chu kỳ hiện tại.",
+        <PanelCard
+          title={copy("Campaign Focus Board", "Bảng điều phối ưu tiên")}
+          description={copy(
+            "A fast decision layer combining strongest trend signal, execution backlog, and top operator activity.",
+            "Lớp ra quyết định nhanh kết hợp tín hiệu trend mạnh nhất, backlog thực thi và tài khoản vận hành tích cực nhất.",
+          )}
+          className="border-primary/25 bg-linear-to-br from-primary/8 via-card/96 to-chart-2/12"
+        >
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
+            <motion.div
+              className="rounded-2xl border border-primary/25 bg-background/70 p-4"
+              whileHover={{ scale: 1.01 }}
+              transition={{ duration: 0.2 }}
+            >
+              <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                {copy("Primary Signal", "Tín hiệu ưu tiên")}
+              </p>
+              <p className="mt-2 font-heading text-2xl font-semibold text-foreground sm:text-3xl">
+                {topTrendSignal.keyword ||
+                  copy("Awaiting trend signal", "Đang chờ tín hiệu xu hướng")}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {topTrendSignal.keyword
+                  ? copy(
+                      "Use this keyword as today's lead angle for your next publishing sprint.",
+                      "Dùng keyword này làm góc khai thác chính cho sprint xuất bản kế tiếp trong hôm nay.",
+                    )
+                  : copy(
+                      "Run a trend analysis to reveal the strongest opportunity for this cycle.",
+                      "Hãy chạy phân tích trend để mở ra cơ hội mạnh nhất cho chu kỳ hiện tại.",
+                    )}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Badge
+                  variant="outline"
+                  className="rounded-full border-primary/35 bg-primary/10 text-primary"
+                >
+                  <Target className="mr-1.5 size-3.5" />
+                  {copy("Trend score", "Điểm trend")}:{" "}
+                  {formatCompactNumber(topTrendSignal.score)}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="rounded-full border-amber-500/35 bg-amber-500/10 text-amber-700"
+                >
+                  <Clock3 className="mr-1.5 size-3.5" />
+                  {copy("Pending jobs", "Job đang chờ")}:{" "}
+                  {formatCompactNumber(pendingJobs)}
+                </Badge>
+              </div>
+            </motion.div>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <motion.div
+                className="rounded-2xl border border-border/65 bg-background/65 p-4"
+                whileHover={{ scale: 1.01 }}
+                transition={{ duration: 0.2 }}
+              >
+                <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  {copy("Top Operator", "Tài khoản vận hành dẫn đầu")}
+                </p>
+                <p className="mt-1 truncate text-sm font-semibold text-foreground">
+                  {topOperator?.email || "--"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {copy("Total outputs", "Tổng đầu ra")}:{" "}
+                  {formatCompactNumber(
+                    (topOperator?.trend_analysis_count ?? 0) +
+                      (topOperator?.generated_content_count ?? 0) +
+                      (topOperator?.publish_job_count ?? 0),
                   )}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Badge
-                variant="outline"
-                className="rounded-full border-primary/35 bg-primary/10 text-primary"
+                </p>
+              </motion.div>
+
+              <motion.div
+                className="rounded-2xl border border-border/65 bg-background/65 p-4"
+                whileHover={{ scale: 1.01 }}
+                transition={{ duration: 0.2 }}
               >
-                <Target className="mr-1.5 size-3.5" />
-                {copy("Trend score", "Điểm trend")}:{" "}
-                {formatCompactNumber(topTrendSignal.score)}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="rounded-full border-amber-500/35 bg-amber-500/10 text-amber-700"
-              >
-                <Clock3 className="mr-1.5 size-3.5" />
-                {copy("Pending jobs", "Job đang chờ")}:{" "}
-                {formatCompactNumber(pendingJobs)}
-              </Badge>
+                <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  {copy("Current Volume", "Khối lượng hiện tại")}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-foreground">
+                  {formatCompactNumber(operationVolume)}
+                </p>
+                <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <Users className="size-3.5" />
+                  {copy(
+                    "Trend, content, and publish records in this window.",
+                    "Tổng record trend, nội dung và publish trong cửa sổ hiện tại.",
+                  )}
+                </p>
+              </motion.div>
             </div>
           </div>
+        </PanelCard>
+      </motion.div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
-              <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                {copy("Top Operator", "Tài khoản vận hành dẫn đầu")}
-              </p>
-              <p className="mt-1 truncate text-sm font-semibold text-foreground">
-                {topOperator?.email || "--"}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {copy("Total outputs", "Tổng đầu ra")}:{" "}
-                {formatCompactNumber(
-                  (topOperator?.trend_analysis_count ?? 0) +
-                    (topOperator?.generated_content_count ?? 0) +
-                    (topOperator?.publish_job_count ?? 0),
-                )}
-              </p>
-            </div>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ ...sectionTransition, delay: 0.08 }}
+      >
+        <DashboardTrendAndPublishChartsSection
+          trendRecords={trendRecords}
+          publishJobs={publishJobs}
+        />
+      </motion.div>
 
-            <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
-              <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                {copy("Current Volume", "Khối lượng hiện tại")}
-              </p>
-              <p className="mt-1 text-sm font-semibold text-foreground">
-                {formatCompactNumber(operationVolume)}
-              </p>
-              <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <Users className="size-3.5" />
-                {copy(
-                  "Trend, content, and publish records in this window.",
-                  "Tổng record trend, nội dung và publish trong cửa sổ hiện tại.",
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-      </PanelCard>
+      <motion.div
+        className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ ...sectionTransition, delay: 0.12 }}
+      >
+        <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
+          <DashboardKeywordPriorityPanel trendRecords={trendRecords} />
+        </motion.div>
+        <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
+          <DashboardUserActivityMatrixPanel users={users} />
+        </motion.div>
+      </motion.div>
 
-      <DashboardTrendAndPublishChartsSection
-        trendRecords={trendRecords}
-        publishJobs={publishJobs}
-      />
-
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <DashboardKeywordPriorityPanel trendRecords={trendRecords} />
-        <DashboardUserActivityMatrixPanel users={users} />
-      </div>
-
-      <div className="grid gap-8">
+      <motion.div
+        className="grid gap-8"
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ ...sectionTransition, delay: 0.16 }}
+        whileHover={{ y: -2 }}
+      >
         <DashboardRecentActivityFeedPanel
           trendRecords={trendRecords}
           generatedContents={generatedContents}
           publishJobs={publishJobs}
           isLoading={isLoading}
         />
-      </div>
+      </motion.div>
 
-      <DashboardTodaySnapshotPanel
-        trendRecords={trendRecords}
-        generatedContents={generatedContents}
-        publishJobs={publishJobs}
-      />
-    </div>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ ...sectionTransition, delay: 0.2 }}
+        whileHover={{ y: -2 }}
+      >
+        <DashboardTodaySnapshotPanel
+          trendRecords={trendRecords}
+          generatedContents={generatedContents}
+          publishJobs={publishJobs}
+        />
+      </motion.div>
+    </motion.div>
   );
 }

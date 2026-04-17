@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import {
   Bot,
   CheckCircle2,
@@ -59,13 +60,15 @@ function readPersistedWorkspaceTab(): AutomationWorkspaceTab {
 
 export function AutomationPage() {
   const copy = useBilingual();
+  const publishJobsParams = useMemo(() => ({ limit: 30 }), []);
   const [workspaceTab, setWorkspaceTab] = useState<AutomationWorkspaceTab>(() =>
     readPersistedWorkspaceTab(),
   );
+  const [hasLoadedMetricsOnce, setHasLoadedMetricsOnce] = useState(false);
 
   const healthQuery = useHealthQuery();
   const agentsStatusQuery = useAgentsStatusQuery();
-  const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 30 });
+  const publishJobsQuery = useUploadPostPublishJobsQuery(publishJobsParams);
 
   const publishJobs = publishJobsQuery.data?.items ?? [];
   const pendingCount = publishJobs.filter(
@@ -128,9 +131,13 @@ export function AutomationPage() {
 
   const allQueries = [healthQuery, agentsStatusQuery, publishJobsQuery];
 
-  const isInitialLoading = allQueries.some(
-    (query) => query.isLoading && !query.data,
+  const hasResolvedMetrics = allQueries.every(
+    (query) => query.data !== undefined || query.error != null,
   );
+
+  const isInitialLoading =
+    !hasLoadedMetricsOnce && allQueries.some((query) => query.isLoading);
+
   const firstError = allQueries.find((query) => query.error)?.error;
 
   const handleWorkspaceTabChange = (value: string) => {
@@ -146,8 +153,24 @@ export function AutomationPage() {
     );
   }, [workspaceTab]);
 
+  useEffect(() => {
+    if (hasResolvedMetrics || firstError) {
+      setHasLoadedMetricsOnce(true);
+    }
+  }, [firstError, hasResolvedMetrics]);
+
+  const sectionTransition = {
+    duration: 0.45,
+    ease: [0.22, 1, 0.36, 1] as const,
+  };
+
   return (
-    <div className="grid gap-8">
+    <motion.div
+      className="grid gap-8"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+    >
       <SectionHeader
         eyebrow={copy("Automation Ops", "Vận hành tự động")}
         title={copy("Automation Command Center", "Trung tâm điều phối tự động")}
@@ -166,61 +189,115 @@ export function AutomationPage() {
         }
       />
 
-      {firstError ? (
-        <QueryStateCard
-          state="error"
-          title={copy("Automation Data Error", "Lỗi dữ liệu tự động hóa")}
-          description={getQueryErrorMessage(
-            firstError,
-            "Unable to load automation metrics.",
-          )}
-        />
-      ) : null}
+      <AnimatePresence initial={false} mode="wait">
+        {firstError ? (
+          <motion.div
+            key="automation-error"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <QueryStateCard
+              state="error"
+              title={copy("Automation Data Error", "Lỗi dữ liệu tự động hóa")}
+              description={getQueryErrorMessage(
+                firstError,
+                "Unable to load automation metrics.",
+              )}
+            />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       {isInitialLoading ? (
         <MetricCardsSkeleton />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label={copy("System Health", "Sức khỏe hệ thống")}
-            value={localizeHealthStatus(healthQuery.data?.status, copy)}
-            detail={copy(
-              "Backend service heartbeat",
-              "Nhịp trạng thái dịch vụ backend",
-            )}
-            icon={<Server className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Ready Agents", "Agent sẵn sàng")}
-            value={`${onlineAgentsCount}/${processes.length}`}
-            detail={copy(
-              "Agent processes responding",
-              "Số process agent phản hồi",
-            )}
-            icon={<Bot className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Publish Success", "Tỷ lệ xuất bản thành công")}
-            value={formatPercentFromRatio(successRatio)}
-            detail={copy(
-              "From finished publish jobs",
-              "Tính trên các publish job đã hoàn tất",
-            )}
-            icon={<CheckCircle2 className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Pending Queue", "Hàng đợi chờ xử lý")}
-            value={formatCompactNumber(pendingCount)}
-            detail={copy(
-              "Jobs waiting for completion",
-              "Số công việc đang chờ hoàn tất",
-            )}
-            icon={<Clock3 className="size-5" />}
-          />
-        </div>
+        <motion.div
+          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.4 }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ ...sectionTransition, delay: 0.02 }}
+            whileHover={{ y: -3 }}
+          >
+            <MetricCard
+              label={copy("System Health", "Sức khỏe hệ thống")}
+              value={localizeHealthStatus(healthQuery.data?.status, copy)}
+              detail={copy(
+                "Backend service heartbeat",
+                "Nhịp trạng thái dịch vụ backend",
+              )}
+              icon={<Server className="size-5" />}
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ ...sectionTransition, delay: 0.06 }}
+            whileHover={{ y: -3 }}
+          >
+            <MetricCard
+              label={copy("Ready Agents", "Agent sẵn sàng")}
+              value={`${onlineAgentsCount}/${processes.length}`}
+              detail={copy(
+                "Agent processes responding",
+                "Số process agent phản hồi",
+              )}
+              icon={<Bot className="size-5" />}
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ ...sectionTransition, delay: 0.1 }}
+            whileHover={{ y: -3 }}
+          >
+            <MetricCard
+              label={copy("Publish Success", "Tỷ lệ xuất bản thành công")}
+              value={formatPercentFromRatio(successRatio)}
+              detail={copy(
+                "From finished publish jobs",
+                "Tính trên các publish job đã hoàn tất",
+              )}
+              icon={<CheckCircle2 className="size-5" />}
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ ...sectionTransition, delay: 0.14 }}
+            whileHover={{ y: -3 }}
+          >
+            <MetricCard
+              label={copy("Pending Queue", "Hàng đợi chờ xử lý")}
+              value={formatCompactNumber(pendingCount)}
+              detail={copy(
+                "Jobs waiting for completion",
+                "Số công việc đang chờ hoàn tất",
+              )}
+              icon={<Clock3 className="size-5" />}
+            />
+          </motion.div>
+        </motion.div>
       )}
 
-      <section className="grid gap-3">
+      <motion.section
+        className="grid gap-3"
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ ...sectionTransition, delay: 0.04 }}
+      >
         <div className="flex flex-col gap-1">
           <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
             {copy("Workspace mode", "Chế độ làm việc")}
@@ -254,10 +331,17 @@ export function AutomationPage() {
             forceMount
             className="flex flex-col gap-8"
           >
-            <AutomationOrchestrationControlSection
-              onOpenPublishing={() => setWorkspaceTab("publishing")}
-            />
-            <AutomationLatestOrchestrationOutput />
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...sectionTransition, delay: 0.04 }}
+              className="flex flex-col gap-8"
+            >
+              <AutomationOrchestrationControlSection
+                onOpenPublishing={() => setWorkspaceTab("publishing")}
+              />
+              <AutomationLatestOrchestrationOutput />
+            </motion.div>
           </TabsContent>
 
           <TabsContent
@@ -265,58 +349,74 @@ export function AutomationPage() {
             forceMount
             className="flex flex-col gap-8"
           >
-            <PublishWorkspaceSection />
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...sectionTransition, delay: 0.04 }}
+            >
+              <PublishWorkspaceSection />
+            </motion.div>
           </TabsContent>
         </Tabs>
-      </section>
+      </motion.section>
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <PanelCard
-          title={copy("Queue Health", "Sức khỏe hàng đợi")}
-          description={copy(
-            "Track queue pressure across pending, published, and failed jobs.",
-            "Theo dõi áp lực hàng đợi giữa các trạng thái đang chờ, đã đăng và thất bại.",
-          )}
-        >
-          {publishJobs.length > 0 ? (
-            <BarTrendChart
-              data={queueBarData}
-              className="bg-linear-to-br from-cyan-100/60 via-card to-emerald-100/45 dark:from-cyan-500/12 dark:via-card/90 dark:to-emerald-500/10"
-            />
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No publish jobs found.",
-                "Chưa có job đăng bài nào.",
-              )}
-            />
-          )}
-        </PanelCard>
+      <motion.div
+        className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ ...sectionTransition, delay: 0.08 }}
+      >
+        <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
+          <PanelCard
+            title={copy("Queue Health", "Sức khỏe hàng đợi")}
+            description={copy(
+              "Track queue pressure across pending, published, and failed jobs.",
+              "Theo dõi áp lực hàng đợi giữa các trạng thái đang chờ, đã đăng và thất bại.",
+            )}
+          >
+            {publishJobs.length > 0 ? (
+              <BarTrendChart
+                data={queueBarData}
+                className="bg-linear-to-br from-cyan-100/60 via-card to-emerald-100/45 dark:from-cyan-500/12 dark:via-card/90 dark:to-emerald-500/10"
+              />
+            ) : (
+              <InlineQueryState
+                state="empty"
+                message={copy(
+                  "No publish jobs found.",
+                  "Chưa có job đăng bài nào.",
+                )}
+              />
+            )}
+          </PanelCard>
+        </motion.div>
 
-        <PanelCard
-          title={copy("Agent Readiness", "Mức sẵn sàng của agent")}
-          description={copy(
-            "Online versus recovering agent processes.",
-            "Tỷ lệ process agent đang online và đang khôi phục.",
-          )}
-        >
-          {processes.length > 0 ? (
-            <DoughnutTrendChart
-              data={agentsMixData}
-              className="bg-linear-to-br from-indigo-100/55 via-card to-cyan-100/45 dark:from-indigo-500/12 dark:via-card/90 dark:to-cyan-500/10"
-            />
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No process state available.",
-                "Chưa có dữ liệu trạng thái process.",
-              )}
-            />
-          )}
-        </PanelCard>
-      </div>
-    </div>
+        <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
+          <PanelCard
+            title={copy("Agent Readiness", "Mức sẵn sàng của agent")}
+            description={copy(
+              "Online versus recovering agent processes.",
+              "Tỷ lệ process agent đang online và đang khôi phục.",
+            )}
+          >
+            {processes.length > 0 ? (
+              <DoughnutTrendChart
+                data={agentsMixData}
+                className="bg-linear-to-br from-indigo-100/55 via-card to-cyan-100/45 dark:from-indigo-500/12 dark:via-card/90 dark:to-cyan-500/10"
+              />
+            ) : (
+              <InlineQueryState
+                state="empty"
+                message={copy(
+                  "No process state available.",
+                  "Chưa có dữ liệu trạng thái process.",
+                )}
+              />
+            )}
+          </PanelCard>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }
