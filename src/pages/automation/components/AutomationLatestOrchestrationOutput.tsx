@@ -226,17 +226,15 @@ export function AutomationLatestOrchestrationOutput() {
         latestPlatformMixData={latestPlatformMixData}
         latestPublishingWindows={latestPublishingWindows}
       />
-
+      <LatestOutputStoryboardPanel
+        copy={copy}
+        sections={latestGeneratedContent.sections}
+      />
       <LatestOutputTrendCharts
         copy={copy}
         latestTrendResults={latestTrendResults}
         latestTrendBarData={latestTrendBarData}
         latestInterestLineData={latestInterestLineData}
-      />
-
-      <LatestOutputStoryboardPanel
-        copy={copy}
-        sections={latestGeneratedContent.sections}
       />
     </>
   );

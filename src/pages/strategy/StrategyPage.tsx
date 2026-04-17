@@ -7,7 +7,6 @@ import {
   MousePointerClick,
   RefreshCw,
   Rocket,
-  SendHorizontal,
   Sparkles,
   Target,
   WandSparkles,
@@ -25,7 +24,6 @@ import {
   QueryStateCard,
 } from "@/components/app-query-state";
 import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +33,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { useLocale } from "@/hooks/use-locale";
@@ -51,8 +48,7 @@ import {
 } from "@/lib/trend-intelligence";
 import { getQueryErrorMessage } from "@/lib/query-error";
 import { cn } from "@/lib/utils";
-import { PromptSuggestionBar } from "@/pages/strategy/components/PromptSuggestionBar";
-import { ReasoningTimeline } from "@/pages/strategy/components/ReasoningTimeline";
+import { TrendPromptCommandDeck } from "@/pages/strategy/components/TrendPromptCommandDeck";
 import { TrendForceGraph } from "@/pages/strategy/components/TrendForceGraph";
 import { TrendResultCards } from "@/pages/strategy/components/TrendResultCards";
 
@@ -793,141 +789,34 @@ function StrategyPageContent({ copy, locale }: StrategyPageContentProps) {
         </PanelCard>
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-        <div
-          ref={promptStudioRef}
-          id="prompt-trend-studio"
-          className="scroll-mt-28"
-        >
-          <Card className="rounded-3xl border-border/75 bg-linear-to-br from-card via-card/95 to-muted/28">
-            <CardHeader>
-              <CardTitle>
-                {copy("Prompt Trend Studio", "Studio prompt xu hướng")}
-              </CardTitle>
-              <CardDescription>
-                {copy(
-                  "Ask for trend ideas with context; suggestion chips evolve through your current session.",
-                  "Yêu cầu xu hướng theo ngữ cảnh; các gợi ý sẽ thay đổi theo phiên hiện tại của bạn.",
-                )}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/60 p-2">
-                <Input
-                  value={promptInput}
-                  onChange={(event) => setPromptInput(event.target.value)}
-                  placeholder={copy(
-                    "Example: trend content ideas for dental clinics in Vietnam",
-                    "Ví dụ: ý tưởng trend content cho nha khoa tại Việt Nam",
-                  )}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      void handleAnalyzeSubmit();
-                    }
-                  }}
-                />
-                <Button
-                  onClick={() => void handleAnalyzeSubmit()}
-                  disabled={isTrendAnalyzePending || !promptInput.trim()}
-                >
-                  <SendHorizontal data-icon="inline-start" />
-                  {copy("Analyze", "Phân tích")}
-                </Button>
-              </div>
-
-              <PromptSuggestionBar
-                suggestions={sessionSuggestions}
-                onSelect={setPromptInput}
-                copy={copy}
-              />
-
-              <div className="rounded-2xl border border-border/55 bg-background/45 p-3 text-xs text-muted-foreground">
-                <p>
-                  {copy("Session ID", "Mã phiên")}: {sessionId}
-                </p>
-                <p className="mt-1">
-                  {copy("Prompt turns", "Số lượt prompt")}:{" "}
-                  {sessionPrompts.length}
-                </p>
-              </div>
-
-              {trendAnalyzeTask.errorMessage ? (
-                <InlineQueryState
-                  state="error"
-                  message={trendAnalyzeTask.errorMessage}
-                />
-              ) : null}
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="rounded-3xl border-border/75 bg-linear-to-br from-card via-card/95 to-muted/28">
-          <CardHeader>
-            <CardTitle>
-              {copy("Reasoning Status", "Trạng thái reasoning")}
-            </CardTitle>
-            <CardDescription>
-              {copy(
-                "Live reasoning progress while waiting for prompt analysis result.",
-                "Tiến trình reasoning trực tiếp trong lúc chờ kết quả phân tích prompt.",
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ReasoningTimeline
-              isPending={isTrendAnalyzePending}
-              elapsedMs={reasoningElapsedMs}
-              mode="trend"
-              promptPreview={
-                promptInput.trim() ||
-                sessionPrompts[sessionPrompts.length - 1] ||
-                promptResponse?.query
-              }
-              copy={copy}
-            />
-
-            <Alert
-              className={cn(
-                "border-border/55 bg-background/50",
-                isTrendAnalyzePending && "border-primary/35",
-              )}
-            >
-              {isTrendAnalyzePending ? (
-                <Bot className="text-primary" />
-              ) : (
-                <Clock3 />
-              )}
-              <AlertTitle>
-                {isTrendAnalyzePending
-                  ? copy("Reasoning In Progress", "Reasoning đang chạy")
-                  : copy(
-                      "Waiting For Next Prompt",
-                      "Đang chờ prompt tiếp theo",
-                    )}
-              </AlertTitle>
-              <AlertDescription>
-                {isTrendAnalyzePending
-                  ? copy("Agent is reasoning...", "Agent đang reasoning...")
-                  : copy(
-                      "Submit a new prompt to continue the analysis workflow.",
-                      "Hãy gửi prompt mới để tiếp tục luồng phân tích.",
-                    )}
-              </AlertDescription>
-            </Alert>
-
-            {promptResponse?.markdown_summary ? (
-              <div className="rounded-2xl border border-border/55 bg-background/50 p-4 text-sm text-muted-foreground">
-                <p className="mb-1 text-xs font-semibold tracking-[0.14em] uppercase">
-                  {copy("Narrative Summary", "Tóm tắt diễn giải")}
-                </p>
-                <p className="whitespace-pre-wrap">
-                  {promptResponse.markdown_summary}
-                </p>
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
+      <div
+        ref={promptStudioRef}
+        id="prompt-trend-studio"
+        className="scroll-mt-28"
+      >
+        <TrendPromptCommandDeck
+          copy={copy}
+          promptInput={promptInput}
+          onPromptInputChange={setPromptInput}
+          onAnalyze={() => {
+            void handleAnalyzeSubmit();
+          }}
+          isPending={isTrendAnalyzePending}
+          suggestions={sessionSuggestions}
+          onSelectSuggestion={setPromptInput}
+          sessionId={sessionId}
+          promptTurns={sessionPrompts.length}
+          elapsedMs={reasoningElapsedMs}
+          promptPreview={
+            promptInput.trim() ||
+            sessionPrompts[sessionPrompts.length - 1] ||
+            promptResponse?.query
+          }
+          markdownSummary={promptResponse?.markdown_summary}
+          errorMessage={trendAnalyzeTask.errorMessage ?? undefined}
+          resultCount={promptResults.length}
+          topKeyword={promptSelectedResult?.main_keyword}
+        />
       </div>
 
       <section id="prompt-trend-results" className="scroll-mt-28">
