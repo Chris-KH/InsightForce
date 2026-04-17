@@ -225,6 +225,81 @@ export function AutomationPage() {
                 onOpenPublishing={() => setWorkspaceTab("publishing")}
               />
               <AutomationLatestOrchestrationOutput />
+
+              <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                <motion.div
+                  whileHover={{ y: -3 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <PanelCard
+                    title={copy("Runtime Queue Pulse", "Xung nhịp hàng đợi")}
+                    description={copy(
+                      "Operational pressure from pending, published, and failed publish jobs.",
+                      "Áp lực vận hành từ các publish job đang chờ, đã đăng và thất bại.",
+                    )}
+                    action={
+                      <Badge
+                        variant="outline"
+                        className="rounded-full border-primary/25 bg-background/75 text-primary"
+                      >
+                        {copy("Ops Monitor", "Giám sát vận hành")}
+                      </Badge>
+                    }
+                  >
+                    {publishJobs.length > 0 ? (
+                      <BarTrendChart
+                        data={queueBarData}
+                        className="bg-linear-to-br from-cyan-100/60 via-card to-emerald-100/45 dark:from-cyan-500/12 dark:via-card/90 dark:to-emerald-500/10"
+                      />
+                    ) : (
+                      <InlineQueryState
+                        state="empty"
+                        message={copy(
+                          "No publish jobs found.",
+                          "Chưa có job đăng bài nào.",
+                        )}
+                      />
+                    )}
+                  </PanelCard>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ y: -3 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <PanelCard
+                    title={copy("Agent Readiness", "Mức sẵn sàng của agent")}
+                    description={copy(
+                      "Live ratio between online and recovering agent processes.",
+                      "Tỷ lệ trực tiếp giữa process agent đang online và đang khôi phục.",
+                    )}
+                    action={
+                      <Badge
+                        variant="outline"
+                        className="rounded-full border-primary/25 bg-background/75 text-primary"
+                      >
+                        {onlineAgentsCount}/{processes.length}{" "}
+                        {copy("online", "online")}
+                      </Badge>
+                    }
+                  >
+                    {processes.length > 0 ? (
+                      <DoughnutTrendChart
+                        data={agentsMixData}
+                        className="bg-linear-to-br from-indigo-100/55 via-card to-cyan-100/45 dark:from-indigo-500/12 dark:via-card/90 dark:to-cyan-500/10"
+                      />
+                    ) : (
+                      <InlineQueryState
+                        state="empty"
+                        message={copy(
+                          "No process state available.",
+                          "Chưa có dữ liệu trạng thái process.",
+                        )}
+                      />
+                    )}
+                  </PanelCard>
+                </motion.div>
+              </div>
             </motion.div>
           </TabsContent>
 
@@ -243,63 +318,6 @@ export function AutomationPage() {
           </TabsContent>
         </Tabs>
       </motion.section>
-
-      <motion.div
-        className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ ...sectionTransition, delay: 0.08 }}
-      >
-        <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
-          <PanelCard
-            title={copy("Queue Health", "Sức khỏe hàng đợi")}
-            description={copy(
-              "Track queue pressure across pending, published, and failed jobs.",
-              "Theo dõi áp lực hàng đợi giữa các trạng thái đang chờ, đã đăng và thất bại.",
-            )}
-          >
-            {publishJobs.length > 0 ? (
-              <BarTrendChart
-                data={queueBarData}
-                className="bg-linear-to-br from-cyan-100/60 via-card to-emerald-100/45 dark:from-cyan-500/12 dark:via-card/90 dark:to-emerald-500/10"
-              />
-            ) : (
-              <InlineQueryState
-                state="empty"
-                message={copy(
-                  "No publish jobs found.",
-                  "Chưa có job đăng bài nào.",
-                )}
-              />
-            )}
-          </PanelCard>
-        </motion.div>
-
-        <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
-          <PanelCard
-            title={copy("Agent Readiness", "Mức sẵn sàng của agent")}
-            description={copy(
-              "Online versus recovering agent processes.",
-              "Tỷ lệ process agent đang online và đang khôi phục.",
-            )}
-          >
-            {processes.length > 0 ? (
-              <DoughnutTrendChart
-                data={agentsMixData}
-                className="bg-linear-to-br from-indigo-100/55 via-card to-cyan-100/45 dark:from-indigo-500/12 dark:via-card/90 dark:to-cyan-500/10"
-              />
-            ) : (
-              <InlineQueryState
-                state="empty"
-                message={copy(
-                  "No process state available.",
-                  "Chưa có dữ liệu trạng thái process.",
-                )}
-              />
-            )}
-          </PanelCard>
-        </motion.div>
-      </motion.div>
     </motion.div>
   );
 }

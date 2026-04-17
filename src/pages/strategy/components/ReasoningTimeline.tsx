@@ -1,4 +1,5 @@
 import { BrainCircuit, Gauge, ScanSearch, Sparkles } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -7,6 +8,7 @@ type ReasoningTimelineProps = {
   isPending: boolean;
   elapsedMs: number;
   mode?: "trend" | "orchestrator";
+  variant?: "default" | "compact";
   promptPreview?: string;
   copy?: (en: string, vi: string) => string;
 };
@@ -220,6 +222,7 @@ export function ReasoningTimeline({
   isPending,
   elapsedMs,
   mode = "trend",
+  variant = "default",
   promptPreview,
   copy,
 }: ReasoningTimelineProps) {
@@ -277,6 +280,253 @@ export function ReasoningTimeline({
   );
 
   const promptLine = summarizePrompt(promptPreview);
+
+  const getStepRatio = (index: number) => {
+    const isActive = isPending && index === activeIndex;
+    const isCompleted = isPending ? index < activeIndex : isRunFinished;
+
+    const beforeDuration = steps
+      .slice(0, index)
+      .reduce((sum, current) => sum + current.durationMs, 0);
+    const elapsedInsideStep = safeElapsedMs - beforeDuration;
+
+    if (isCompleted) {
+      return 1;
+    }
+
+    if (isActive) {
+      return clamp(elapsedInsideStep / steps[index].durationMs, 0.1, 1);
+    }
+
+    if (isRunFinished) {
+      return 1;
+    }
+
+    return 0;
+  };
+
+  const currentStepIndex = isPending
+    ? Math.max(activeIndex, 0)
+    : isRunFinished
+      ? steps.length - 1
+      : 0;
+
+  const currentStep = steps[currentStepIndex];
+  const nextSteps = steps.slice(currentStepIndex + 1, currentStepIndex + 4);
+
+  if (variant === "compact") {
+    return (
+      <div className="space-y-3">
+        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-linear-to-br from-background/85 via-background/70 to-primary/8 p-3">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-14 -right-12 size-32 rounded-full bg-primary/12 blur-3xl" />
+          </div>
+
+          <div className="relative">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                <BrainCircuit className="size-3.5 text-primary" />
+                {t("Reasoning engine", "Bộ suy luận")}
+              </p>
+
+              <Badge
+                variant="outline"
+                className={cn(
+                  "rounded-full text-[10px]",
+                  isPending && "border-primary/35 bg-primary/10 text-primary",
+                  isRunFinished &&
+                    "border-emerald-500/35 bg-emerald-500/10 text-emerald-700",
+                )}
+              >
+                {isPending
+                  ? t("Live", "Đang chạy")
+                  : isRunFinished
+                    ? t("Completed", "Hoàn tất")
+                    : t("Idle", "Chờ chạy")}
+              </Badge>
+            </div>
+
+            {promptLine ? (
+              <p className="mt-1.5 line-clamp-1 text-xs text-muted-foreground">
+                {t("Prompt", "Yêu cầu")}: {promptLine}
+              </p>
+            ) : null}
+
+            <div className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-muted/65">
+              <div
+                className="h-full rounded-full bg-linear-to-r from-sky-500 via-primary to-emerald-500 transition-all duration-300"
+                style={{ width: `${Math.round(progressRatio * 100)}%` }}
+              />
+              {isPending ? (
+                <motion.div
+                  className="absolute inset-y-0 w-12 bg-linear-to-r from-transparent via-white/45 to-transparent"
+                  initial={{ x: -56 }}
+                  animate={{ x: 320 }}
+                  transition={{
+                    duration: 1.3,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                />
+              ) : null}
+            </div>
+
+            <div className="mt-2 grid gap-2 sm:grid-cols-3">
+              <div className="rounded-xl border border-border/60 bg-background/75 px-2.5 py-2">
+                <p className="text-[10px] text-muted-foreground uppercase">
+                  {t("Confidence", "Độ tin cậy")}
+                </p>
+                <p className="mt-0.5 text-sm font-semibold text-foreground">
+                  {confidence}%
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border/60 bg-background/75 px-2.5 py-2">
+                <p className="text-[10px] text-muted-foreground uppercase">
+                  {t("Signal rate", "Tốc độ tín hiệu")}
+                </p>
+                <p className="mt-0.5 text-sm font-semibold text-foreground">
+                  {signalRate}
+                  <span className="ml-1 text-[11px] font-medium text-muted-foreground">
+                    {t("sig/s", "tín hiệu/giây")}
+                  </span>
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border/60 bg-background/75 px-2.5 py-2">
+                <p className="text-[10px] text-muted-foreground uppercase">
+                  {t("Candidates", "Số phương án")}
+                </p>
+                <p className="mt-0.5 text-sm font-semibold text-foreground">
+                  {candidateCount}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border/60 bg-background/60 p-3">
+          <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            {t("Pipeline", "Tiến trình")}
+          </p>
+
+          <div className="mt-2 flex items-center gap-2 overflow-x-auto pb-1">
+            {steps.map((step, index) => {
+              const isActive = isPending && index === activeIndex;
+              const isCompleted = isPending
+                ? index < activeIndex
+                : isRunFinished;
+
+              return (
+                <div key={step.id} className="flex items-center gap-2">
+                  <div className="min-w-24 rounded-lg border border-border/60 bg-background/75 px-2 py-1.5">
+                    <p
+                      className={cn(
+                        "text-[11px] font-semibold",
+                        isCompleted && "text-emerald-700",
+                        isActive && "text-primary",
+                        !isCompleted && !isActive && "text-muted-foreground",
+                      )}
+                    >
+                      {index + 1}. {t(step.title.en, step.title.vi)}
+                    </p>
+                    <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted/70">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all duration-300",
+                          isCompleted && "bg-emerald-500/75",
+                          isActive && "bg-primary/85",
+                          !isCompleted && !isActive && "bg-border",
+                        )}
+                        style={{
+                          width: `${Math.round(getStepRatio(index) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {index < steps.length - 1 ? (
+                    <div className="h-px w-3 shrink-0 bg-border/70" />
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border/60 bg-background/60 p-3">
+          <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            {t("Current focus", "Trọng tâm hiện tại")}
+          </p>
+          <div className="mt-2 rounded-xl border border-primary/28 bg-primary/7 px-3 py-2">
+            <p className="text-sm font-semibold text-foreground">
+              {t(currentStep.title.en, currentStep.title.vi)}
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {t(currentStep.detail.en, currentStep.detail.vi)}
+            </p>
+          </div>
+
+          {nextSteps.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {nextSteps.map((step) => (
+                <Badge
+                  key={step.id}
+                  variant="outline"
+                  className="rounded-full border-border/70 bg-background/75 text-[11px]"
+                >
+                  {t(step.title.en, step.title.vi)}
+                </Badge>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="rounded-2xl border border-border/60 bg-background/55 p-3">
+          <p className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            <ScanSearch className="size-3.5 text-primary" />
+            {t("Live trace", "Dấu vết thời gian thực")}
+          </p>
+
+          <div className="mt-2 space-y-1.5 text-xs text-muted-foreground">
+            {liveTrace.map((line, index) => (
+              <motion.p
+                key={`${line.en}-${index}`}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.22, delay: index * 0.05 }}
+                className="flex items-start gap-2"
+              >
+                <motion.span
+                  className="mt-1 size-2 shrink-0 rounded-full bg-primary"
+                  animate={isPending ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+                  transition={{
+                    duration: 0.8,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+                <span>{t(line.en, line.vi)}</span>
+              </motion.p>
+            ))}
+          </div>
+
+          <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Sparkles className="size-3.5 text-amber-500" />
+            {isPending
+              ? t(
+                  "Reasoning stream is active and updates continuously during orchestration.",
+                  "Luồng suy luận đang hoạt động và cập nhật liên tục trong khi orchestration chạy.",
+                )
+              : t(
+                  "Reasoning stream will react instantly when you run a new request.",
+                  "Luồng suy luận sẽ phản hồi ngay khi bạn chạy một request mới.",
+                )}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">

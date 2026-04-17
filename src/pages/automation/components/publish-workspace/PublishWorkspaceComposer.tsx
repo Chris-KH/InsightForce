@@ -9,6 +9,7 @@ import {
 } from "@/api";
 import { InlineQueryState } from "@/components/app-query-state";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +46,13 @@ function isPublishPlatform(value: string): value is UploadPostPublishPlatform {
 
 function getDisplayTitle(record: GeneratedContentResponse) {
   return record.main_title || record.selected_keyword || record.id;
+}
+
+function formatPlatformName(platform: string) {
+  return platform
+    .split("_")
+    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+    .join(" ");
 }
 
 export function PublishWorkspaceComposer({
@@ -148,225 +156,265 @@ export function PublishWorkspaceComposer({
   };
 
   return (
-    <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)}>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1">
-          <Label htmlFor="automation-publish-user">
-            {copy("Publisher", "Tài khoản đăng")}
-          </Label>
-          <Input
-            id="automation-publish-user"
-            value={resolvedUser}
-            list="automation-publish-users"
-            onChange={(event) => setUserInput(event.target.value)}
-            placeholder={copy("Email or username", "Email hoặc username")}
-          />
-          <datalist id="automation-publish-users">
-            {users.map((item) => (
-              <option key={item.id} value={item.email} />
-            ))}
-          </datalist>
+    <form
+      className="space-y-4 rounded-2xl border border-border/60 bg-linear-to-br from-card/95 via-card/92 to-primary/6 p-4"
+      onSubmit={(event) => void handleSubmit(event)}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            {copy("Manual Composer", "Bộ soạn thủ công")}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {copy(
+              "Craft publish payload manually with full control over channels and metadata.",
+              "Soạn payload xuất bản thủ công với toàn quyền kiểm soát kênh đăng và metadata.",
+            )}
+          </p>
         </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="automation-publish-title">
-            {copy("Post Title", "Tiêu đề bài đăng")}
-          </Label>
-          <Input
-            id="automation-publish-title"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder={copy(
-              "Ex: 3 tips to boost reach",
-              "Ví dụ: 3 cách tăng độ phủ",
-            )}
-          />
-        </div>
+        <Badge
+          variant="outline"
+          className="rounded-full border-primary/30 bg-primary/8 text-primary"
+        >
+          {copy("Advanced Control", "Toàn quyền kiểm soát")}
+        </Badge>
       </div>
 
-      <div className="space-y-1">
-        <Label>{copy("Channels", "Kênh đăng")}</Label>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          size="sm"
-          value={selectedPreset}
-          className="mb-2 flex-wrap"
-          onValueChange={(value) => {
-            if (value === "short-video" || value === "multichannel") {
-              setSelectedPreset(value);
-              applyPreset(value);
-            }
-          }}
-        >
-          <ToggleGroupItem
-            value="short-video"
-            aria-label={copy("Preset: Short-video", "Preset: Video ngắn")}
-          >
-            {copy("Preset: Short-video", "Preset: Video ngắn")}
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="multichannel"
-            aria-label={copy("Preset: Multi-channel", "Preset: Đa kênh")}
-          >
-            {copy("Preset: Multi-channel", "Preset: Đa kênh")}
-          </ToggleGroupItem>
-        </ToggleGroup>
+      <div className="space-y-4 rounded-2xl border border-border/60 bg-background/75 p-3">
+        <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+          {copy("Core content", "Nội dung chính")}
+        </p>
 
-        <ToggleGroup
-          type="multiple"
-          variant="outline"
-          size="sm"
-          value={platforms}
-          className="flex-wrap"
-          onValueChange={(value) => {
-            const nextPlatforms = value.filter(isPublishPlatform);
-            setPlatforms(nextPlatforms);
-            setSelectedPreset("");
-          }}
-        >
-          {PUBLISH_PLATFORM_OPTIONS.map((platform) => (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label htmlFor="automation-publish-user">
+              {copy("Publisher", "Tài khoản đăng")}
+            </Label>
+            <Input
+              id="automation-publish-user"
+              value={resolvedUser}
+              list="automation-publish-users"
+              onChange={(event) => setUserInput(event.target.value)}
+              placeholder={copy("Email or username", "Email hoặc username")}
+            />
+            <datalist id="automation-publish-users">
+              {users.map((item) => (
+                <option key={item.id} value={item.email} />
+              ))}
+            </datalist>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="automation-publish-title">
+              {copy("Post Title", "Tiêu đề bài đăng")}
+            </Label>
+            <Input
+              id="automation-publish-title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder={copy(
+                "Ex: 3 tips to boost reach",
+                "Ví dụ: 3 cách tăng độ phủ",
+              )}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <Label>{copy("Channels", "Kênh đăng")}</Label>
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            size="sm"
+            value={selectedPreset}
+            className="mb-2 flex-wrap"
+            onValueChange={(value) => {
+              if (value === "short-video" || value === "multichannel") {
+                setSelectedPreset(value);
+                applyPreset(value);
+              }
+            }}
+          >
             <ToggleGroupItem
-              key={platform}
-              value={platform}
-              aria-label={platform}
-              className="rounded-full capitalize"
+              value="short-video"
+              aria-label={copy("Preset: Short-video", "Preset: Video ngắn")}
             >
-              {platform}
+              {copy("Preset: Short-video", "Preset: Video ngắn")}
             </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-      </div>
+            <ToggleGroupItem
+              value="multichannel"
+              aria-label={copy("Preset: Multi-channel", "Preset: Đa kênh")}
+            >
+              {copy("Preset: Multi-channel", "Preset: Đa kênh")}
+            </ToggleGroupItem>
+          </ToggleGroup>
 
-      <div className="space-y-1">
-        <Label htmlFor="automation-publish-description">
-          {copy("Caption / Context", "Nội dung mô tả")}
-        </Label>
-        <Textarea
-          id="automation-publish-description"
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-          placeholder={copy(
-            "Write the core context for this post.",
-            "Viết nội dung cốt lõi cho bài đăng này.",
-          )}
-        />
-      </div>
+          <ToggleGroup
+            type="multiple"
+            variant="outline"
+            size="sm"
+            value={platforms}
+            className="flex-wrap"
+            onValueChange={(value) => {
+              const nextPlatforms = value.filter(isPublishPlatform);
+              setPlatforms(nextPlatforms);
+              setSelectedPreset("");
+            }}
+          >
+            {PUBLISH_PLATFORM_OPTIONS.map((platform) => (
+              <ToggleGroupItem
+                key={platform}
+                value={platform}
+                aria-label={platform}
+                className="rounded-full"
+              >
+                {formatPlatformName(platform)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label htmlFor="automation-publish-tags">{copy("Tags", "Thẻ")}</Label>
-          <Input
-            id="automation-publish-tags"
-            value={tags}
-            onChange={(event) => setTags(event.target.value)}
-            placeholder={copy("tag1,tag2,tag3", "the1,the2,the3")}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="automation-publish-schedule">
-            {copy("Schedule Time", "Thời gian đăng")}
+          <Label htmlFor="automation-publish-description">
+            {copy("Caption / Context", "Nội dung mô tả")}
           </Label>
-          <Input
-            id="automation-publish-schedule"
-            type="datetime-local"
-            value={schedulePost}
-            onChange={(event) => setSchedulePost(event.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1">
-          <Label htmlFor="automation-publish-comment">
-            {copy("First Comment", "Bình luận đầu tiên")}
-          </Label>
-          <Input
-            id="automation-publish-comment"
-            value={firstComment}
-            onChange={(event) => setFirstComment(event.target.value)}
-            placeholder={copy("Optional", "Tùy chọn")}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="automation-publish-asset-urls">
-            {copy("Asset URLs", "Liên kết tài nguyên")}
-          </Label>
-          <Input
-            id="automation-publish-asset-urls"
-            value={assetUrls}
-            onChange={(event) => setAssetUrls(event.target.value)}
+          <Textarea
+            id="automation-publish-description"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
             placeholder={copy(
-              "https://... , https://...",
-              "https://... , https://...",
+              "Write the core context for this post.",
+              "Viết nội dung cốt lõi cho bài đăng này.",
             )}
           />
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1">
-          <Label htmlFor="automation-publish-link-url">
-            {copy("Reference Link", "Liên kết tham chiếu")}
-          </Label>
-          <Input
-            id="automation-publish-link-url"
-            value={linkUrl}
-            onChange={(event) => setLinkUrl(event.target.value)}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="automation-publish-subreddit">
-            {copy("Subreddit", "Subreddit (Reddit)")}
-          </Label>
-          <Input
-            id="automation-publish-subreddit"
-            value={subreddit}
-            onChange={(event) => setSubreddit(event.target.value)}
-          />
-        </div>
-      </div>
+      <div className="space-y-4 rounded-2xl border border-border/60 bg-background/70 p-3">
+        <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+          {copy("Metadata and scheduling", "Metadata và lịch đăng")}
+        </p>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1">
-          <Label htmlFor="automation-publish-user-id">
-            {copy("Workspace User ID", "ID người dùng workspace")}
-          </Label>
-          <Input
-            id="automation-publish-user-id"
-            value={resolvedUserId}
-            onChange={(event) => setUserIdInput(event.target.value)}
-            list="automation-publish-user-ids"
-          />
-          <datalist id="automation-publish-user-ids">
-            {users.map((item) => (
-              <option key={item.id} value={item.id} />
-            ))}
-          </datalist>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label htmlFor="automation-publish-tags">
+              {copy("Tags", "Thẻ")}
+            </Label>
+            <Input
+              id="automation-publish-tags"
+              value={tags}
+              onChange={(event) => setTags(event.target.value)}
+              placeholder={copy("tag1,tag2,tag3", "the1,the2,the3")}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="automation-publish-schedule">
+              {copy("Schedule Time", "Thời gian đăng")}
+            </Label>
+            <Input
+              id="automation-publish-schedule"
+              type="datetime-local"
+              value={schedulePost}
+              onChange={(event) => setSchedulePost(event.target.value)}
+            />
+          </div>
         </div>
 
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label htmlFor="automation-publish-comment">
+              {copy("First Comment", "Bình luận đầu tiên")}
+            </Label>
+            <Input
+              id="automation-publish-comment"
+              value={firstComment}
+              onChange={(event) => setFirstComment(event.target.value)}
+              placeholder={copy("Optional", "Tùy chọn")}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="automation-publish-asset-urls">
+              {copy("Asset URLs", "Liên kết tài nguyên")}
+            </Label>
+            <Input
+              id="automation-publish-asset-urls"
+              value={assetUrls}
+              onChange={(event) => setAssetUrls(event.target.value)}
+              placeholder={copy(
+                "https://... , https://...",
+                "https://... , https://...",
+              )}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label htmlFor="automation-publish-link-url">
+              {copy("Reference Link", "Liên kết tham chiếu")}
+            </Label>
+            <Input
+              id="automation-publish-link-url"
+              value={linkUrl}
+              onChange={(event) => setLinkUrl(event.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="automation-publish-subreddit">
+              {copy("Subreddit", "Subreddit (Reddit)")}
+            </Label>
+            <Input
+              id="automation-publish-subreddit"
+              value={subreddit}
+              onChange={(event) => setSubreddit(event.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label htmlFor="automation-publish-user-id">
+              {copy("Workspace User ID", "ID người dùng workspace")}
+            </Label>
+            <Input
+              id="automation-publish-user-id"
+              value={resolvedUserId}
+              onChange={(event) => setUserIdInput(event.target.value)}
+              list="automation-publish-user-ids"
+            />
+            <datalist id="automation-publish-user-ids">
+              {users.map((item) => (
+                <option key={item.id} value={item.id} />
+              ))}
+            </datalist>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="automation-publish-generated-content-id">
+              {copy("Generated Content ID", "ID nội dung đã tạo")}
+            </Label>
+            <Input
+              id="automation-publish-generated-content-id"
+              value={resolvedGeneratedContentId}
+              onChange={(event) =>
+                setGeneratedContentIdInput(event.target.value)
+              }
+            />
+          </div>
+        </div>
+
         <div className="space-y-1">
-          <Label htmlFor="automation-publish-generated-content-id">
-            {copy("Generated Content ID", "ID nội dung đã tạo")}
+          <Label htmlFor="automation-publish-files">
+            {copy("Upload Media Files", "Tải tệp media lên")}
           </Label>
           <Input
-            id="automation-publish-generated-content-id"
-            value={resolvedGeneratedContentId}
-            onChange={(event) => setGeneratedContentIdInput(event.target.value)}
+            id="automation-publish-files"
+            type="file"
+            multiple
+            onChange={handleFileChange}
           />
         </div>
-      </div>
-
-      <div className="space-y-1">
-        <Label htmlFor="automation-publish-files">
-          {copy("Upload Media Files", "Tải tệp media lên")}
-        </Label>
-        <Input
-          id="automation-publish-files"
-          type="file"
-          multiple
-          onChange={handleFileChange}
-        />
       </div>
 
       <div className="flex items-center gap-2">
