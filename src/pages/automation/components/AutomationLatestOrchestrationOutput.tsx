@@ -203,8 +203,7 @@ export function AutomationLatestOrchestrationOutput() {
         id="latest-orchestration-output"
         className="grid scroll-mt-28 gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]"
         initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
         <LatestOutputOverviewPanel
@@ -229,8 +228,7 @@ export function AutomationLatestOrchestrationOutput() {
       <motion.div
         className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
         initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
       >
         <LatestOutputPlatformPostMixPanel
@@ -246,8 +244,7 @@ export function AutomationLatestOrchestrationOutput() {
 
       <motion.div
         initial={{ opacity: 0, y: 22 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.52, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
       >
         <LatestOutputScriptBlueprintPanel
@@ -259,8 +256,7 @@ export function AutomationLatestOrchestrationOutput() {
 
       <motion.div
         initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.46, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
       >
         <LatestOutputTrendCharts

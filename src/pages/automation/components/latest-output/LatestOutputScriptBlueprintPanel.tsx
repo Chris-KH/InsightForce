@@ -347,8 +347,7 @@ export function LatestOutputScriptBlueprintPanel({
     >
       <motion.div
         initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
         <Alert className="border-primary/30 bg-primary/8">
@@ -372,8 +371,7 @@ export function LatestOutputScriptBlueprintPanel({
         <motion.div
           className="space-y-3"
           initial={{ opacity: 0, x: -16 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
+          animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.45, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="rounded-2xl border border-border/60 bg-background/70 p-3">
@@ -406,8 +404,7 @@ export function LatestOutputScriptBlueprintPanel({
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.05 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{
                       duration: 0.3,
                       delay: index * 0.03,
@@ -446,8 +443,7 @@ export function LatestOutputScriptBlueprintPanel({
         <motion.div
           className="space-y-4"
           initial={{ opacity: 0, x: 16 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
+          animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         >
           <FieldGroup>

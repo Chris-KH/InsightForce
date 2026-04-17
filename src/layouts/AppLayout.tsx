@@ -21,8 +21,8 @@ export default function AppLayout() {
         <AppRuntimeActivityBridge />
         <AppActivityToaster />
 
-        <main className="px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
-          <div className="mx-auto w-full max-w-screen-2xl">
+        <main className="px-3 py-4 sm:px-5 lg:px-6 xl:px-8">
+          <div className="mx-auto w-full max-w-440">
             <Outlet />
           </div>
         </main>

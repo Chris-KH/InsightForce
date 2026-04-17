@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
-  Bot,
-  Clock3,
-  Compass,
   ListChecks,
   MousePointerClick,
   RefreshCw,
@@ -19,12 +16,8 @@ import {
   useTrendHistoryQuery,
 } from "@/api";
 import { runStrategyTrendAnalyze } from "@/app/slices/runtime-tasks.slice";
-import {
-  InlineQueryState,
-  MetricCardsSkeleton,
-  QueryStateCard,
-} from "@/components/app-query-state";
-import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
+import { InlineQueryState, QueryStateCard } from "@/components/app-query-state";
+import { PanelCard, SectionHeader } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -125,26 +118,6 @@ function loadTrendSessionState(
   } catch {
     return fallback;
   }
-}
-
-function computeAverageScore(results: TrendAnalyzeResultItem[]) {
-  if (results.length === 0) {
-    return 0;
-  }
-  return (
-    results.reduce((total, item) => total + item.trend_score, 0) /
-    results.length
-  );
-}
-
-function computeAverageViewsPerHour(results: TrendAnalyzeResultItem[]) {
-  if (results.length === 0) {
-    return 0;
-  }
-  return (
-    results.reduce((total, item) => total + item.avg_views_per_hour, 0) /
-    results.length
-  );
 }
 
 function buildGeneralTrendPlans(
@@ -281,10 +254,6 @@ function StrategyPageContent({ copy, locale }: StrategyPageContentProps) {
     () => sanitizeTrendResults(promptResponse?.results),
     [promptResponse?.results],
   );
-
-  const strongestGeneralResult = generalResults[0];
-  const averageGeneralScore = computeAverageScore(generalResults);
-  const averageGeneralViewsPerHour = computeAverageViewsPerHour(generalResults);
 
   const effectiveSelectedGeneralKeyword = useMemo(() => {
     if (!selectedGeneralKeyword) {
@@ -476,9 +445,7 @@ function StrategyPageContent({ copy, locale }: StrategyPageContentProps) {
   };
 
   const hasGeneralTrendData = generalResults.length > 0;
-  const isGeneralTrendLoading =
-    !hasGeneralTrendData &&
-    (trendHistoryQuery.isLoading || generalTrendQuery.isFetching);
+
   const generalTrendError = generalTrendQuery.error ?? trendHistoryQuery.error;
   const sectionTransition = {
     duration: 0.45,
@@ -532,62 +499,6 @@ function StrategyPageContent({ copy, locale }: StrategyPageContentProps) {
           </div>
         }
       />
-
-      {isGeneralTrendLoading ? (
-        <MetricCardsSkeleton />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label={copy("General Trend Entries", "Số entry trend chung")}
-            value={String(generalResults.length)}
-            detail={copy(
-              "From latest available trend snapshot",
-              "Lấy từ snapshot trend khả dụng gần nhất",
-            )}
-            icon={<Compass className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Top Trend Score", "Điểm trend cao nhất")}
-            value={
-              strongestGeneralResult
-                ? formatPercentValue(strongestGeneralResult.trend_score)
-                : "--"
-            }
-            detail={strongestGeneralResult?.main_keyword ?? "--"}
-            icon={<Target className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Avg Views / Hour", "Trung bình views / giờ")}
-            value={formatCompactNumber(averageGeneralViewsPerHour)}
-            detail={copy(
-              "Average from general trend results",
-              "Trung bình từ danh sách trend chung",
-            )}
-            icon={<Bot className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Avg Trend Score", "Điểm trend trung bình")}
-            value={formatPercentValue(averageGeneralScore)}
-            detail={
-              generalTrendQuery.data
-                ? copy(
-                    "Live result from manual refresh",
-                    "Kết quả live từ lần làm mới thủ công",
-                  )
-                : latestGeneralTrendRecord
-                  ? copy(
-                      "Loaded from latest saved analysis",
-                      "Lấy từ phiên phân tích đã lưu gần nhất",
-                    )
-                  : copy(
-                      "No snapshot yet. Run a live refresh.",
-                      "Chưa có snapshot. Hãy làm mới live.",
-                    )
-            }
-            icon={<Clock3 className="size-5" />}
-          />
-        </div>
-      )}
 
       <AnimatePresence initial={false} mode="wait">
         {!hasGeneralTrendData && generalTrendError ? (

@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import {
-  Bot,
-  CheckCircle2,
-  Clock3,
-  SendHorizontal,
-  Server,
-  Sparkles,
-  Workflow,
-} from "lucide-react";
+import { SendHorizontal, Sparkles, Workflow } from "lucide-react";
 
 import {
   useAgentsStatusQuery,
@@ -16,20 +8,11 @@ import {
   useUploadPostPublishJobsQuery,
 } from "@/api";
 import { BarTrendChart, DoughnutTrendChart } from "@/components/app-data-viz";
-import {
-  InlineQueryState,
-  MetricCardsSkeleton,
-  QueryStateCard,
-} from "@/components/app-query-state";
-import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
+import { InlineQueryState, QueryStateCard } from "@/components/app-query-state";
+import { PanelCard, SectionHeader } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBilingual } from "@/hooks/use-bilingual";
-import {
-  formatCompactNumber,
-  formatPercentFromRatio,
-} from "@/lib/insight-formatters";
-import { localizeHealthStatus } from "@/lib/localized-status";
 import { getQueryErrorMessage } from "@/lib/query-error";
 import { AutomationLatestOrchestrationOutput } from "@/pages/automation/components/AutomationLatestOrchestrationOutput";
 import { AutomationOrchestrationControlSection } from "@/pages/automation/components/AutomationOrchestrationControlSection";
@@ -64,7 +47,6 @@ export function AutomationPage() {
   const [workspaceTab, setWorkspaceTab] = useState<AutomationWorkspaceTab>(() =>
     readPersistedWorkspaceTab(),
   );
-  const [hasLoadedMetricsOnce, setHasLoadedMetricsOnce] = useState(false);
 
   const healthQuery = useHealthQuery();
   const agentsStatusQuery = useAgentsStatusQuery();
@@ -80,9 +62,6 @@ export function AutomationPage() {
   const failedCount = publishJobs.filter(
     (job) => job.status.toLowerCase() === "failed",
   ).length;
-
-  const doneCount = publishedCount + failedCount;
-  const successRatio = doneCount > 0 ? publishedCount / doneCount : 0;
 
   const processes = agentsStatusQuery.data?.processes ?? [];
   const onlineAgentsCount = processes.filter(
@@ -131,13 +110,6 @@ export function AutomationPage() {
 
   const allQueries = [healthQuery, agentsStatusQuery, publishJobsQuery];
 
-  const hasResolvedMetrics = allQueries.every(
-    (query) => query.data !== undefined || query.error != null,
-  );
-
-  const isInitialLoading =
-    !hasLoadedMetricsOnce && allQueries.some((query) => query.isLoading);
-
   const firstError = allQueries.find((query) => query.error)?.error;
 
   const handleWorkspaceTabChange = (value: string) => {
@@ -152,12 +124,6 @@ export function AutomationPage() {
       workspaceTab,
     );
   }, [workspaceTab]);
-
-  useEffect(() => {
-    if (hasResolvedMetrics || firstError) {
-      setHasLoadedMetricsOnce(true);
-    }
-  }, [firstError, hasResolvedMetrics]);
 
   const sectionTransition = {
     duration: 0.45,
@@ -210,92 +176,10 @@ export function AutomationPage() {
         ) : null}
       </AnimatePresence>
 
-      {isInitialLoading ? (
-        <MetricCardsSkeleton />
-      ) : (
-        <motion.div
-          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.4 }}
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ ...sectionTransition, delay: 0.02 }}
-            whileHover={{ y: -3 }}
-          >
-            <MetricCard
-              label={copy("System Health", "Sức khỏe hệ thống")}
-              value={localizeHealthStatus(healthQuery.data?.status, copy)}
-              detail={copy(
-                "Backend service heartbeat",
-                "Nhịp trạng thái dịch vụ backend",
-              )}
-              icon={<Server className="size-5" />}
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ ...sectionTransition, delay: 0.06 }}
-            whileHover={{ y: -3 }}
-          >
-            <MetricCard
-              label={copy("Ready Agents", "Agent sẵn sàng")}
-              value={`${onlineAgentsCount}/${processes.length}`}
-              detail={copy(
-                "Agent processes responding",
-                "Số process agent phản hồi",
-              )}
-              icon={<Bot className="size-5" />}
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ ...sectionTransition, delay: 0.1 }}
-            whileHover={{ y: -3 }}
-          >
-            <MetricCard
-              label={copy("Publish Success", "Tỷ lệ xuất bản thành công")}
-              value={formatPercentFromRatio(successRatio)}
-              detail={copy(
-                "From finished publish jobs",
-                "Tính trên các publish job đã hoàn tất",
-              )}
-              icon={<CheckCircle2 className="size-5" />}
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ ...sectionTransition, delay: 0.14 }}
-            whileHover={{ y: -3 }}
-          >
-            <MetricCard
-              label={copy("Pending Queue", "Hàng đợi chờ xử lý")}
-              value={formatCompactNumber(pendingCount)}
-              detail={copy(
-                "Jobs waiting for completion",
-                "Số công việc đang chờ hoàn tất",
-              )}
-              icon={<Clock3 className="size-5" />}
-            />
-          </motion.div>
-        </motion.div>
-      )}
-
       <motion.section
         className="grid gap-3"
         initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ ...sectionTransition, delay: 0.04 }}
       >
         <div className="flex flex-col gap-1">
@@ -363,8 +247,7 @@ export function AutomationPage() {
       <motion.div
         className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
         initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ ...sectionTransition, delay: 0.08 }}
       >
         <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
