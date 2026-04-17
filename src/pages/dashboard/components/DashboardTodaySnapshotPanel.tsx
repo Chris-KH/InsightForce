@@ -7,6 +7,7 @@ import type {
   TrendAnalysisRecordResponse,
 } from "@/api";
 import { PanelCard } from "@/components/app-section";
+import { Card, CardContent } from "@/components/ui/card";
 import { useBilingual } from "@/hooks/use-bilingual";
 import {
   formatCompactNumber,
@@ -49,39 +50,59 @@ export function DashboardTodaySnapshotPanel({
       )}
     >
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
-          <p className="text-xs text-muted-foreground">
-            {copy("Trend Analyses", "Phân tích xu hướng")}
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-foreground">
-            {formatCompactNumber(trendRecords.length)}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
-          <p className="text-xs text-muted-foreground">
-            {copy("Generated Contents", "Nội dung đã tạo")}
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-foreground">
-            {formatCompactNumber(generatedContents.length)}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
-          <p className="text-xs text-muted-foreground">
-            {copy("Publishing Tasks", "Tác vụ đăng bài")}
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-foreground">
-            {formatCompactNumber(publishJobs.length)}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
-          <p className="text-xs text-muted-foreground">
-            {copy("Top Keyword Strength", "Độ mạnh keyword cao nhất")}
-          </p>
-          <p className="mt-2 flex items-center gap-2 text-2xl font-semibold text-foreground">
-            <Sparkles className="size-5 text-amber-500" />
-            {formatPercentValue(topKeywordScore)}
-          </p>
-        </div>
+        <Card
+          className="rounded-2xl border-border/65 bg-background/65"
+          size="sm"
+        >
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">
+              {copy("Trend Analyses", "Phân tích xu hướng")}
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-foreground">
+              {formatCompactNumber(trendRecords.length)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card
+          className="rounded-2xl border-border/65 bg-background/65"
+          size="sm"
+        >
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">
+              {copy("Generated Contents", "Nội dung đã tạo")}
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-foreground">
+              {formatCompactNumber(generatedContents.length)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card
+          className="rounded-2xl border-border/65 bg-background/65"
+          size="sm"
+        >
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">
+              {copy("Publishing Tasks", "Tác vụ đăng bài")}
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-foreground">
+              {formatCompactNumber(publishJobs.length)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card
+          className="rounded-2xl border-border/65 bg-background/65"
+          size="sm"
+        >
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">
+              {copy("Top Keyword Strength", "Độ mạnh keyword cao nhất")}
+            </p>
+            <p className="mt-2 flex items-center gap-2 text-2xl font-semibold text-foreground">
+              <Sparkles className="text-amber-500" />
+              {formatPercentValue(topKeywordScore)}
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </PanelCard>
   );

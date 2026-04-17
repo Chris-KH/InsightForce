@@ -1,11 +1,9 @@
-import { useMemo } from "react";
-import { Link } from "react-router";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Activity,
   Bot,
   CheckCircle2,
   Clock3,
-  Send,
+  SendHorizontal,
   Server,
   Sparkles,
   Workflow,
@@ -13,40 +11,60 @@ import {
 
 import {
   useAgentsStatusQuery,
-  useGeneratedContentsQuery,
   useHealthQuery,
-  useTrendHistoryQuery,
   useUploadPostPublishJobsQuery,
 } from "@/api";
 import { BarTrendChart, DoughnutTrendChart } from "@/components/app-data-viz";
 import {
   InlineQueryState,
   MetricCardsSkeleton,
-  PanelRowsSkeleton,
   QueryStateCard,
 } from "@/components/app-query-state";
 import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBilingual } from "@/hooks/use-bilingual";
 import {
   formatCompactNumber,
-  formatDateTime,
   formatPercentFromRatio,
 } from "@/lib/insight-formatters";
-import { localizeHealthStatus, localizeStatus } from "@/lib/localized-status";
+import { localizeHealthStatus } from "@/lib/localized-status";
 import { getQueryErrorMessage } from "@/lib/query-error";
 import { AutomationLatestOrchestrationOutput } from "@/pages/automation/components/AutomationLatestOrchestrationOutput";
 import { AutomationOrchestrationControlSection } from "@/pages/automation/components/AutomationOrchestrationControlSection";
 import { PublishWorkspaceSection } from "@/pages/automation/components/PublishWorkspaceSection";
 
+type AutomationWorkspaceTab = "orchestration" | "publishing";
+
+const AUTOMATION_WORKSPACE_TAB_STORAGE_KEY =
+  "insightforce.automation.workspace-tab";
+
+function isAutomationWorkspaceTab(
+  value: string,
+): value is AutomationWorkspaceTab {
+  return value === "orchestration" || value === "publishing";
+}
+
+function readPersistedWorkspaceTab(): AutomationWorkspaceTab {
+  if (typeof window === "undefined") {
+    return "orchestration";
+  }
+
+  const stored = window.localStorage.getItem(
+    AUTOMATION_WORKSPACE_TAB_STORAGE_KEY,
+  );
+
+  return stored && isAutomationWorkspaceTab(stored) ? stored : "orchestration";
+}
+
 export function AutomationPage() {
   const copy = useBilingual();
+  const [workspaceTab, setWorkspaceTab] = useState<AutomationWorkspaceTab>(() =>
+    readPersistedWorkspaceTab(),
+  );
 
   const healthQuery = useHealthQuery();
   const agentsStatusQuery = useAgentsStatusQuery();
-  const trendHistoryQuery = useTrendHistoryQuery({ limit: 20 });
-  const generatedContentsQuery = useGeneratedContentsQuery({ limit: 20 });
   const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 30 });
 
   const publishJobs = publishJobsQuery.data?.items ?? [];
@@ -108,19 +126,25 @@ export function AutomationPage() {
     [copy, onlineAgentsCount, processes.length],
   );
 
-  const allQueries = [
-    healthQuery,
-    agentsStatusQuery,
-    trendHistoryQuery,
-    generatedContentsQuery,
-    publishJobsQuery,
-  ];
+  const allQueries = [healthQuery, agentsStatusQuery, publishJobsQuery];
 
   const isInitialLoading = allQueries.some(
     (query) => query.isLoading && !query.data,
   );
-  const isLoading = allQueries.some((query) => query.isLoading);
   const firstError = allQueries.find((query) => query.error)?.error;
+
+  const handleWorkspaceTabChange = (value: string) => {
+    if (isAutomationWorkspaceTab(value)) {
+      setWorkspaceTab(value);
+    }
+  };
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      AUTOMATION_WORKSPACE_TAB_STORAGE_KEY,
+      workspaceTab,
+    );
+  }, [workspaceTab]);
 
   return (
     <div className="grid gap-8">
@@ -196,56 +220,55 @@ export function AutomationPage() {
         </div>
       )}
 
-      <AutomationOrchestrationControlSection />
-
-      <PanelCard
-        title={copy("Quick Navigation", "Điều hướng nhanh")}
-        description={copy(
-          "Open the next core workspace based on your current operation state.",
-          "Mở nhanh workspace cốt lõi tiếp theo theo trạng thái vận hành hiện tại.",
-        )}
-      >
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          <Button asChild>
-            <Link to="/app/strategy">
-              <Activity data-icon="inline-start" />
-              {copy("Open Strategy", "Mở chiến lược")}
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link to="/app/audience">
-              <Workflow data-icon="inline-start" />
-              {copy("Open Audience", "Mở khán giả")}
-            </Link>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="sm:col-span-2 xl:col-span-1"
-          >
-            <Link to="/app/finance">
-              <Send data-icon="inline-start" />
-              {copy("Open Finance", "Mở tài chính")}
-            </Link>
-          </Button>
-        </div>
-
-        <div className="mt-4 rounded-2xl border border-border/65 bg-background/65 p-4">
-          <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-            {copy("Recent Progress", "Tiến độ gần đây")}
+      <section className="grid gap-3">
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            {copy("Workspace mode", "Chế độ làm việc")}
           </p>
-          <p className="mt-2 text-sm text-foreground">
-            {copy("Trend sessions", "Phiên trend")}:{" "}
-            {formatCompactNumber(trendHistoryQuery.data?.items.length ?? 0)}
-          </p>
-          <p className="mt-1 text-sm text-foreground">
-            {copy("Generated content", "Nội dung đã tạo")}:{" "}
-            {formatCompactNumber(
-              generatedContentsQuery.data?.items.length ?? 0,
+          <p className="text-sm text-muted-foreground">
+            {copy(
+              "Orchestration creates trend/content outputs. Publishing turns those outputs into platform-ready posts.",
+              "Orchestration tạo đầu ra xu hướng/nội dung. Publishing chuyển đầu ra đó thành bài đăng sẵn sàng cho từng nền tảng.",
             )}
           </p>
         </div>
-      </PanelCard>
+
+        <Tabs
+          value={workspaceTab}
+          onValueChange={handleWorkspaceTabChange}
+          className="gap-6"
+        >
+          <TabsList variant="line" className="w-full justify-start">
+            <TabsTrigger value="orchestration">
+              <Workflow data-icon="inline-start" />
+              {copy("Orchestration", "Điều phối")}
+            </TabsTrigger>
+            <TabsTrigger value="publishing">
+              <SendHorizontal data-icon="inline-start" />
+              {copy("Publishing", "Xuất bản")}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent
+            value="orchestration"
+            forceMount
+            className="flex flex-col gap-8"
+          >
+            <AutomationOrchestrationControlSection
+              onOpenPublishing={() => setWorkspaceTab("publishing")}
+            />
+            <AutomationLatestOrchestrationOutput />
+          </TabsContent>
+
+          <TabsContent
+            value="publishing"
+            forceMount
+            className="flex flex-col gap-8"
+          >
+            <PublishWorkspaceSection />
+          </TabsContent>
+        </Tabs>
+      </section>
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <PanelCard
@@ -294,54 +317,6 @@ export function AutomationPage() {
           )}
         </PanelCard>
       </div>
-
-      <AutomationLatestOrchestrationOutput />
-
-      <PanelCard
-        title={copy("Recent Publish Queue", "Hàng đợi xuất bản gần đây")}
-        description={copy(
-          "Latest publish jobs with status and planned schedule.",
-          "Các publish job gần nhất với trạng thái và lịch dự kiến.",
-        )}
-      >
-        {isLoading ? (
-          <PanelRowsSkeleton rows={5} />
-        ) : publishJobs.length > 0 ? (
-          <div className="space-y-3">
-            {publishJobs.slice(0, 8).map((job) => (
-              <div
-                key={job.id}
-                className="rounded-2xl border border-border/65 bg-background/65 p-4"
-              >
-                <p className="text-sm font-semibold text-foreground">
-                  {job.title}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {copy("Status", "Trạng thái")}:{" "}
-                  {localizeStatus(job.status, copy)}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {copy("Platforms", "Nền tảng")}: {job.platforms.join(", ")}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {copy("Time", "Thời gian")}:{" "}
-                  {formatDateTime(job.schedule_post ?? job.created_at)}
-                </p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <InlineQueryState
-            state="empty"
-            message={copy(
-              "No publish jobs available yet.",
-              "Chưa có job đăng bài khả dụng.",
-            )}
-          />
-        )}
-      </PanelCard>
-
-      <PublishWorkspaceSection />
     </div>
   );
 }

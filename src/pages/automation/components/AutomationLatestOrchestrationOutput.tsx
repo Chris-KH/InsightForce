@@ -220,18 +220,18 @@ export function AutomationLatestOrchestrationOutput() {
         />
       </section>
 
-      <LatestOutputTrendCharts
-        copy={copy}
-        latestTrendResults={latestTrendResults}
-        latestTrendBarData={latestTrendBarData}
-        latestInterestLineData={latestInterestLineData}
-      />
-
       <LatestOutputPlatformScriptPanels
         copy={copy}
         latestGeneratedContent={latestGeneratedContent}
         latestPlatformMixData={latestPlatformMixData}
         latestPublishingWindows={latestPublishingWindows}
+      />
+
+      <LatestOutputTrendCharts
+        copy={copy}
+        latestTrendResults={latestTrendResults}
+        latestTrendBarData={latestTrendBarData}
+        latestInterestLineData={latestInterestLineData}
       />
 
       <LatestOutputStoryboardPanel

@@ -25,7 +25,9 @@ import {
   QueryStateCard,
 } from "@/components/app-query-state";
 import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useBilingual } from "@/hooks/use-bilingual";
 import {
   formatCompactNumber,
@@ -354,11 +356,19 @@ export function AudiencePage() {
             "Các phiên trend và kết quả publish mới nhất.",
           )}
         >
-          <div className="space-y-3">
-            {isLoading ? (
-              <PanelRowsSkeleton rows={5} />
-            ) : (
-              <>
+          {isLoading ? (
+            <PanelRowsSkeleton rows={5} />
+          ) : trendHistoryItems.length === 0 && publishJobs.length === 0 ? (
+            <InlineQueryState
+              state="empty"
+              message={copy(
+                "No recent strategy activity available.",
+                "Chưa có hoạt động chiến lược gần đây.",
+              )}
+            />
+          ) : (
+            <ScrollArea className="h-96 pr-3">
+              <div className="space-y-3">
                 {trendHistoryItems.slice(0, 4).map((record) => (
                   <div
                     key={
@@ -398,21 +408,9 @@ export function AudiencePage() {
                     </p>
                   </div>
                 ))}
-              </>
-            )}
-
-            {!isLoading &&
-            trendHistoryItems.length === 0 &&
-            publishJobs.length === 0 ? (
-              <InlineQueryState
-                state="empty"
-                message={copy(
-                  "No recent strategy activity available.",
-                  "Chưa có hoạt động chiến lược gần đây.",
-                )}
-              />
-            ) : null}
-          </div>
+              </div>
+            </ScrollArea>
+          )}
         </PanelCard>
       </div>
 
@@ -453,18 +451,18 @@ export function AudiencePage() {
           "Các endpoint mức bình luận không còn trong docs hiện hành. Hãy dùng kết quả trend và publish như proxy đã được xác thực cho tín hiệu khán giả.",
         )}
       >
-        <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
-          <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <MessageCircle className="size-4 text-primary" />
+        <Alert className="border-border/65 bg-background/65">
+          <MessageCircle className="text-primary" />
+          <AlertTitle>
             {copy("Why this changed", "Vì sao phần này thay đổi")}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          </AlertTitle>
+          <AlertDescription className="mt-1">
             {copy(
               "Legacy TikTok/YouTube and comment lookup APIs are excluded to keep the frontend aligned with backend API documentation.",
               "Các API TikTok/YouTube cũ và tra cứu comment đã được loại bỏ để đảm bảo frontend bám sát tài liệu API backend.",
             )}
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
       </PanelCard>
     </div>
   );

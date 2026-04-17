@@ -6,6 +6,8 @@ import {
   PanelRowsSkeleton,
 } from "@/components/app-query-state";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { formatDateTime } from "@/lib/insight-formatters";
 import { localizeStatus } from "@/lib/localized-status";
@@ -71,6 +73,15 @@ function getFilterLabel(
   return copy("Failed", "Lỗi");
 }
 
+function isPublishStatusFilter(value: string): value is PublishStatusFilter {
+  return (
+    value === "all" ||
+    value === "pending" ||
+    value === "published" ||
+    value === "failed"
+  );
+}
+
 export function PublishWorkspaceTimeline({
   jobs,
   isLoading,
@@ -103,67 +114,72 @@ export function PublishWorkspaceTimeline({
         <p className="mb-3 text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
           {copy("Publishing Timeline", "Dòng thời gian xuất bản")}
         </p>
-        <div className="mb-3 flex flex-wrap gap-2">
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          size="sm"
+          value={statusFilter}
+          className="mb-3 flex-wrap"
+          onValueChange={(value) => {
+            if (isPublishStatusFilter(value)) {
+              setStatusFilter(value);
+            }
+          }}
+        >
           {(["all", "pending", "published", "failed"] as const).map(
-            (status) => {
-              const active = statusFilter === status;
-
-              return (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => setStatusFilter(status)}
-                  className={cn(
-                    "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                    active
-                      ? "border-primary/45 bg-primary/10 text-primary"
-                      : "border-border/70 bg-background/70 text-muted-foreground",
-                  )}
-                >
-                  {getFilterLabel(status, copy)}
-                </button>
-              );
-            },
+            (status) => (
+              <ToggleGroupItem
+                key={status}
+                value={status}
+                aria-label={getFilterLabel(status, copy)}
+                className="rounded-full"
+              >
+                {getFilterLabel(status, copy)}
+              </ToggleGroupItem>
+            ),
           )}
-        </div>
+        </ToggleGroup>
 
         {isLoading ? (
           <PanelRowsSkeleton rows={7} />
         ) : filteredJobs.length > 0 ? (
-          <div className="space-y-3">
-            {filteredJobs.slice(0, 8).map((job) => (
-              <button
-                key={job.id}
-                type="button"
-                onClick={() => onSelectJob(job.id)}
-                className={cn(
-                  "w-full rounded-2xl border border-border/65 bg-background/65 p-4 text-left transition-colors hover:border-primary/35",
-                  selectedJobId === job.id ? "border-primary/45" : undefined,
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-foreground">
-                    {job.title}
+          <ScrollArea className="h-104 pr-3">
+            <div className="space-y-3">
+              {filteredJobs.map((job) => (
+                <button
+                  key={job.id}
+                  type="button"
+                  onClick={() => onSelectJob(job.id)}
+                  className={cn(
+                    "w-full rounded-2xl border border-border/65 bg-background/65 p-4 text-left transition-colors hover:border-primary/35",
+                    selectedJobId === job.id ? "border-primary/45" : undefined,
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      {job.title}
+                    </p>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "rounded-full capitalize",
+                        statusBadgeClass(job.status),
+                      )}
+                    >
+                      {localizeStatus(job.status, copy)}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {copy("Platforms", "Nền tảng")}: {job.platforms.join(", ")}
                   </p>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "rounded-full capitalize",
-                      statusBadgeClass(job.status),
-                    )}
-                  >
-                    {localizeStatus(job.status, copy)}
-                  </Badge>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {copy("Platforms", "Nền tảng")}: {job.platforms.join(", ")}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {copy("Created", "Tạo lúc")}: {formatDateTime(job.created_at)}
-                </p>
-              </button>
-            ))}
-          </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {copy("Created", "Tạo lúc")}:{" "}
+                    {formatDateTime(job.created_at)}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
         ) : (
           <InlineQueryState
             state="empty"

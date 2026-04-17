@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Loader2, PlayCircle } from "lucide-react";
+import { Loader2, PlayCircle, SendHorizontal } from "lucide-react";
 
 import {
   runAutomationOrchestration,
@@ -9,7 +9,15 @@ import {
 } from "@/app/slices/runtime-tasks.slice";
 import { InlineQueryState } from "@/components/app-query-state";
 import { PanelCard } from "@/components/app-section";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +25,13 @@ import { useAppDispatch, useAppSelector } from "@/hooks";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { ReasoningTimeline } from "@/pages/strategy/components/ReasoningTimeline";
 
-export function AutomationOrchestrationControlSection() {
+type AutomationOrchestrationControlSectionProps = {
+  onOpenPublishing?: () => void;
+};
+
+export function AutomationOrchestrationControlSection({
+  onOpenPublishing,
+}: AutomationOrchestrationControlSectionProps) {
   const copy = useBilingual();
   const dispatch = useAppDispatch();
 
@@ -133,25 +147,32 @@ export function AutomationOrchestrationControlSection() {
                 />
               </div>
 
-              <div className="rounded-2xl border border-border/60 bg-background/60 px-3 py-3">
-                <label className="flex items-center gap-2 text-sm text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={saveFiles}
-                    onChange={(event) =>
-                      dispatch(setAutomationSaveFiles(event.target.checked))
-                    }
-                    className="size-4 rounded border-border"
-                  />
-                  {copy("Save run files", "Lưu file kết quả")}
-                </label>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {copy(
-                    "Keep artifacts for later review by the operations team.",
-                    "Giữ lại tệp đầu ra để đội vận hành xem lại sau.",
-                  )}
-                </p>
-              </div>
+              <Field
+                orientation="horizontal"
+                className="rounded-2xl border border-border/60 bg-background/60 px-3 py-3"
+              >
+                <Checkbox
+                  id="automation-save-files"
+                  checked={saveFiles}
+                  onCheckedChange={(checked) =>
+                    dispatch(setAutomationSaveFiles(checked === true))
+                  }
+                />
+                <FieldContent>
+                  <FieldLabel
+                    htmlFor="automation-save-files"
+                    className="font-normal text-foreground"
+                  >
+                    {copy("Save run files", "Lưu file kết quả")}
+                  </FieldLabel>
+                  <FieldDescription className="text-xs">
+                    {copy(
+                      "Keep artifacts for later review by the operations team.",
+                      "Giữ lại tệp đầu ra để đội vận hành xem lại sau.",
+                    )}
+                  </FieldDescription>
+                </FieldContent>
+              </Field>
             </div>
 
             <Button
@@ -177,20 +198,32 @@ export function AutomationOrchestrationControlSection() {
             ) : null}
 
             {latestOrchestrationResponse ? (
-              <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-4 text-xs text-muted-foreground">
-                <p className="font-semibold text-foreground">
+              <Alert className="border-emerald-500/35 bg-emerald-500/10">
+                <AlertTitle>
                   {copy(
                     "Automation run completed",
                     "Phiên tự động hóa đã hoàn tất",
                   )}
-                </p>
-                <p className="mt-1.5">
+                </AlertTitle>
+                <AlertDescription>
                   {copy(
                     "Trend and content outputs were generated successfully.",
                     "Trend và nội dung đã được tạo thành công.",
                   )}
-                </p>
-              </div>
+                </AlertDescription>
+                {onOpenPublishing ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={onOpenPublishing}
+                  >
+                    <SendHorizontal data-icon="inline-start" />
+                    {copy("Continue to Publishing", "Chuyển sang Xuất bản")}
+                  </Button>
+                ) : null}
+              </Alert>
             ) : null}
           </form>
         </PanelCard>

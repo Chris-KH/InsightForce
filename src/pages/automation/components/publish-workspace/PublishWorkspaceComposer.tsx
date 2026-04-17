@@ -8,13 +8,14 @@ import {
   useUploadPostPublishMutation,
 } from "@/api";
 import { InlineQueryState } from "@/components/app-query-state";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { getQueryErrorMessage } from "@/lib/query-error";
-import { cn } from "@/lib/utils";
 
 const PUBLISH_PLATFORM_OPTIONS: UploadPostPublishPlatform[] = [
   "tiktok",
@@ -35,6 +36,12 @@ type PublishWorkspaceComposerProps = {
   generatedContents: GeneratedContentResponse[];
   onJobCreated?: (jobId: string) => void;
 };
+
+type PublishPreset = "short-video" | "multichannel";
+
+function isPublishPlatform(value: string): value is UploadPostPublishPlatform {
+  return PUBLISH_PLATFORM_OPTIONS.includes(value as UploadPostPublishPlatform);
+}
 
 function getDisplayTitle(record: GeneratedContentResponse) {
   return record.main_title || record.selected_keyword || record.id;
@@ -65,6 +72,7 @@ export function PublishWorkspaceComposer({
   const [platforms, setPlatforms] = useState<UploadPostPublishPlatform[]>([
     "tiktok",
   ]);
+  const [selectedPreset, setSelectedPreset] = useState<PublishPreset | "">("");
   const [files, setFiles] = useState<File[]>([]);
 
   const resolvedUser = userInput ?? users[0]?.email ?? "";
@@ -79,15 +87,7 @@ export function PublishWorkspaceComposer({
     }
   }, [onJobCreated, publishMutation.data?.publish_job.id]);
 
-  const togglePlatform = (platform: UploadPostPublishPlatform) => {
-    setPlatforms((current) =>
-      current.includes(platform)
-        ? current.filter((item) => item !== platform)
-        : [...current, platform],
-    );
-  };
-
-  const applyPreset = (preset: "short-video" | "multichannel") => {
+  const applyPreset = (preset: PublishPreset) => {
     if (preset === "short-video") {
       setPlatforms(["tiktok", "instagram", "youtube"]);
       return;
@@ -186,44 +186,56 @@ export function PublishWorkspaceComposer({
 
       <div className="space-y-1">
         <Label>{copy("Channels", "Kênh đăng")}</Label>
-        <div className="mb-2 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => applyPreset("short-video")}
-            className="rounded-full border border-border/70 bg-background/70 px-3 py-1 text-xs text-muted-foreground transition hover:border-primary/45 hover:text-primary"
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          size="sm"
+          value={selectedPreset}
+          className="mb-2 flex-wrap"
+          onValueChange={(value) => {
+            if (value === "short-video" || value === "multichannel") {
+              setSelectedPreset(value);
+              applyPreset(value);
+            }
+          }}
+        >
+          <ToggleGroupItem
+            value="short-video"
+            aria-label={copy("Preset: Short-video", "Preset: Video ngắn")}
           >
             {copy("Preset: Short-video", "Preset: Video ngắn")}
-          </button>
-          <button
-            type="button"
-            onClick={() => applyPreset("multichannel")}
-            className="rounded-full border border-border/70 bg-background/70 px-3 py-1 text-xs text-muted-foreground transition hover:border-primary/45 hover:text-primary"
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="multichannel"
+            aria-label={copy("Preset: Multi-channel", "Preset: Đa kênh")}
           >
             {copy("Preset: Multi-channel", "Preset: Đa kênh")}
-          </button>
-        </div>
+          </ToggleGroupItem>
+        </ToggleGroup>
 
-        <div className="flex flex-wrap gap-2">
-          {PUBLISH_PLATFORM_OPTIONS.map((platform) => {
-            const active = platforms.includes(platform);
-
-            return (
-              <button
-                key={platform}
-                type="button"
-                onClick={() => togglePlatform(platform)}
-                className={cn(
-                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                  active
-                    ? "border-primary/45 bg-primary/10 text-primary"
-                    : "border-border/70 bg-background/70 text-muted-foreground",
-                )}
-              >
-                {platform}
-              </button>
-            );
-          })}
-        </div>
+        <ToggleGroup
+          type="multiple"
+          variant="outline"
+          size="sm"
+          value={platforms}
+          className="flex-wrap"
+          onValueChange={(value) => {
+            const nextPlatforms = value.filter(isPublishPlatform);
+            setPlatforms(nextPlatforms);
+            setSelectedPreset("");
+          }}
+        >
+          {PUBLISH_PLATFORM_OPTIONS.map((platform) => (
+            <ToggleGroupItem
+              key={platform}
+              value={platform}
+              aria-label={platform}
+              className="rounded-full capitalize"
+            >
+              {platform}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       </div>
 
       <div className="space-y-1">
@@ -401,14 +413,14 @@ export function PublishWorkspaceComposer({
       ) : null}
 
       {publishMutation.data ? (
-        <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-4 text-xs text-muted-foreground">
-          <p className="font-semibold text-foreground">
+        <Alert className="border-emerald-500/35 bg-emerald-500/10">
+          <AlertTitle>
             {copy("Publish request created", "Đã tạo yêu cầu xuất bản")}
-          </p>
-          <p className="mt-1.5">
+          </AlertTitle>
+          <AlertDescription>
             {copy("Job ID", "Mã job")}: {publishMutation.data.publish_job.id}
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
       ) : null}
 
       {showAdvanced ? (

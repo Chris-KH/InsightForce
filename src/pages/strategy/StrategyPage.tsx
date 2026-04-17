@@ -25,6 +25,7 @@ import {
   QueryStateCard,
 } from "@/components/app-query-state";
 import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -886,21 +887,34 @@ function StrategyPageContent({ copy, locale }: StrategyPageContentProps) {
               copy={copy}
             />
 
-            <div
+            <Alert
               className={cn(
-                "rounded-2xl border border-border/55 bg-background/50 p-4 text-xs",
-                isTrendAnalyzePending
-                  ? "text-primary"
-                  : "text-muted-foreground",
+                "border-border/55 bg-background/50",
+                isTrendAnalyzePending && "border-primary/35",
               )}
             >
-              {isTrendAnalyzePending
-                ? copy("Agent is reasoning...", "Agent đang reasoning...")
-                : copy(
-                    "Waiting for next prompt.",
-                    "Đang chờ prompt tiếp theo.",
-                  )}
-            </div>
+              {isTrendAnalyzePending ? (
+                <Bot className="text-primary" />
+              ) : (
+                <Clock3 />
+              )}
+              <AlertTitle>
+                {isTrendAnalyzePending
+                  ? copy("Reasoning In Progress", "Reasoning đang chạy")
+                  : copy(
+                      "Waiting For Next Prompt",
+                      "Đang chờ prompt tiếp theo",
+                    )}
+              </AlertTitle>
+              <AlertDescription>
+                {isTrendAnalyzePending
+                  ? copy("Agent is reasoning...", "Agent đang reasoning...")
+                  : copy(
+                      "Submit a new prompt to continue the analysis workflow.",
+                      "Hãy gửi prompt mới để tiếp tục luồng phân tích.",
+                    )}
+              </AlertDescription>
+            </Alert>
 
             {promptResponse?.markdown_summary ? (
               <div className="rounded-2xl border border-border/55 bg-background/50 p-4 text-sm text-muted-foreground">

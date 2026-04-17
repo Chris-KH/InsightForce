@@ -289,6 +289,8 @@ export function HeatMatrix({
 }: HeatMatrixProps) {
   const flatValues = values.flat();
   const maxValue = Math.max(...flatValues, 1);
+  const firstColumnWidth = 126;
+  const minTableWidth = Math.max(500, firstColumnWidth + columns.length * 94);
 
   return (
     <div
@@ -301,27 +303,31 @@ export function HeatMatrix({
         <div className="absolute inset-x-6 top-3 h-px bg-linear-to-r from-transparent via-primary/70 to-transparent" />
         <div className="absolute -top-20 -right-14 size-40 rounded-full bg-chart-2/22 blur-3xl dark:bg-chart-2/14" />
       </div>
-      <div className="min-w-140">
+      <div style={{ minWidth: `${minTableWidth}px` }}>
         <div
           className="grid gap-2"
           style={{
-            gridTemplateColumns: `160px repeat(${columns.length}, minmax(0, 1fr))`,
+            gridTemplateColumns: `minmax(${firstColumnWidth}px, 1.35fr) repeat(${columns.length}, minmax(84px, 1fr))`,
           }}
         >
           <div />
           {columns.map((column) => (
             <div
               key={column}
-              className="text-center text-xs font-medium text-muted-foreground"
+              className="min-w-0 px-1 text-center text-xs font-medium text-muted-foreground"
+              title={column}
             >
-              {column}
+              <span className="block truncate">{column}</span>
             </div>
           ))}
 
           {rows.map((row, rowIndex) => (
             <div key={row} className="contents">
-              <div className="flex items-center text-xs font-medium text-muted-foreground">
-                {row}
+              <div
+                className="min-w-0 pr-2 text-xs font-medium text-muted-foreground"
+                title={row}
+              >
+                <span className="block truncate">{row}</span>
               </div>
               {columns.map((column, columnIndex) => {
                 const value = values[rowIndex]?.[columnIndex] ?? 0;

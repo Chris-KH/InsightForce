@@ -3,11 +3,16 @@ import { useMemo, useState } from "react";
 import type { TrendAnalysisRecordResponse } from "@/api";
 import { InlineQueryState } from "@/components/app-query-state";
 import { PanelCard, ProgressBar } from "@/components/app-section";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { formatPercentValue } from "@/lib/insight-formatters";
-import { cn } from "@/lib/utils";
 
 type KeywordSortMode = "score" | "frequency";
+
+function isKeywordSortMode(value: string): value is KeywordSortMode {
+  return value === "score" || value === "frequency";
+}
 
 type DashboardKeywordPriorityPanelProps = {
   trendRecords: TrendAnalysisRecordResponse[];
@@ -69,7 +74,18 @@ export function DashboardKeywordPriorityPanel({
         "Chuyển chế độ sắp xếp để xem keyword mạnh nhất hoặc xuất hiện nhiều nhất.",
       )}
     >
-      <div className="mb-4 flex flex-wrap gap-2">
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        size="sm"
+        value={keywordSortMode}
+        className="mb-4 flex-wrap"
+        onValueChange={(value) => {
+          if (isKeywordSortMode(value)) {
+            setKeywordSortMode(value);
+          }
+        }}
+      >
         {(
           [
             { key: "score", label: copy("By Strength", "Theo độ mạnh") },
@@ -78,45 +94,39 @@ export function DashboardKeywordPriorityPanel({
               label: copy("By Frequency", "Theo tần suất"),
             },
           ] as const
-        ).map((mode) => {
-          const active = keywordSortMode === mode.key;
-          return (
-            <button
-              key={mode.key}
-              type="button"
-              onClick={() => setKeywordSortMode(mode.key)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                active
-                  ? "border-primary/45 bg-primary/10 text-primary"
-                  : "border-border/70 bg-background/70 text-muted-foreground",
-              )}
-            >
-              {mode.label}
-            </button>
-          );
-        })}
-      </div>
+        ).map((mode) => (
+          <ToggleGroupItem
+            key={mode.key}
+            value={mode.key}
+            aria-label={mode.label}
+            className="rounded-full"
+          >
+            {mode.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
 
       {keywordPulse.length > 0 ? (
-        <div className="space-y-4">
-          {keywordPulse.map((item, index) => (
-            <div key={item.keyword}>
-              <div className="mb-1 flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-foreground">
-                  {item.keyword}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {formatPercentValue(item.score)} • {item.count}x
-                </p>
+        <ScrollArea className="h-80 pr-3">
+          <div className="space-y-4">
+            {keywordPulse.map((item, index) => (
+              <div key={item.keyword}>
+                <div className="mb-1 flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-foreground">
+                    {item.keyword}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatPercentValue(item.score)} • {item.count}x
+                  </p>
+                </div>
+                <ProgressBar
+                  value={Math.min(item.score, 100)}
+                  tone={index % 2 === 0 ? "primary" : "secondary"}
+                />
               </div>
-              <ProgressBar
-                value={Math.min(item.score, 100)}
-                tone={index % 2 === 0 ? "primary" : "secondary"}
-              />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </ScrollArea>
       ) : (
         <InlineQueryState
           state="empty"

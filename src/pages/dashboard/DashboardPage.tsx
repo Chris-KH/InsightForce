@@ -1,4 +1,13 @@
-import { Activity, Bot, Database, RefreshCcw, Workflow } from "lucide-react";
+import {
+  Activity,
+  Bot,
+  Clock3,
+  Database,
+  RefreshCcw,
+  Target,
+  Users,
+  Workflow,
+} from "lucide-react";
 
 import {
   type GeneratedContentResponse,
@@ -17,7 +26,7 @@ import {
   MetricCardsSkeleton,
   QueryStateCard,
 } from "@/components/app-query-state";
-import { MetricCard, SectionHeader } from "@/components/app-section";
+import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useBilingual } from "@/hooks/use-bilingual";
@@ -77,12 +86,55 @@ export function DashboardPage() {
   const publishedJobs = publishJobs.filter(
     (job) => job.status.toLowerCase() === "published",
   ).length;
+  const pendingJobs = publishJobs.filter(
+    (job) => job.status.toLowerCase() === "pending",
+  ).length;
   const failedJobs = publishJobs.filter(
     (job) => job.status.toLowerCase() === "failed",
   ).length;
   const completedPublishJobs = publishedJobs + failedJobs;
   const publishSuccessRatio =
     completedPublishJobs > 0 ? publishedJobs / completedPublishJobs : 0;
+
+  const topTrendSignal = (() => {
+    let keyword: string | undefined;
+    let score = 0;
+
+    for (const record of trendRecords) {
+      for (const result of record.results) {
+        if (result.trend_score > score) {
+          score = result.trend_score;
+          keyword = result.main_keyword;
+        }
+      }
+    }
+
+    return { keyword, score };
+  })();
+
+  const topOperator = users.reduce<UserSummaryResponse | undefined>(
+    (currentTop, candidate) => {
+      const candidateTotal =
+        candidate.trend_analysis_count +
+        candidate.generated_content_count +
+        candidate.publish_job_count;
+
+      if (!currentTop) {
+        return candidate;
+      }
+
+      const currentTotal =
+        currentTop.trend_analysis_count +
+        currentTop.generated_content_count +
+        currentTop.publish_job_count;
+
+      return candidateTotal > currentTotal ? candidate : currentTop;
+    },
+    undefined,
+  );
+
+  const operationVolume =
+    trendRecords.length + generatedContents.length + publishJobs.length;
 
   const handleRefresh = async () => {
     await Promise.all([
@@ -191,6 +243,91 @@ export function DashboardPage() {
           />
         </div>
       )}
+
+      <PanelCard
+        title={copy("Campaign Focus Board", "Bảng điều phối ưu tiên")}
+        description={copy(
+          "A fast decision layer combining strongest trend signal, execution backlog, and top operator activity.",
+          "Lớp ra quyết định nhanh kết hợp tín hiệu trend mạnh nhất, backlog thực thi và tài khoản vận hành tích cực nhất.",
+        )}
+        className="border-primary/25 bg-linear-to-br from-primary/8 via-card/96 to-chart-2/12"
+      >
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
+          <div className="rounded-2xl border border-primary/25 bg-background/70 p-4">
+            <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+              {copy("Primary Signal", "Tín hiệu ưu tiên")}
+            </p>
+            <p className="mt-2 font-heading text-2xl font-semibold text-foreground sm:text-3xl">
+              {topTrendSignal.keyword ||
+                copy("Awaiting trend signal", "Đang chờ tín hiệu xu hướng")}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {topTrendSignal.keyword
+                ? copy(
+                    "Use this keyword as today's lead angle for your next publishing sprint.",
+                    "Dùng keyword này làm góc khai thác chính cho sprint xuất bản kế tiếp trong hôm nay.",
+                  )
+                : copy(
+                    "Run a trend analysis to reveal the strongest opportunity for this cycle.",
+                    "Hãy chạy phân tích trend để mở ra cơ hội mạnh nhất cho chu kỳ hiện tại.",
+                  )}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Badge
+                variant="outline"
+                className="rounded-full border-primary/35 bg-primary/10 text-primary"
+              >
+                <Target className="mr-1.5 size-3.5" />
+                {copy("Trend score", "Điểm trend")}:{" "}
+                {formatCompactNumber(topTrendSignal.score)}
+              </Badge>
+              <Badge
+                variant="outline"
+                className="rounded-full border-amber-500/35 bg-amber-500/10 text-amber-700"
+              >
+                <Clock3 className="mr-1.5 size-3.5" />
+                {copy("Pending jobs", "Job đang chờ")}:{" "}
+                {formatCompactNumber(pendingJobs)}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+              <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                {copy("Top Operator", "Tài khoản vận hành dẫn đầu")}
+              </p>
+              <p className="mt-1 truncate text-sm font-semibold text-foreground">
+                {topOperator?.email || "--"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {copy("Total outputs", "Tổng đầu ra")}:{" "}
+                {formatCompactNumber(
+                  (topOperator?.trend_analysis_count ?? 0) +
+                    (topOperator?.generated_content_count ?? 0) +
+                    (topOperator?.publish_job_count ?? 0),
+                )}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+              <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                {copy("Current Volume", "Khối lượng hiện tại")}
+              </p>
+              <p className="mt-1 text-sm font-semibold text-foreground">
+                {formatCompactNumber(operationVolume)}
+              </p>
+              <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <Users className="size-3.5" />
+                {copy(
+                  "Trend, content, and publish records in this window.",
+                  "Tổng record trend, nội dung và publish trong cửa sổ hiện tại.",
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      </PanelCard>
 
       <DashboardTrendAndPublishChartsSection
         trendRecords={trendRecords}

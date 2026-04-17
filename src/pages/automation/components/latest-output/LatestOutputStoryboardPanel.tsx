@@ -1,5 +1,6 @@
 import { InlineQueryState } from "@/components/app-query-state";
 import { PanelCard } from "@/components/app-section";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { StoryboardFrame } from "@/lib/orchestrator-intelligence";
 
 type CopyFn = (en: string, vi: string) => string;
@@ -16,49 +17,51 @@ export function LatestOutputStoryboardPanel({
   return (
     <PanelCard
       title={copy(
-        "Storyboard Preview (Mock Images)",
-        "Xem trước storyboard (ảnh mô phỏng)",
+        "Storyboard Preview Gallery",
+        "Thư viện xem trước storyboard",
       )}
       description={copy(
-        "Images are mocked while section thumbnail output paths are not public URLs.",
-        "Hình ảnh đang dùng bản mô phỏng vì đường dẫn thumbnail đầu ra chưa phải URL công khai.",
+        "Visual references generated for each script segment.",
+        "Bộ khung hình tham chiếu tương ứng với từng phân đoạn kịch bản.",
       )}
     >
       {sections.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {sections.map((section) => (
-            <article
-              key={`storyboard-${section.id}`}
-              className="overflow-hidden rounded-2xl border border-border/65 bg-background/70"
-            >
-              <img
-                src={section.imageUrl}
-                alt={copy(
-                  `${section.label} mock preview`,
-                  `${section.label} bản xem trước mô phỏng`,
-                )}
-                loading="lazy"
-                className="h-40 w-full object-cover"
-              />
-              <div className="space-y-1.5 p-3">
-                <p className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
-                  {section.timestamp}
-                </p>
-                <p className="text-sm font-semibold text-foreground">
-                  {section.label}
-                </p>
-                <p className="line-clamp-2 text-xs text-muted-foreground">
-                  {section.thumbnailPrompt || section.narration || "--"}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {copy("Output path", "Đường dẫn đầu ra")}:{" "}
-                  {section.thumbnailOutputPath ||
-                    copy("(mock-only)", "(chỉ mô phỏng)")}
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
+        <ScrollArea className="h-120 pr-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {sections.map((section) => (
+              <article
+                key={`storyboard-${section.id}`}
+                className="overflow-hidden rounded-2xl border border-border/65 bg-background/70"
+              >
+                <img
+                  src={section.imageUrl}
+                  alt={copy(
+                    `${section.label} mock preview`,
+                    `${section.label} bản xem trước mô phỏng`,
+                  )}
+                  loading="lazy"
+                  className="h-40 w-full object-cover"
+                />
+                <div className="space-y-1.5 p-3">
+                  <p className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
+                    {section.timestamp}
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {section.label}
+                  </p>
+                  <p className="line-clamp-2 text-xs text-muted-foreground">
+                    {section.thumbnailPrompt || section.narration || "--"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {copy("Output path", "Đường dẫn đầu ra")}:{" "}
+                    {section.thumbnailOutputPath ||
+                      copy("(mock-only)", "(chỉ mô phỏng)")}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </ScrollArea>
       ) : (
         <InlineQueryState
           state="empty"

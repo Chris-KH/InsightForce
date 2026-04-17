@@ -11,6 +11,8 @@ import {
 } from "@/components/app-query-state";
 import { PanelCard } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { formatDateTime } from "@/lib/insight-formatters";
 import {
@@ -28,6 +30,15 @@ type PipelineEvent = {
 };
 
 type EventFilter = "all" | PipelineEvent["type"];
+
+function isEventFilter(value: string): value is EventFilter {
+  return (
+    value === "all" ||
+    value === "trend" ||
+    value === "content" ||
+    value === "publish"
+  );
+}
 
 type DashboardRecentActivityFeedPanelProps = {
   trendRecords: TrendAnalysisRecordResponse[];
@@ -117,7 +128,18 @@ export function DashboardRecentActivityFeedPanel({
         "Lọc luồng hoạt động theo xu hướng, nội dung hoặc tác vụ đăng bài.",
       )}
     >
-      <div className="mb-4 flex flex-wrap gap-2">
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        size="sm"
+        value={eventFilter}
+        className="mb-4 flex-wrap"
+        onValueChange={(value) => {
+          if (isEventFilter(value)) {
+            setEventFilter(value);
+          }
+        }}
+      >
         {(
           [
             { key: "all", label: copy("All", "Tất cả") },
@@ -125,59 +147,53 @@ export function DashboardRecentActivityFeedPanel({
             { key: "content", label: copy("Content", "Nội dung") },
             { key: "publish", label: copy("Publish", "Đăng bài") },
           ] as const
-        ).map((filter) => {
-          const active = eventFilter === filter.key;
-          return (
-            <button
-              key={filter.key}
-              type="button"
-              onClick={() => setEventFilter(filter.key)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                active
-                  ? "border-primary/45 bg-primary/10 text-primary"
-                  : "border-border/70 bg-background/70 text-muted-foreground",
-              )}
-            >
-              {filter.label}
-            </button>
-          );
-        })}
-      </div>
+        ).map((filter) => (
+          <ToggleGroupItem
+            key={filter.key}
+            value={filter.key}
+            aria-label={filter.label}
+            className="rounded-full"
+          >
+            {filter.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
 
       {isLoading && filteredEvents.length === 0 ? (
         <PanelRowsSkeleton rows={6} />
       ) : filteredEvents.length > 0 ? (
-        <div className="space-y-3">
-          {filteredEvents.map((event) => (
-            <div
-              key={`${event.type}-${event.id}`}
-              className="rounded-2xl border border-border/65 bg-background/65 p-4"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "rounded-full capitalize",
-                    eventTypeClass(event.type),
-                  )}
-                >
-                  {localizePipelineEventType(event.type, copy)}
-                </Badge>
-                <p className="text-xs text-muted-foreground">
-                  {formatDateTime(event.createdAt)}
+        <ScrollArea className="h-112 pr-3">
+          <div className="space-y-3">
+            {filteredEvents.map((event) => (
+              <div
+                key={`${event.type}-${event.id}`}
+                className="rounded-2xl border border-border/65 bg-background/65 p-4"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "rounded-full capitalize",
+                      eventTypeClass(event.type),
+                    )}
+                  >
+                    {localizePipelineEventType(event.type, copy)}
+                  </Badge>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDateTime(event.createdAt)}
+                  </p>
+                </div>
+                <p className="mt-2 text-sm font-semibold text-foreground">
+                  {event.title}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {copy("Status", "Trạng thái")}:{" "}
+                  {localizeStatus(event.status, copy)}
                 </p>
               </div>
-              <p className="mt-2 text-sm font-semibold text-foreground">
-                {event.title}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {copy("Status", "Trạng thái")}:{" "}
-                {localizeStatus(event.status, copy)}
-              </p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </ScrollArea>
       ) : (
         <InlineQueryState
           state="empty"
