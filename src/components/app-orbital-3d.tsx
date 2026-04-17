@@ -1,12 +1,9 @@
 import type { ReactNode } from "react";
-import { Float, Sparkles } from "@react-three/drei";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { motion } from "motion/react";
+import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import type { Group, Mesh } from "three";
 
-import { cn } from "@/lib/utils";
-
+// These 3D scenes are currently disabled due to performance concerns, but the component structure and logic are kept intact for easy re-enabling in the future once optimizations are made.
 function CrystalCore() {
   const orbitRef = useRef<Group>(null);
   const coreRef = useRef<Mesh>(null);
@@ -28,7 +25,7 @@ function CrystalCore() {
     }
   });
 
-  return (
+  /*   return (
     <>
       <ambientLight intensity={0.9} />
       <pointLight position={[3.2, 2.4, 2.6]} intensity={1.2} color="#7dd3fc" />
@@ -92,9 +89,12 @@ function CrystalCore() {
         </mesh>
       </group>
     </>
-  );
+  ); */
+
+  return <></>;
 }
 
+//  This scene is currently disabled due to performance concerns, but the component structure and logic are kept intact for easy re-enabling in the future once optimizations are made.
 function TetraCore() {
   const shellRef = useRef<Group>(null);
   const tetraRef = useRef<Mesh>(null);
@@ -117,7 +117,7 @@ function TetraCore() {
     }
   });
 
-  return (
+  /*   return (
     <>
       <ambientLight intensity={0.82} />
       <pointLight position={[2.6, 2.2, 2.2]} intensity={1.1} color="#a5b4fc" />
@@ -169,9 +169,12 @@ function TetraCore() {
         </mesh>
       </group>
     </>
-  );
+  ); */
+
+  return <></>;
 }
 
+// This scene is currently disabled due to performance concerns, but the component structure and logic are kept intact for easy re-enabling in the future once optimizations are made.
 function SatelliteCore() {
   const systemRef = useRef<Group>(null);
   const satelliteARef = useRef<Mesh>(null);
@@ -202,7 +205,7 @@ function SatelliteCore() {
     }
   });
 
-  return (
+  /*   return (
     <>
       <ambientLight intensity={0.88} />
       <pointLight position={[3.1, 2.6, 2.3]} intensity={1.16} color="#bae6fd" />
@@ -261,7 +264,9 @@ function SatelliteCore() {
         </mesh>
       </group>
     </>
-  );
+  ); */
+
+  return <></>;
 }
 
 export type PanelOrbital3DVariant = "crystal" | "tetra" | "satellite";
@@ -309,6 +314,7 @@ function canRenderOrbitalScene() {
   return deviceMemory >= 6 && cpuCores >= 6;
 }
 
+// This is not a bug, but a temporary measure to disable the 3D scene rendering while we optimize its performance and reduce its resource usage. The component structure and logic are kept intact for easy re-enabling in the future.
 export function PanelOrbital3D({
   className,
   variant = "crystal",
@@ -316,7 +322,7 @@ export function PanelOrbital3D({
   const SceneComponent = PANEL_SCENE[variant];
   const shouldRender3D = useMemo(() => canRenderOrbitalScene(), []);
 
-  return (
+  /*   return (
     <div
       aria-hidden
       className={cn(
@@ -357,5 +363,7 @@ export function PanelOrbital3D({
         </Canvas>
       ) : null}
     </div>
-  );
+  ); */
+
+  return <></>;
 }

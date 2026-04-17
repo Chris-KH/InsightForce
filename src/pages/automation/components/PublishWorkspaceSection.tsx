@@ -73,7 +73,7 @@ export function PublishWorkspaceSection() {
         }
         className="gap-0"
       >
-        <div className="mb-4 rounded-2xl border border-border/60 bg-background/70 p-3">
+        <div className="mb-4 rounded-2xl border border-border/60 bg-linear-to-r from-primary/8 via-background/80 to-chart-2/10 p-3">
           <p className="mb-2 text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
             {copy("Publishing mode", "Chế độ xuất bản")}
           </p>
@@ -98,28 +98,30 @@ export function PublishWorkspaceSection() {
           </ToggleGroup>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          {publishingMode === "ai-auto" ? (
+        {publishingMode === "ai-auto" ? (
+          <div className="overflow-hidden pt-1">
             <PublishWorkspaceAiComposer
               users={users}
               generatedContents={generatedContents}
               onJobCreated={setSelectedJobId}
             />
-          ) : (
+          </div>
+        ) : (
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.28fr)_minmax(0,0.72fr)] 2xl:grid-cols-[minmax(0,1.34fr)_minmax(0,0.66fr)]">
             <PublishWorkspaceComposer
               users={users}
               generatedContents={generatedContents}
               onJobCreated={setSelectedJobId}
             />
-          )}
 
-          <PublishWorkspaceTimeline
-            jobs={publishJobs}
-            isLoading={publishJobsQuery.isLoading}
-            selectedJobId={selectedJobId}
-            onSelectJob={setSelectedJobId}
-          />
-        </div>
+            <PublishWorkspaceTimeline
+              jobs={publishJobs}
+              isLoading={publishJobsQuery.isLoading}
+              selectedJobId={selectedJobId}
+              onSelectJob={setSelectedJobId}
+            />
+          </div>
+        )}
       </PanelCard>
 
       <PublishWorkspaceStateSnapshot jobs={publishJobs} />

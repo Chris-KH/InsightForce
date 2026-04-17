@@ -1,5 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { FileStack, Loader2, Upload } from "lucide-react";
+import { Icon } from "@iconify-icon/react";
 
 import {
   type GeneratedContentResponse,
@@ -17,6 +18,9 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { getQueryErrorMessage } from "@/lib/query-error";
+import { cn } from "@/lib/utils";
+
+import { getPublishingPlatformVisual } from "./platform-visuals";
 
 const PUBLISH_PLATFORM_OPTIONS: UploadPostPublishPlatform[] = [
   "tiktok",
@@ -46,13 +50,6 @@ function isPublishPlatform(value: string): value is UploadPostPublishPlatform {
 
 function getDisplayTitle(record: GeneratedContentResponse) {
   return record.main_title || record.selected_keyword || record.id;
-}
-
-function formatPlatformName(platform: string) {
-  return platform
-    .split("_")
-    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
-    .join(" ");
 }
 
 export function PublishWorkspaceComposer({
@@ -262,17 +259,42 @@ export function PublishWorkspaceComposer({
               setSelectedPreset("");
             }}
           >
-            {PUBLISH_PLATFORM_OPTIONS.map((platform) => (
-              <ToggleGroupItem
-                key={platform}
-                value={platform}
-                aria-label={platform}
-                className="rounded-full"
-              >
-                {formatPlatformName(platform)}
-              </ToggleGroupItem>
-            ))}
+            {PUBLISH_PLATFORM_OPTIONS.map((platform) => {
+              const visual = getPublishingPlatformVisual(platform);
+
+              return (
+                <ToggleGroupItem
+                  key={platform}
+                  value={platform}
+                  aria-label={platform}
+                  className={cn(
+                    "rounded-full border-border/60 bg-background/70 data-[state=on]:border-primary/35 data-[state=on]:bg-primary/8",
+                    visual.chipClassName,
+                  )}
+                >
+                  <Icon icon={visual.icon} className="mr-1 size-3.5" />
+                  {visual.label}
+                </ToggleGroupItem>
+              );
+            })}
           </ToggleGroup>
+
+          <div className="mt-2 flex flex-wrap gap-2">
+            {platforms.map((platform) => {
+              const visual = getPublishingPlatformVisual(platform);
+
+              return (
+                <Badge
+                  key={`selected-${platform}`}
+                  variant="outline"
+                  className={cn("rounded-full", visual.chipClassName)}
+                >
+                  <Icon icon={visual.icon} className="mr-1 size-3.5" />
+                  {visual.label}
+                </Badge>
+              );
+            })}
+          </div>
         </div>
 
         <div className="space-y-1">
