@@ -11,6 +11,17 @@ import { useBilingual } from "@/hooks/use-bilingual";
 const INTERRUPTED_MESSAGE =
   "Previous request was interrupted because the app reloaded.";
 const AUTO_RESUME_THROTTLE_MS = 45_000;
+const IS_AUTO_RESUME_ENABLED =
+  import.meta.env.VITE_ENABLE_TASK_AUTO_RESUME === "true" &&
+  !import.meta.env.DEV;
+
+function shouldConfirmRetry() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return import.meta.env.VITE_AUTO_RESUME_CONFIRM !== "false";
+}
 
 function allowAutoResume(key: string) {
   if (typeof window === "undefined") {
@@ -51,6 +62,7 @@ export function AppTaskAutoResume() {
 
   useEffect(() => {
     if (
+      !IS_AUTO_RESUME_ENABLED ||
       resumedAutomationRef.current ||
       orchestrationTask.status !== "failed" ||
       orchestrationTask.errorMessage !== INTERRUPTED_MESSAGE
@@ -64,6 +76,18 @@ export function AppTaskAutoResume() {
     }
 
     if (!allowAutoResume("insightforce.auto-resume.automation")) {
+      return;
+    }
+
+    if (
+      shouldConfirmRetry() &&
+      !window.confirm(
+        copy(
+          "An interrupted automation run was detected. Retry it now?",
+          "Phát hiện phiên automation bị gián đoạn. Chạy lại ngay?",
+        ),
+      )
+    ) {
       return;
     }
 
@@ -106,6 +130,7 @@ export function AppTaskAutoResume() {
 
   useEffect(() => {
     if (
+      !IS_AUTO_RESUME_ENABLED ||
       resumedStrategyRef.current ||
       trendAnalyzeTask.status !== "failed" ||
       trendAnalyzeTask.errorMessage !== INTERRUPTED_MESSAGE
@@ -119,6 +144,18 @@ export function AppTaskAutoResume() {
     }
 
     if (!allowAutoResume("insightforce.auto-resume.strategy")) {
+      return;
+    }
+
+    if (
+      shouldConfirmRetry() &&
+      !window.confirm(
+        copy(
+          "An interrupted trend analysis was detected. Retry it now?",
+          "Phát hiện phiên phân tích trend bị gián đoạn. Chạy lại ngay?",
+        ),
+      )
+    ) {
       return;
     }
 

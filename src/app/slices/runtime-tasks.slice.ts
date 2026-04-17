@@ -170,6 +170,7 @@ export const runtimeTasksSlice = createSlice({
         state.automation.orchestration.startedAt = Date.now();
         state.automation.orchestration.completedAt = null;
         state.automation.orchestration.requestId = action.meta.requestId;
+        state.automation.orchestration.data = null;
         state.automation.orchestration.errorMessage = null;
         state.automation.orchestration.prompt = action.meta.arg.prompt;
       })
@@ -202,6 +203,7 @@ export const runtimeTasksSlice = createSlice({
         state.strategy.trendAnalyze.startedAt = Date.now();
         state.strategy.trendAnalyze.completedAt = null;
         state.strategy.trendAnalyze.requestId = action.meta.requestId;
+        state.strategy.trendAnalyze.data = null;
         state.strategy.trendAnalyze.errorMessage = null;
         state.strategy.trendAnalyze.prompt = action.meta.arg.query;
       })

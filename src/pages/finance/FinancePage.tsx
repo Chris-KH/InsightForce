@@ -11,11 +11,11 @@ import {
 
 import {
   useGeneratedContentsQuery,
-  useTrendGeneralQuery,
   useTrendHistoryQuery,
   useUploadPostPublishJobsQuery,
   useUsersQuery,
 } from "@/api";
+import type { TrendAnalysisRecordResponse } from "@/api/types";
 import {
   BarTrendChart,
   DoughnutTrendChart,
@@ -28,7 +28,9 @@ import {
   QueryStateCard,
 } from "@/components/app-query-state";
 import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useBilingual } from "@/hooks/use-bilingual";
 import {
   formatCompactNumber,
@@ -36,6 +38,7 @@ import {
   formatPercentFromRatio,
   formatPercentValue,
 } from "@/lib/insight-formatters";
+import { localizeStatus } from "@/lib/localized-status";
 import { getQueryErrorMessage } from "@/lib/query-error";
 
 function groupJobsByDay(items: Array<{ created_at: string }>) {
@@ -51,20 +54,26 @@ function groupJobsByDay(items: Array<{ created_at: string }>) {
   );
 }
 
+const EMPTY_TREND_SIGNALS: TrendAnalysisRecordResponse["results"] = [];
+
 export function FinancePage() {
   const copy = useBilingual();
 
   const usersQuery = useUsersQuery();
-  const trendGeneralQuery = useTrendGeneralQuery({
-    limit: 5,
-  });
   const trendHistoryQuery = useTrendHistoryQuery({ limit: 20 });
   const generatedContentsQuery = useGeneratedContentsQuery({ limit: 40 });
   const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 60 });
 
+  const latestTrendRecord = useMemo<TrendAnalysisRecordResponse | undefined>(
+    () =>
+      (trendHistoryQuery.data?.items ?? []).find(
+        (record) => record.results.length > 0,
+      ),
+    [trendHistoryQuery.data?.items],
+  );
+
   const allQueries = [
     usersQuery,
-    trendGeneralQuery,
     trendHistoryQuery,
     generatedContentsQuery,
     publishJobsQuery,
@@ -78,7 +87,7 @@ export function FinancePage() {
 
   const publishJobs = publishJobsQuery.data?.items ?? [];
   const generatedContents = generatedContentsQuery.data?.items ?? [];
-  const trendSignals = trendGeneralQuery.data?.results ?? [];
+  const trendSignals = latestTrendRecord?.results ?? EMPTY_TREND_SIGNALS;
 
   const publishedJobsCount = publishJobs.filter(
     (job) => job.status.toLowerCase() === "published",
@@ -101,45 +110,39 @@ export function FinancePage() {
 
   const jobsTimeline = groupJobsByDay(publishJobs).slice(-10);
 
-  const jobsTimelineData = useMemo(
-    () => ({
-      labels: jobsTimeline.map(([date]) => date.slice(5)),
-      datasets: [
-        {
-          label: copy("Jobs", "Công việc"),
-          data: jobsTimeline.map(([, value]) => value),
-          borderColor: "rgba(6, 182, 212, 0.9)",
-          backgroundColor: "rgba(6, 182, 212, 0.2)",
-          tension: 0.36,
-          fill: true,
-          pointRadius: 3,
-        },
-      ],
-    }),
-    [copy, jobsTimeline],
-  );
+  const jobsTimelineData = {
+    labels: jobsTimeline.map(([date]) => date.slice(5)),
+    datasets: [
+      {
+        label: copy("Jobs", "Công việc"),
+        data: jobsTimeline.map(([, value]) => value),
+        borderColor: "rgba(6, 182, 212, 0.9)",
+        backgroundColor: "rgba(6, 182, 212, 0.2)",
+        tension: 0.36,
+        fill: true,
+        pointRadius: 3,
+      },
+    ],
+  };
 
-  const publishMixData = useMemo(
-    () => ({
-      labels: [
-        copy("Published", "Đã đăng"),
-        copy("Pending", "Đang chờ"),
-        copy("Failed", "Lỗi"),
-      ],
-      datasets: [
-        {
-          data: [publishedJobsCount, pendingJobsCount, failedJobsCount],
-          backgroundColor: [
-            "rgba(16, 185, 129, 0.82)",
-            "rgba(245, 158, 11, 0.78)",
-            "rgba(248, 113, 113, 0.74)",
-          ],
-          borderWidth: 0,
-        },
-      ],
-    }),
-    [copy, failedJobsCount, pendingJobsCount, publishedJobsCount],
-  );
+  const publishMixData = {
+    labels: [
+      copy("Published", "Đã đăng"),
+      copy("Pending", "Đang chờ"),
+      copy("Failed", "Lỗi"),
+    ],
+    datasets: [
+      {
+        data: [publishedJobsCount, pendingJobsCount, failedJobsCount],
+        backgroundColor: [
+          "rgba(16, 185, 129, 0.82)",
+          "rgba(245, 158, 11, 0.78)",
+          "rgba(248, 113, 113, 0.74)",
+        ],
+        borderWidth: 0,
+      },
+    ],
+  };
 
   const trendBarData = useMemo(
     () => ({
@@ -206,7 +209,7 @@ export function FinancePage() {
             icon={<Coins className="size-5" />}
             detail={copy(
               "Published / completed jobs",
-              "Published trên tổng job đã hoàn tất",
+              "Đã đăng trên tổng job đã hoàn tất",
             )}
           />
           <MetricCard
@@ -258,7 +261,7 @@ export function FinancePage() {
           title={copy("Publish Outcome Mix", "Tỷ trọng kết quả xuất bản")}
           description={copy(
             "Share of published, pending, and failed jobs.",
-            "Tỷ trọng các job published, pending và failed.",
+            "Tỷ trọng các job đã đăng, đang chờ và thất bại.",
           )}
         >
           {publishJobs.length > 0 ? (
@@ -271,7 +274,7 @@ export function FinancePage() {
               state="empty"
               message={copy(
                 "No publish jobs available.",
-                "Chưa có publish job khả dụng.",
+                "Chưa có job đăng bài khả dụng.",
               )}
             />
           )}
@@ -315,45 +318,7 @@ export function FinancePage() {
           {isLoading ? (
             <PanelRowsSkeleton rows={5} />
           ) : (
-            <div className="space-y-3">
-              {publishJobs.slice(0, 5).map((job) => (
-                <div
-                  key={job.id}
-                  className="rounded-2xl border border-border/65 bg-background/65 p-4"
-                >
-                  <p className="text-sm font-semibold text-foreground">
-                    {job.title}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Status", "Trạng thái")}: {job.status}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Created", "Tạo lúc")}:{" "}
-                    {formatDateTime(job.created_at)}
-                  </p>
-                </div>
-              ))}
-
-              {trendHistoryQuery.data?.items.slice(0, 3).map((record) => (
-                <div
-                  key={
-                    record.analysis_id ?? `${record.query}-${record.created_at}`
-                  }
-                  className="rounded-2xl border border-border/65 bg-background/65 p-4"
-                >
-                  <p className="text-sm font-semibold text-foreground">
-                    {record.query}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Trend session", "Phiên trend")}:{" "}
-                    {formatDateTime(record.created_at)}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Insights", "Số insight")}: {record.results.length}
-                  </p>
-                </div>
-              ))}
-
+            <>
               {publishJobs.length === 0 &&
               (trendHistoryQuery.data?.items.length ?? 0) === 0 ? (
                 <InlineQueryState
@@ -363,8 +328,53 @@ export function FinancePage() {
                     "Chưa có hoạt động nào.",
                   )}
                 />
-              ) : null}
-            </div>
+              ) : (
+                <ScrollArea className="h-96 pr-3">
+                  <div className="space-y-3">
+                    {publishJobs.slice(0, 5).map((job) => (
+                      <div
+                        key={job.id}
+                        className="rounded-2xl border border-border/65 bg-background/65 p-4"
+                      >
+                        <p className="text-sm font-semibold text-foreground">
+                          {job.title}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {copy("Status", "Trạng thái")}:{" "}
+                          {localizeStatus(job.status, copy)}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {copy("Created", "Tạo lúc")}:{" "}
+                          {formatDateTime(job.created_at)}
+                        </p>
+                      </div>
+                    ))}
+
+                    {trendHistoryQuery.data?.items.slice(0, 3).map((record) => (
+                      <div
+                        key={
+                          record.analysis_id ??
+                          `${record.query}-${record.created_at}`
+                        }
+                        className="rounded-2xl border border-border/65 bg-background/65 p-4"
+                      >
+                        <p className="text-sm font-semibold text-foreground">
+                          {record.query}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {copy("Trend session", "Phiên xu hướng")}:{" "}
+                          {formatDateTime(record.created_at)}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {copy("Insights", "Số insight")}:{" "}
+                          {record.results.length}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </>
           )}
         </PanelCard>
       </div>
@@ -377,34 +387,35 @@ export function FinancePage() {
         )}
       >
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-muted-foreground">
-            <p className="flex items-center gap-2 font-semibold text-foreground">
-              <AlertTriangle className="size-4" />
+          <Alert className="border-amber-500/30 bg-amber-500/10">
+            <AlertTriangle />
+            <AlertTitle>
               {copy("Before Scheduling", "Trước khi lên lịch")}
-            </p>
-            <p className="mt-1.5">
+            </AlertTitle>
+            <AlertDescription>
               {copy(
                 "Only schedule jobs when trend direction and generated content are already reviewed.",
                 "Chỉ lên lịch khi hướng trend và nội dung tạo ra đã được kiểm tra.",
               )}
-            </p>
-          </div>
+            </AlertDescription>
+          </Alert>
 
-          <div className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4 text-xs text-muted-foreground">
-            <p className="font-semibold text-foreground">
-              {copy("Failure Follow-up", "Theo dõi lỗi")}
-            </p>
-            <p className="mt-1.5">
-              {copy("Failed jobs", "Job lỗi")}:{" "}
-              {formatCompactNumber(failedJobsCount)}
-            </p>
-            <p className="mt-1.5">
-              {copy(
-                "Review title, platforms, and scheduling window before re-run.",
-                "Rà soát tiêu đề, nền tảng và khung thời gian trước khi chạy lại.",
-              )}
-            </p>
-          </div>
+          <Alert className="border-blue-500/30 bg-blue-500/10">
+            <BarChart3 className="text-primary" />
+            <AlertTitle>{copy("Failure Follow-up", "Theo dõi lỗi")}</AlertTitle>
+            <AlertDescription>
+              <p>
+                {copy("Failed jobs", "Job thất bại")}:{" "}
+                {formatCompactNumber(failedJobsCount)}
+              </p>
+              <p className="mt-1.5">
+                {copy(
+                  "Review title, platforms, and scheduling window before re-run.",
+                  "Rà soát tiêu đề, nền tảng và khung thời gian trước khi chạy lại.",
+                )}
+              </p>
+            </AlertDescription>
+          </Alert>
         </div>
       </PanelCard>
 
@@ -415,18 +426,18 @@ export function FinancePage() {
           "Các endpoint Upload-Post account/profile đã bị loại khỏi trang này để khớp với tài liệu backend.",
         )}
       >
-        <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
-          <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <BarChart3 className="size-4 text-primary" />
+        <Alert className="border-border/65 bg-background/65">
+          <BarChart3 className="text-primary" />
+          <AlertTitle>
             {copy("Current source of truth", "Nguồn dữ liệu hiện hành")}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          </AlertTitle>
+          <AlertDescription className="mt-1">
             {copy(
               "This page now uses users, trends, generated contents, and publish jobs only.",
               "Trang này hiện chỉ dùng users, trends, generated contents và publish jobs.",
             )}
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
       </PanelCard>
     </div>
   );

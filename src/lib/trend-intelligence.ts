@@ -32,12 +32,14 @@ export type TrendFilterOptions = {
   hashtagQuery?: string;
 };
 
+type CopyFn = (en: string, vi: string) => string;
+
 export const DEFAULT_TREND_PROMPT_SUGGESTIONS = [
-  "xu hướng video ngắn cho creator Việt Nam",
-  "chủ đề AI cho phòng khám trong 7 ngày tới",
-  "ý tưởng content cho nhà thuốc và sức khỏe",
-  "trend social media cho ngành giáo dục",
-  "chủ đề đang tăng trưởng trên TikTok hôm nay",
+  "short-form video trends for Vietnamese creators",
+  "AI topics for clinics in the next 7 days",
+  "content ideas for pharmacy and health",
+  "social media trends for the education industry",
+  "topics growing on TikTok today",
 ];
 
 export function sanitizeTrendResults(
@@ -51,16 +53,14 @@ export function sanitizeTrendResults(
     .map((result, index) => ({
       ...result,
       main_keyword: result.main_keyword?.trim() || `trend-${index + 1}`,
-      why_the_trend_happens:
-        result.why_the_trend_happens?.trim() || "Không có diễn giải.",
+      why_the_trend_happens: result.why_the_trend_happens?.trim() || "",
       trend_score: Number.isFinite(result.trend_score) ? result.trend_score : 0,
       avg_views_per_hour: Number.isFinite(result.avg_views_per_hour)
         ? result.avg_views_per_hour
         : 0,
       top_hashtags: (result.top_hashtags ?? []).filter(Boolean),
       interest_over_day: result.interest_over_day ?? [],
-      recommended_action:
-        result.recommended_action?.trim() || "Tiếp tục theo dõi thêm tín hiệu.",
+      recommended_action: result.recommended_action?.trim() || "",
     }))
     .filter((item) => item.main_keyword);
 }
@@ -212,7 +212,9 @@ export function buildSessionSuggestions(
   prompts: string[],
   results: TrendAnalyzeResultItem[],
   fallback: string[] = DEFAULT_TREND_PROMPT_SUGGESTIONS,
+  copy?: CopyFn,
 ): string[] {
+  const t = copy ?? ((en: string) => en);
   const unique = new Set<string>();
 
   for (const fallbackPrompt of fallback) {
@@ -221,13 +223,17 @@ export function buildSessionSuggestions(
 
   const latestPrompts = prompts.slice(-4);
   for (const prompt of latestPrompts) {
-    unique.add(`mở rộng thêm cho ${prompt}`);
+    unique.add(`${t("expand further on", "mở rộng thêm cho")} ${prompt}`);
   }
 
   for (const result of sanitizeTrendResults(results).slice(0, 4)) {
-    unique.add(`phân tích sâu hơn về ${result.main_keyword}`);
+    unique.add(
+      `${t("deeper analysis for", "phân tích sâu hơn về")} ${result.main_keyword}`,
+    );
     for (const hashtag of result.top_hashtags.slice(0, 2)) {
-      unique.add(`lập kế hoạch nội dung cho ${hashtag}`);
+      unique.add(
+        `${t("build a content plan for", "lập kế hoạch nội dung cho")} ${hashtag}`,
+      );
     }
   }
 

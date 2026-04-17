@@ -2,6 +2,7 @@ import { AlertTriangle, Inbox, LoaderCircle } from "lucide-react";
 
 import { PanelCard } from "@/components/app-section";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useBilingual } from "@/hooks/use-bilingual";
 import { cn } from "@/lib/utils";
 
 type QueryStateType = "loading" | "empty" | "error";
@@ -38,6 +39,21 @@ const stateStyles: Record<
   },
 };
 
+function getStateLabel(
+  state: QueryStateType,
+  copy: (en: string, vi: string) => string,
+) {
+  if (state === "loading") {
+    return copy("Loading", "Đang tải");
+  }
+
+  if (state === "empty") {
+    return copy("No data", "Không có dữ liệu");
+  }
+
+  return copy("Error", "Lỗi");
+}
+
 export function QueryStateCard({
   state,
   title,
@@ -45,8 +61,10 @@ export function QueryStateCard({
   hint,
   className,
 }: QueryStateCardProps) {
+  const copy = useBilingual();
   const config = stateStyles[state];
   const Icon = config.icon;
+  const stateLabel = getStateLabel(state, copy);
 
   return (
     <PanelCard title={title} description={description} className={className}>
@@ -56,7 +74,7 @@ export function QueryStateCard({
             className={cn("size-4", state === "loading" && "animate-spin")}
           />
           <span className="text-xs font-medium tracking-[0.14em] uppercase">
-            {state}
+            {stateLabel}
           </span>
         </div>
         {hint ? <p className="text-sm text-muted-foreground">{hint}</p> : null}
@@ -70,8 +88,10 @@ export function InlineQueryState({
   message,
   className,
 }: InlineQueryStateProps) {
+  const copy = useBilingual();
   const config = stateStyles[state];
   const Icon = config.icon;
+  const stateLabel = getStateLabel(state, copy);
 
   return (
     <div
@@ -83,7 +103,7 @@ export function InlineQueryState({
       <div className={cn("mb-2 flex items-center gap-2", config.className)}>
         <Icon className={cn("size-4", state === "loading" && "animate-spin")} />
         <span className="text-xs font-medium tracking-[0.14em] uppercase">
-          {state}
+          {stateLabel}
         </span>
       </div>
       <p className="text-muted-foreground">{message}</p>

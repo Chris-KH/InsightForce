@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router";
 
 import HERO_IMAGE from "@/assets/hero-section.png";
 import {
@@ -14,6 +15,7 @@ import { useAppSelector } from "@/hooks";
 import { isPerformanceSafeModeActive } from "@/lib/performance-mode";
 
 export function AppBackdrop() {
+  const location = useLocation();
   const isLongRunPending = useAppSelector(
     (state) =>
       state.runtimeTasks.automation.orchestration.status === "pending" ||
@@ -42,7 +44,12 @@ export function AppBackdrop() {
     };
   }, []);
 
-  const shouldRenderHeavyBackdrop = !isLongRunPending && !isSafeMode;
+  const isHighComputeRoute =
+    location.pathname.startsWith("/app/strategy") ||
+    location.pathname.startsWith("/app/automation");
+
+  const shouldRenderHeavyBackdrop =
+    !isLongRunPending && !isSafeMode && !isHighComputeRoute;
 
   return (
     <div

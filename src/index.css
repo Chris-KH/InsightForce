@@ -54,6 +54,8 @@
 }
 
 :root {
+  --app-density-desktop-font-size: 15px;
+  --app-density-wide-font-size: 14.5px;
   --background: oklch(0.972 0.012 78);
   --foreground: oklch(0.15 0.05 252);
   --card: oklch(0.992 0.004 92);
@@ -150,6 +152,19 @@
   }
   html {
     @apply font-sans;
+    font-size: 16px;
+  }
+
+  @media (min-width: 1024px) {
+    html {
+      font-size: var(--app-density-desktop-font-size);
+    }
+  }
+
+  @media (min-width: 1536px) {
+    html {
+      font-size: var(--app-density-wide-font-size);
+    }
   }
 }
 

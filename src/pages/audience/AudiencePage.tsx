@@ -10,11 +10,13 @@ import {
 
 import {
   useGeneratedContentsQuery,
-  useTrendGeneralQuery,
   useTrendHistoryQuery,
   useUploadPostPublishJobsQuery,
 } from "@/api";
-import type { TrendAnalyzeResponse, TrendAnalyzeResultItem } from "@/api/types";
+import type {
+  TrendAnalysisRecordResponse,
+  TrendAnalyzeResultItem,
+} from "@/api/types";
 import { BarTrendChart, DoughnutTrendChart } from "@/components/app-data-viz";
 import {
   InlineQueryState,
@@ -23,13 +25,16 @@ import {
   QueryStateCard,
 } from "@/components/app-query-state";
 import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useBilingual } from "@/hooks/use-bilingual";
 import {
   formatCompactNumber,
   formatDateTime,
   formatPercentValue,
 } from "@/lib/insight-formatters";
+import { localizeStatus } from "@/lib/localized-status";
 import { getQueryErrorMessage } from "@/lib/query-error";
 
 type TrendSignal = {
@@ -41,7 +46,7 @@ type TrendSignal = {
   avgViewsPerHour: number;
 };
 
-function normalizeTrendSignals(raw: TrendAnalyzeResponse | undefined) {
+function normalizeTrendSignals(raw: TrendAnalysisRecordResponse | undefined) {
   const source: TrendAnalyzeResultItem[] = raw?.results ?? [];
 
   return source.map<TrendSignal>((item) => ({
@@ -57,16 +62,21 @@ function normalizeTrendSignals(raw: TrendAnalyzeResponse | undefined) {
 export function AudiencePage() {
   const copy = useBilingual();
 
-  const trendGeneralQuery = useTrendGeneralQuery({
-    limit: 5,
-  });
   const trendHistoryQuery = useTrendHistoryQuery({ limit: 20 });
   const generatedContentsQuery = useGeneratedContentsQuery({ limit: 20 });
   const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 20 });
 
+  const latestTrendRecord = useMemo(
+    () =>
+      (trendHistoryQuery.data?.items ?? []).find(
+        (record) => record.results.length > 0,
+      ),
+    [trendHistoryQuery.data?.items],
+  );
+
   const trendSignals = useMemo(
-    () => normalizeTrendSignals(trendGeneralQuery.data),
-    [trendGeneralQuery.data],
+    () => normalizeTrendSignals(latestTrendRecord),
+    [latestTrendRecord],
   );
 
   const topSignal = trendSignals[0];
@@ -110,33 +120,29 @@ export function AudiencePage() {
     (job) => job.status.toLowerCase() === "failed",
   ).length;
 
-  const publishMixData = useMemo(
-    () => ({
-      labels: [
-        copy("Published", "Đã đăng"),
-        copy("Pending", "Đang chờ"),
-        copy("Failed", "Lỗi"),
-      ],
-      datasets: [
-        {
-          data: [publishedJobsCount, pendingJobsCount, failedJobsCount],
-          backgroundColor: [
-            "rgba(16, 185, 129, 0.82)",
-            "rgba(245, 158, 11, 0.78)",
-            "rgba(248, 113, 113, 0.75)",
-          ],
-          borderWidth: 0,
-        },
-      ],
-    }),
-    [copy, failedJobsCount, pendingJobsCount, publishedJobsCount],
-  );
+  const publishMixData = {
+    labels: [
+      copy("Published", "Đã đăng"),
+      copy("Pending", "Đang chờ"),
+      copy("Failed", "Lỗi"),
+    ],
+    datasets: [
+      {
+        data: [publishedJobsCount, pendingJobsCount, failedJobsCount],
+        backgroundColor: [
+          "rgba(16, 185, 129, 0.82)",
+          "rgba(245, 158, 11, 0.78)",
+          "rgba(248, 113, 113, 0.75)",
+        ],
+        borderWidth: 0,
+      },
+    ],
+  };
 
   const trendHistoryItems = trendHistoryQuery.data?.items ?? [];
   const generatedContents = generatedContentsQuery.data?.items ?? [];
 
   const allQueries = [
-    trendGeneralQuery,
     trendHistoryQuery,
     generatedContentsQuery,
     publishJobsQuery,
@@ -218,7 +224,7 @@ export function AudiencePage() {
             value={formatCompactNumber(publishedJobsCount)}
             detail={copy(
               "Recent jobs marked as published",
-              "Các công việc gần đây có trạng thái published",
+              "Các công việc gần đây có trạng thái đã đăng",
             )}
             icon={<Users className="size-5" />}
           />
@@ -295,7 +301,11 @@ export function AudiencePage() {
                     {formatPercentValue(topSignal.score)}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-foreground">
-                    {topSignal.why}
+                    {topSignal.why ||
+                      copy(
+                        "Insight explanation is still being updated.",
+                        "Phần diễn giải đang được cập nhật.",
+                      )}
                   </p>
                 </div>
 
@@ -304,7 +314,11 @@ export function AudiencePage() {
                     {copy("Recommended action", "Hành động đề xuất")}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-foreground">
-                    {topSignal.recommendation}
+                    {topSignal.recommendation ||
+                      copy(
+                        "Continue monitoring this signal before scaling.",
+                        "Tiếp tục theo dõi tín hiệu này trước khi mở rộng.",
+                      )}
                   </p>
                 </div>
 
@@ -342,11 +356,19 @@ export function AudiencePage() {
             "Các phiên trend và kết quả publish mới nhất.",
           )}
         >
-          <div className="space-y-3">
-            {isLoading ? (
-              <PanelRowsSkeleton rows={5} />
-            ) : (
-              <>
+          {isLoading ? (
+            <PanelRowsSkeleton rows={5} />
+          ) : trendHistoryItems.length === 0 && publishJobs.length === 0 ? (
+            <InlineQueryState
+              state="empty"
+              message={copy(
+                "No recent strategy activity available.",
+                "Chưa có hoạt động chiến lược gần đây.",
+              )}
+            />
+          ) : (
+            <ScrollArea className="h-96 pr-3">
+              <div className="space-y-3">
                 {trendHistoryItems.slice(0, 4).map((record) => (
                   <div
                     key={
@@ -377,7 +399,8 @@ export function AudiencePage() {
                       {job.title}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {copy("Status", "Trạng thái")}: {job.status}
+                      {copy("Status", "Trạng thái")}:{" "}
+                      {localizeStatus(job.status, copy)}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {copy("Platforms", "Nền tảng")}:{" "}
@@ -385,21 +408,9 @@ export function AudiencePage() {
                     </p>
                   </div>
                 ))}
-              </>
-            )}
-
-            {!isLoading &&
-            trendHistoryItems.length === 0 &&
-            publishJobs.length === 0 ? (
-              <InlineQueryState
-                state="empty"
-                message={copy(
-                  "No recent strategy activity available.",
-                  "Chưa có hoạt động chiến lược gần đây.",
-                )}
-              />
-            ) : null}
-          </div>
+              </div>
+            </ScrollArea>
+          )}
         </PanelCard>
       </div>
 
@@ -440,18 +451,18 @@ export function AudiencePage() {
           "Các endpoint mức bình luận không còn trong docs hiện hành. Hãy dùng kết quả trend và publish như proxy đã được xác thực cho tín hiệu khán giả.",
         )}
       >
-        <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
-          <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <MessageCircle className="size-4 text-primary" />
+        <Alert className="border-border/65 bg-background/65">
+          <MessageCircle className="text-primary" />
+          <AlertTitle>
             {copy("Why this changed", "Vì sao phần này thay đổi")}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          </AlertTitle>
+          <AlertDescription className="mt-1">
             {copy(
               "Legacy TikTok/YouTube and comment lookup APIs are excluded to keep the frontend aligned with backend API documentation.",
               "Các API TikTok/YouTube cũ và tra cứu comment đã được loại bỏ để đảm bảo frontend bám sát tài liệu API backend.",
             )}
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
       </PanelCard>
     </div>
   );

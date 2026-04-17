@@ -85,7 +85,7 @@ export function AppHeader() {
             className="hidden rounded-full border-primary/20 text-primary xl:inline-flex"
           >
             <span className="size-1.5 rounded-full bg-primary" />
-            {copy("3 agents online", "3 bot đang hoạt động")}
+            {copy("3 agents online", "3 tác nhân đang trực tuyến")}
           </Badge>
           {isSafeMode ? (
             <Badge

@@ -112,7 +112,7 @@ export function AssistantSidebarStatus({
           className="rounded-full border-primary/30 bg-primary/10 px-2.5 text-primary"
         >
           <Sparkles className="size-3" />
-          {copy("Live", "Live")}
+          {copy("Live", "Trực tuyến")}
         </Badge>
       </div>
 

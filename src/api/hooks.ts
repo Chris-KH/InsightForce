@@ -34,11 +34,12 @@ import {
 import { createUser, getUser, getUsers } from "@/api/users.api";
 import { getDefaultGeneralTrendQuery } from "@/lib/trend-query";
 
+const ENABLE_API_POLLING = import.meta.env.VITE_ENABLE_API_POLLING === "true";
+
 export type TrendGeneralQueryParams = {
   query?: string;
   limit?: number;
   enabled?: boolean;
-  refetchIntervalMs?: number;
 };
 
 export type TrendHistoryQueryParams = GetTrendHistoryParams & {
@@ -71,9 +72,9 @@ export type PublishJobQueryParams = {
 export function healthQueryOptions() {
   return queryOptions({
     queryKey: queryKeys.health,
-    queryFn: getHealthStatus,
+    queryFn: ({ signal }) => getHealthStatus({ signal }),
     staleTime: 30_000,
-    refetchInterval: 60_000,
+    refetchInterval: ENABLE_API_POLLING ? 60_000 : false,
   });
 }
 
@@ -91,16 +92,15 @@ export function trendGeneralQueryOptions(params: TrendGeneralQueryParams = {}) {
 
   return queryOptions({
     queryKey: queryKeys.trend.general(query, limit),
-    queryFn: () => analyzeTrend({ query, limit }),
-    staleTime: 30_000,
-    refetchInterval: params.refetchIntervalMs ?? 180_000,
+    queryFn: ({ signal }) => analyzeTrend({ query, limit }, { signal }),
+    staleTime: 15 * 60 * 1000,
   });
 }
 
 export function useTrendGeneralQuery(params: TrendGeneralQueryParams = {}) {
   return useQuery({
     ...trendGeneralQueryOptions(params),
-    enabled: params.enabled ?? true,
+    enabled: params.enabled ?? false,
   });
 }
 
@@ -116,7 +116,8 @@ export function trendHistoryQueryOptions(params: TrendHistoryQueryParams = {}) {
 
   return queryOptions({
     queryKey: queryKeys.trend.history(params.userId, limit),
-    queryFn: () => getTrendHistory({ userId: params.userId, limit }),
+    queryFn: ({ signal }) =>
+      getTrendHistory({ userId: params.userId, limit }, { signal }),
     staleTime: 30_000,
   });
 }
@@ -131,7 +132,7 @@ export function useTrendHistoryQuery(params: TrendHistoryQueryParams = {}) {
 export function trendDetailQueryOptions(analysisId: string) {
   return queryOptions({
     queryKey: queryKeys.trend.detail(analysisId),
-    queryFn: () => getTrendAnalysisDetail(analysisId),
+    queryFn: ({ signal }) => getTrendAnalysisDetail(analysisId, { signal }),
     staleTime: 30_000,
   });
 }
@@ -146,9 +147,9 @@ export function useTrendDetailQuery(params: TrendDetailQueryParams) {
 export function agentsStatusQueryOptions() {
   return queryOptions({
     queryKey: queryKeys.agents.status,
-    queryFn: getAgentsStatus,
+    queryFn: ({ signal }) => getAgentsStatus({ signal }),
     staleTime: 30_000,
-    refetchInterval: 60_000,
+    refetchInterval: ENABLE_API_POLLING ? 60_000 : false,
   });
 }
 
@@ -158,6 +159,13 @@ export function useAgentsStatusQuery() {
 
 export function useAgentsOrchestrateMutation() {
   const queryClient = useQueryClient();
+  const trendHistoryRootKey = trendHistoryQueryOptions().queryKey.slice(0, 2);
+  const generatedContentsRootKey =
+    generatedContentsQueryOptions().queryKey.slice(0, 2);
+  const publishJobsRootKey = uploadPostPublishJobsQueryOptions().queryKey.slice(
+    0,
+    2,
+  );
 
   return useMutation({
     mutationKey: queryKeys.agents.orchestrate,
@@ -165,11 +173,9 @@ export function useAgentsOrchestrateMutation() {
       orchestrateAgentsPipeline(payload),
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["trend", "history"] }),
-        queryClient.invalidateQueries({ queryKey: ["contents", "list"] }),
-        queryClient.invalidateQueries({
-          queryKey: ["upload-post", "publish-jobs"],
-        }),
+        queryClient.invalidateQueries({ queryKey: trendHistoryRootKey }),
+        queryClient.invalidateQueries({ queryKey: generatedContentsRootKey }),
+        queryClient.invalidateQueries({ queryKey: publishJobsRootKey }),
       ]);
     },
   });
@@ -182,7 +188,8 @@ export function generatedContentsQueryOptions(
 
   return queryOptions({
     queryKey: queryKeys.contents.list(params.userId, limit),
-    queryFn: () => getGeneratedContents({ userId: params.userId, limit }),
+    queryFn: ({ signal }) =>
+      getGeneratedContents({ userId: params.userId, limit }, { signal }),
     staleTime: 30_000,
   });
 }
@@ -199,7 +206,7 @@ export function useGeneratedContentsQuery(
 export function generatedContentQueryOptions(contentId: string) {
   return queryOptions({
     queryKey: queryKeys.contents.detail(contentId),
-    queryFn: () => getGeneratedContent(contentId),
+    queryFn: ({ signal }) => getGeneratedContent(contentId, { signal }),
     staleTime: 30_000,
   });
 }
@@ -213,14 +220,17 @@ export function useGeneratedContentQuery(params: GeneratedContentQueryParams) {
 
 export function useContentGenerateMutation() {
   const queryClient = useQueryClient();
+  const trendHistoryRootKey = trendHistoryQueryOptions().queryKey.slice(0, 2);
+  const generatedContentsRootKey =
+    generatedContentsQueryOptions().queryKey.slice(0, 2);
 
   return useMutation({
     mutationKey: ["contents", "generate"],
     mutationFn: (payload: ContentGenerateRequest) => generateContent(payload),
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["contents", "list"] }),
-        queryClient.invalidateQueries({ queryKey: ["trend", "history"] }),
+        queryClient.invalidateQueries({ queryKey: generatedContentsRootKey }),
+        queryClient.invalidateQueries({ queryKey: trendHistoryRootKey }),
       ]);
     },
   });
@@ -229,7 +239,7 @@ export function useContentGenerateMutation() {
 export function usersQueryOptions() {
   return queryOptions({
     queryKey: queryKeys.users.list,
-    queryFn: getUsers,
+    queryFn: ({ signal }) => getUsers({ signal }),
     staleTime: 60_000,
   });
 }
@@ -244,7 +254,7 @@ export function useUsersQuery(enabled = true) {
 export function userQueryOptions(userId: string) {
   return queryOptions({
     queryKey: queryKeys.users.detail(userId),
-    queryFn: () => getUser(userId),
+    queryFn: ({ signal }) => getUser(userId, { signal }),
     staleTime: 60_000,
   });
 }
@@ -279,12 +289,15 @@ export function uploadPostPublishJobsQueryOptions(
       params.generatedContentId,
       limit,
     ),
-    queryFn: () =>
-      getUploadPostPublishJobs({
-        userId: params.userId,
-        generatedContentId: params.generatedContentId,
-        limit,
-      }),
+    queryFn: ({ signal }) =>
+      getUploadPostPublishJobs(
+        {
+          userId: params.userId,
+          generatedContentId: params.generatedContentId,
+          limit,
+        },
+        { signal },
+      ),
     staleTime: 30_000,
   });
 }
@@ -301,7 +314,7 @@ export function useUploadPostPublishJobsQuery(
 export function uploadPostPublishJobQueryOptions(publishJobId: string) {
   return queryOptions({
     queryKey: queryKeys.uploadPost.publishJob(publishJobId),
-    queryFn: () => getUploadPostPublishJob(publishJobId),
+    queryFn: ({ signal }) => getUploadPostPublishJob(publishJobId, { signal }),
     staleTime: 30_000,
   });
 }
@@ -315,14 +328,16 @@ export function useUploadPostPublishJobQuery(params: PublishJobQueryParams) {
 
 export function useUploadPostPublishMutation() {
   const queryClient = useQueryClient();
+  const publishJobsRootKey = uploadPostPublishJobsQueryOptions().queryKey.slice(
+    0,
+    2,
+  );
 
   return useMutation({
     mutationKey: queryKeys.uploadPost.publish,
     mutationFn: publishUploadPostContent,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["upload-post", "publish-jobs"],
-      });
+      await queryClient.invalidateQueries({ queryKey: publishJobsRootKey });
     },
   });
 }

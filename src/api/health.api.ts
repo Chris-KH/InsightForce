@@ -1,6 +1,12 @@
 import { httpClient } from "@/api/http-client";
 import type { HealthResponse } from "@/api/types";
 
-export function getHealthStatus() {
-  return httpClient.get<HealthResponse>("/health");
+type RequestOptions = {
+  signal?: AbortSignal;
+};
+
+export function getHealthStatus(options: RequestOptions = {}) {
+  return httpClient.get<HealthResponse>("/health", {
+    signal: options.signal,
+  });
 }

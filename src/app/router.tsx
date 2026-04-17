@@ -1,10 +1,14 @@
 import { createBrowserRouter } from "react-router";
+import { RouteHydrateFallback } from "@/app/RouteHydrateFallback";
 import { RootLayout } from "@/layouts/RootLayout";
+
+const routeHydrateFallbackElement = <RouteHydrateFallback />;
 
 export const router = createBrowserRouter([
   {
     path: "/",
     Component: RootLayout,
+    hydrateFallbackElement: routeHydrateFallbackElement,
     children: [
       {
         index: true,
@@ -15,6 +19,7 @@ export const router = createBrowserRouter([
     ],
   },
   {
+    hydrateFallbackElement: routeHydrateFallbackElement,
     lazy: async () => ({
       Component: (await import("@/layouts/AuthLayout")).AuthLayout,
     }),
@@ -50,6 +55,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/app",
+    hydrateFallbackElement: routeHydrateFallbackElement,
     lazy: async () => ({
       Component: (await import("@/components/ProtectedRoute")).ProtectedRoute,
     }),

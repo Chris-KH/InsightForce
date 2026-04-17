@@ -8,6 +8,10 @@ import type {
 
 const UPLOAD_POST_BASE_PATH = "/api/v1/upload-post";
 
+type RequestOptions = {
+  signal?: AbortSignal;
+};
+
 export type GetPublishJobsParams = {
   userId?: string;
   generatedContentId?: string;
@@ -82,7 +86,10 @@ export function publishUploadPostContent(payload: UploadPostPublishRequest) {
   );
 }
 
-export function getUploadPostPublishJobs(params: GetPublishJobsParams = {}) {
+export function getUploadPostPublishJobs(
+  params: GetPublishJobsParams = {},
+  options: RequestOptions = {},
+) {
   return httpClient.get<PublishJobsListResponse>(
     `${UPLOAD_POST_BASE_PATH}/publish-jobs`,
     {
@@ -91,12 +98,19 @@ export function getUploadPostPublishJobs(params: GetPublishJobsParams = {}) {
         generated_content_id: params.generatedContentId,
         limit: params.limit ?? 20,
       },
+      signal: options.signal,
     },
   );
 }
 
-export function getUploadPostPublishJob(publishJobId: string) {
+export function getUploadPostPublishJob(
+  publishJobId: string,
+  options: RequestOptions = {},
+) {
   return httpClient.get<PublishJobResponse>(
     `${UPLOAD_POST_BASE_PATH}/publish-jobs/${encodeURIComponent(publishJobId)}`,
+    {
+      signal: options.signal,
+    },
   );
 }

@@ -2,6 +2,7 @@ import { BarChart3, Hash, Sparkles, TrendingUp } from "lucide-react";
 
 import type { TrendAnalyzeResultItem } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { extractInterestValues } from "@/lib/trend-intelligence";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +10,7 @@ type TrendResultCardsProps = {
   results: TrendAnalyzeResultItem[];
   selectedKeyword?: string;
   onSelect: (result: TrendAnalyzeResultItem) => void;
+  copy?: (en: string, vi: string) => string;
 };
 
 function InterestSparkline({ values }: { values: number[] }) {
@@ -51,69 +53,89 @@ export function TrendResultCards({
   results,
   selectedKeyword,
   onSelect,
+  copy,
 }: TrendResultCardsProps) {
+  const t = copy ?? ((en: string) => en);
+
   return (
-    <div className="space-y-3">
-      {results.map((result) => {
-        const selected = selectedKeyword === result.main_keyword;
-        const interestValues = extractInterestValues(result);
+    <>
+      {results.length > 0 ? (
+        <ScrollArea className="h-120 pr-3">
+          <div className="space-y-3">
+            {results.map((result) => {
+              const selected = selectedKeyword === result.main_keyword;
+              const interestValues = extractInterestValues(result);
 
-        return (
-          <button
-            key={`${result.main_keyword}-${result.trend_score}`}
-            type="button"
-            onClick={() => onSelect(result)}
-            className={cn(
-              "w-full rounded-2xl border border-border/60 bg-background/60 p-4 text-left transition-all hover:border-primary/30 hover:bg-primary/6",
-              selected &&
-                "border-primary/35 bg-primary/8 shadow-[0_0_0_1px_rgba(59,130,246,0.2)_inset]",
-            )}
-          >
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <p className="text-sm font-semibold text-foreground">
-                {result.main_keyword}
-              </p>
-              <Badge
-                variant="outline"
-                className="rounded-full border-primary/25"
-              >
-                <TrendingUp data-icon="inline-start" />
-                {result.trend_score.toFixed(1)}
-              </Badge>
-            </div>
+              return (
+                <button
+                  key={`${result.main_keyword}-${result.trend_score}`}
+                  type="button"
+                  onClick={() => onSelect(result)}
+                  className={cn(
+                    "w-full rounded-2xl border border-border/60 bg-background/60 p-4 text-left transition-all hover:border-primary/30 hover:bg-primary/6",
+                    selected &&
+                      "border-primary/35 bg-primary/8 shadow-[0_0_0_1px_rgba(59,130,246,0.2)_inset]",
+                  )}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      {result.main_keyword}
+                    </p>
+                    <Badge
+                      variant="outline"
+                      className="rounded-full border-primary/25"
+                    >
+                      <TrendingUp data-icon="inline-start" />
+                      {result.trend_score.toFixed(1)}
+                    </Badge>
+                  </div>
 
-            <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
-              {result.why_the_trend_happens}
-            </p>
+                  <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
+                    {result.why_the_trend_happens ||
+                      t(
+                        "Insight is updating.",
+                        "Đang cập nhật phần diễn giải.",
+                      )}
+                  </p>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
-                <BarChart3 className="size-3.5" />
-                {Math.round(result.avg_views_per_hour).toLocaleString()} views/h
-              </span>
-              {result.top_hashtags.slice(0, 3).map((hashtag) => (
-                <span key={hashtag} className="inline-flex items-center gap-1">
-                  <Hash className="size-3.5" />
-                  {hashtag}
-                </span>
-              ))}
-            </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <BarChart3 className="size-3.5" />
+                      {Math.round(
+                        result.avg_views_per_hour,
+                      ).toLocaleString()}{" "}
+                      {t("views/hour", "lượt xem/giờ")}
+                    </span>
+                    {result.top_hashtags.slice(0, 3).map((hashtag) => (
+                      <span
+                        key={hashtag}
+                        className="inline-flex items-center gap-1"
+                      >
+                        <Hash className="size-3.5" />
+                        {hashtag}
+                      </span>
+                    ))}
+                  </div>
 
-            <div className="mt-3">
-              <InterestSparkline values={interestValues} />
-            </div>
-          </button>
-        );
-      })}
-
-      {results.length === 0 ? (
+                  <div className="mt-3">
+                    <InterestSparkline values={interestValues} />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      ) : (
         <div className="rounded-2xl border border-dashed border-border/60 bg-background/35 p-4 text-xs text-muted-foreground">
           <p className="inline-flex items-center gap-2 text-foreground">
             <Sparkles className="size-3.5" />
-            Chưa có kết quả trend để hiển thị.
+            {t(
+              "No trend results to display yet.",
+              "Chưa có kết quả xu hướng để hiển thị.",
+            )}
           </p>
         </div>
-      ) : null}
-    </div>
+      )}
+    </>
   );
 }
