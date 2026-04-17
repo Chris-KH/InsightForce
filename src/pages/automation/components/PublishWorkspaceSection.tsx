@@ -100,11 +100,7 @@ export function PublishWorkspaceSection() {
 
         {publishingMode === "ai-auto" ? (
           <div className="overflow-hidden pt-1">
-            <PublishWorkspaceAiComposer
-              users={users}
-              generatedContents={generatedContents}
-              onJobCreated={setSelectedJobId}
-            />
+            <PublishWorkspaceAiComposer />
           </div>
         ) : (
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.28fr)_minmax(0,0.72fr)] 2xl:grid-cols-[minmax(0,1.34fr)_minmax(0,0.66fr)]">

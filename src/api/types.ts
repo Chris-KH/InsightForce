@@ -590,6 +590,20 @@ export type UploadPostPostAnalyticsEnvelope = {
   payload: UploadPostPostAnalyticsPayload;
 };
 
+export type PostAgentDecision = "asking" | "approve" | "reject";
+
+export type PostAgentRequest = {
+  prompt: string;
+  config_id: string;
+  decision: PostAgentDecision;
+};
+
+export type PostAgentResponse = {
+  status: string;
+  source: string;
+  result_markdown: string;
+};
+
 export type TrendAnalyzeRequest = {
   query: string;
   limit?: number;

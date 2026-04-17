@@ -5,39 +5,20 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
-import { Bot, Eraser, Loader2, SendHorizontal, Sparkles } from "lucide-react";
+import { Bot, Check, Loader2, SendHorizontal, Sparkles, X } from "lucide-react";
 import { Icon } from "@iconify-icon/react";
 import { motion } from "motion/react";
 
-import {
-  type GeneratedContentResponse,
-  type UploadPostPublishPlatform,
-  type UserSummaryResponse,
-  useUploadPostPublishMutation,
-} from "@/api";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import type { UploadPostPublishPlatform } from "@/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { useBilingual } from "@/hooks/use-bilingual";
-import { getQueryErrorMessage } from "@/lib/query-error";
 import { cn } from "@/lib/utils";
+import { useAiAutopilotChat } from "@/pages/automation/hooks/use-ai-autopilot-chat";
 
 import { getPublishingPlatformVisual } from "./platform-visuals";
-
-type PublishWorkspaceAiComposerProps = {
-  users: UserSummaryResponse[];
-  generatedContents: GeneratedContentResponse[];
-  onJobCreated?: (jobId: string) => void;
-};
-
-type ChatMessage = {
-  id: string;
-  role: "user" | "assistant";
-  text: string;
-  tone?: "default" | "success" | "error";
-};
 
 const PLATFORM_KEYWORDS: Array<{
   platform: UploadPostPublishPlatform;
@@ -62,13 +43,6 @@ const SUGGESTED_PROMPTS = [
   "Publish a Reddit + X announcement for a new product drop with link tracking.",
 ];
 
-function extractHashtags(prompt: string) {
-  return Array.from(prompt.matchAll(/#([\p{L}\p{N}_-]+)/gu))
-    .map((match) => match[1])
-    .filter(Boolean)
-    .slice(0, 8);
-}
-
 function inferPlatforms(prompt: string): UploadPostPublishPlatform[] {
   const lowered = prompt.toLowerCase();
   const matches = PLATFORM_KEYWORDS.filter((entry) =>
@@ -82,66 +56,25 @@ function inferPlatforms(prompt: string): UploadPostPublishPlatform[] {
   return ["tiktok", "instagram", "youtube"];
 }
 
-function buildTitle(prompt: string) {
-  const normalized = prompt
-    .replace(/#([\p{L}\p{N}_-]+)/gu, "")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  if (!normalized) {
-    return "AI Generated Post";
-  }
-
-  const firstSentence = normalized.split(/[.!?\n]/)[0]?.trim() ?? normalized;
-  return firstSentence.slice(0, 96);
-}
-
-export function PublishWorkspaceAiComposer({
-  users,
-  generatedContents,
-  onJobCreated,
-}: PublishWorkspaceAiComposerProps) {
+export function PublishWorkspaceAiComposer() {
   const copy = useBilingual();
-  const publishMutation = useUploadPostPublishMutation();
+  const {
+    canDecide,
+    clearConversation,
+    configId,
+    draftPrompt,
+    isPending,
+    messages,
+    setDraftPrompt,
+    submitPrompt: submitAutopilotPrompt,
+    approvePosting,
+    rejectPosting,
+    status,
+  } = useAiAutopilotChat();
 
-  const [prompt, setPrompt] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "assistant-welcome",
-      role: "assistant",
-      text: copy(
-        "Describe your publishing goal and press Enter. I will auto-build a publish request from your prompt.",
-        "Mô tả mục tiêu xuất bản của bạn và nhấn Enter. Mình sẽ tự tạo publish request từ prompt.",
-      ),
-    },
-  ]);
-
-  const resolvedUser = users[0]?.email ?? "";
-  const resolvedUserId = users[0]?.id ?? "";
-  const resolvedGeneratedContentId = generatedContents[0]?.id ?? "";
+  const [hasInteracted, setHasInteracted] = useState(false);
   const chatScrollRootRef = useRef<HTMLDivElement | null>(null);
-  const hasPublisherProfile = Boolean(resolvedUser.trim());
-
-  useEffect(() => {
-    const createdId = publishMutation.data?.publish_job.id;
-    if (!createdId) {
-      return;
-    }
-
-    onJobCreated?.(createdId);
-    setMessages((current) => [
-      ...current,
-      {
-        id: `assistant-success-${createdId}`,
-        role: "assistant",
-        tone: "success",
-        text: copy(
-          `Publish request created successfully. Job ID: ${createdId}`,
-          `Đã tạo yêu cầu xuất bản thành công. Mã job: ${createdId}`,
-        ),
-      },
-    ]);
-  }, [copy, onJobCreated, publishMutation.data?.publish_job.id]);
+  const prompt = draftPrompt;
 
   const promptHint = useMemo(
     () =>
@@ -171,96 +104,53 @@ export function PublishWorkspaceAiComposer({
     });
 
     return () => window.cancelAnimationFrame(frameId);
-  }, [messages, publishMutation.isPending]);
+  }, [messages, isPending]);
 
-  const clearConversation = () => {
-    setMessages([
-      {
-        id: `assistant-reset-${Date.now()}`,
-        role: "assistant",
-        text: copy(
-          "Conversation reset. Describe your publishing goal and I will draft a publish request.",
-          "Đã đặt lại hội thoại. Hãy mô tả mục tiêu xuất bản và mình sẽ tạo bản nháp publish request.",
-        ),
-      },
-    ]);
-  };
-
-  const submitPrompt = async () => {
+  const handleSubmitPrompt = async () => {
     const normalizedPrompt = prompt.trim();
 
-    if (!normalizedPrompt || publishMutation.isPending) {
+    if (!normalizedPrompt || isPending) {
       return;
     }
-
-    const inferredPlatforms = inferPlatforms(normalizedPrompt);
-    const resolvedTitle = buildTitle(normalizedPrompt);
-    const resolvedTags = extractHashtags(normalizedPrompt);
-
-    setMessages((current) => [
-      ...current,
-      {
-        id: `user-${Date.now()}`,
-        role: "user",
-        text: normalizedPrompt,
-      },
-    ]);
-
-    setPrompt("");
-
-    if (!hasPublisherProfile) {
-      const platformLabel = inferredPlatforms
-        .map((platform) => getPublishingPlatformVisual(platform).label)
-        .join(", ");
-      const hashtagsLabel =
-        resolvedTags.length > 0
-          ? ` #${resolvedTags.join(" #")}`
-          : copy(" none", " không có");
-
-      setMessages((current) => [
-        ...current,
-        {
-          id: `assistant-draft-${Date.now()}`,
-          role: "assistant",
-          text: copy(
-            `Draft prepared (not submitted yet). Title: ${resolvedTitle}. Channels: ${platformLabel}. Hashtags:${hashtagsLabel}. Create one publisher profile to send this live.`,
-            `Mình đã tạo draft (chưa gửi). Tiêu đề: ${resolvedTitle}. Kênh: ${platformLabel}. Hashtag:${hashtagsLabel}. Hãy tạo 1 publisher profile để gửi thật.`,
-          ),
-        },
-      ]);
-
-      return;
-    }
-
-    try {
-      await publishMutation.mutateAsync({
-        user: resolvedUser,
-        user_id: resolvedUserId || undefined,
-        generated_content_id: resolvedGeneratedContentId || undefined,
-        title: resolvedTitle,
-        description: normalizedPrompt,
-        tags: resolvedTags,
-        platforms: inferredPlatforms,
-      });
-    } catch (error) {
-      setMessages((current) => [
-        ...current,
-        {
-          id: `assistant-error-${Date.now()}`,
-          role: "assistant",
-          tone: "error",
-          text: getQueryErrorMessage(error, "Publishing request failed."),
-        },
-      ]);
-    }
+    setHasInteracted(true);
+    await submitAutopilotPrompt(normalizedPrompt);
   };
 
   const handlePromptKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      void submitPrompt();
+      void handleSubmitPrompt();
     }
   };
+
+  const handleApprove = async () => {
+    if (isPending) {
+      return;
+    }
+
+    setHasInteracted(true);
+    await approvePosting();
+  };
+
+  const handleReject = async () => {
+    if (isPending) {
+      return;
+    }
+
+    setHasInteracted(true);
+    await rejectPosting();
+  };
+
+  const statusLabel =
+    status === "pending"
+      ? copy("Reasoning in progress", "Đang reasoning")
+      : status === "awaiting-approval"
+        ? copy("Awaiting approval", "Chờ xác nhận")
+        : status === "completed"
+          ? copy("Completed", "Hoàn tất")
+          : status === "failed"
+            ? copy("Error", "Lỗi")
+            : copy("Ready", "Sẵn sàng");
 
   return (
     <div className="relative isolate mt-1 overflow-hidden rounded-2xl border border-border/60 bg-linear-to-br from-chart-2/12 via-card/94 to-chart-1/10 p-4 pt-5">
@@ -290,14 +180,14 @@ export function PublishWorkspaceAiComposer({
             variant="outline"
             className={cn(
               "rounded-full shadow-[0_8px_22px_rgba(15,23,42,0.14)] backdrop-blur",
-              hasPublisherProfile
-                ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-700"
-                : "border-amber-500/40 bg-amber-500/16 text-amber-700",
+              status === "failed"
+                ? "border-rose-500/40 bg-rose-500/15 text-rose-700"
+                : status === "pending"
+                  ? "border-amber-500/40 bg-amber-500/16 text-amber-700"
+                  : "border-emerald-500/40 bg-emerald-500/15 text-emerald-700",
             )}
           >
-            {hasPublisherProfile
-              ? copy("Profile Ready", "Profile sẵn sàng")
-              : copy("Profile Missing", "Thiếu profile")}
+            {statusLabel}
           </Badge>
 
           <Button
@@ -307,8 +197,8 @@ export function PublishWorkspaceAiComposer({
             onClick={clearConversation}
             className="border-border/60 bg-background/78 shadow-[0_8px_18px_rgba(15,23,42,0.08)] backdrop-blur"
           >
-            <Eraser data-icon="inline-start" />
-            {copy("Clear", "Xóa")}
+            <X data-icon="inline-start" />
+            {copy("Reset", "Đặt lại")}
           </Button>
         </div>
       </div>
@@ -339,7 +229,7 @@ export function PublishWorkspaceAiComposer({
             <button
               key={sample}
               type="button"
-              onClick={() => setPrompt(sample)}
+              onClick={() => setDraftPrompt(sample)}
               className="rounded-full border border-border/70 bg-background/80 px-2.5 py-1 text-xs text-muted-foreground transition hover:border-primary/40 hover:text-primary"
             >
               {sample}
@@ -355,48 +245,108 @@ export function PublishWorkspaceAiComposer({
               variant="outline"
               className={cn(
                 "rounded-full border-border/60 bg-background/85 text-foreground shadow-[0_10px_24px_rgba(15,23,42,0.14)] backdrop-blur",
-                !hasPublisherProfile &&
-                  "border-amber-500/35 bg-amber-500/14 text-amber-700",
+                canDecide && "border-primary/45 bg-primary/15 text-primary",
               )}
             >
-              {hasPublisherProfile
-                ? copy("Live Publisher", "Publisher trực tiếp")
-                : copy("Draft Chat Mode", "Chế độ chat nháp")}
+              {canDecide
+                ? copy("Decision Required", "Cần quyết định")
+                : copy("Autopilot Chat", "Autopilot Chat")}
             </Badge>
           </div>
           <div className="space-y-2">
-            {messages.map((message) => (
+            {messages.length === 0 ? (
               <motion.div
-                key={message.id}
+                key="assistant-initial"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                className={cn(
-                  "max-w-[92%] rounded-2xl border px-3 py-2 text-sm",
-                  message.role === "user"
-                    ? "ml-auto border-chart-1/45 bg-linear-to-r from-chart-1/18 via-primary/15 to-chart-2/14 text-foreground shadow-[0_10px_24px_rgba(59,130,246,0.16)]"
-                    : "mr-auto border-border/65 bg-card/88 text-foreground shadow-[0_10px_24px_rgba(15,23,42,0.1)]",
-                  message.tone === "success" &&
-                    "border-emerald-500/35 bg-emerald-500/10 text-emerald-700",
-                  message.tone === "error" &&
-                    "border-rose-500/35 bg-rose-500/10 text-rose-700",
-                )}
+                className="mr-auto max-w-[92%] rounded-2xl border border-border/65 bg-card/88 px-3 py-2 text-sm text-foreground shadow-[0_10px_24px_rgba(15,23,42,0.1)]"
               >
                 <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.12em] uppercase">
-                  {message.role === "user" ? (
-                    copy("You", "Bạn")
-                  ) : (
-                    <>
-                      <Bot className="size-3.5" />
-                      {copy("AI Publisher", "AI Publisher")}
-                    </>
+                  <Bot className="size-3.5" />
+                  {copy("AI Publisher", "AI Publisher")}
+                </p>
+                <p>
+                  {copy(
+                    "Describe your publishing goal. The assistant will call the post API and return preview details before asking for approval.",
+                    "Mô tả mục tiêu đăng bài. Assistant sẽ gọi API post và trả preview trước khi yêu cầu phê duyệt.",
                   )}
                 </p>
-                <p>{message.text}</p>
               </motion.div>
-            ))}
+            ) : (
+              messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                  className={cn(
+                    "max-w-[92%] rounded-2xl border px-3 py-2 text-sm",
+                    message.role === "user"
+                      ? "ml-auto border-chart-1/45 bg-linear-to-r from-chart-1/18 via-primary/15 to-chart-2/14 text-foreground shadow-[0_10px_24px_rgba(59,130,246,0.16)]"
+                      : "mr-auto border-border/65 bg-card/88 text-foreground shadow-[0_10px_24px_rgba(15,23,42,0.1)]",
+                    message.kind === "error" &&
+                      "border-rose-500/35 bg-rose-500/10 text-rose-700",
+                    message.kind === "thread" &&
+                      "border-primary/45 bg-primary/10 text-primary",
+                  )}
+                >
+                  <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.12em] uppercase">
+                    {message.role === "user" ? (
+                      copy("You", "Bạn")
+                    ) : (
+                      <>
+                        <Bot className="size-3.5" />
+                        {copy("AI Publisher", "AI Publisher")}
+                      </>
+                    )}
+                  </p>
 
-            {publishMutation.isPending ? (
+                  {message.kind === "preview" && message.preview ? (
+                    <div className="flex flex-col gap-1.5">
+                      <p>
+                        <span className="font-semibold">User:</span>{" "}
+                        {message.preview.user}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Platform:</span>{" "}
+                        {message.preview.platform}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Caption:</span>{" "}
+                        {message.preview.caption}
+                      </p>
+                      {message.preview.images.length > 0 ? (
+                        <div>
+                          <p className="font-semibold">Images:</p>
+                          <ul className="mt-1 flex list-disc flex-col gap-1 pl-5">
+                            {message.preview.images.map((imageUrl) => (
+                              <li key={imageUrl}>
+                                <a
+                                  href={imageUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-primary underline decoration-primary/40 underline-offset-2"
+                                >
+                                  {imageUrl}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                      <p className="font-semibold">
+                        {message.preview.question}
+                      </p>
+                    </div>
+                  ) : (
+                    <p>{message.text}</p>
+                  )}
+                </motion.div>
+              ))
+            )}
+
+            {isPending ? (
               <motion.div
                 className="mr-auto flex max-w-[92%] items-center gap-2 rounded-2xl border border-primary/30 bg-primary/8 px-3 py-2 text-sm text-primary"
                 initial={{ opacity: 0.6 }}
@@ -409,8 +359,8 @@ export function PublishWorkspaceAiComposer({
               >
                 <Loader2 className="size-4 animate-spin" />
                 {copy(
-                  "Building publish request...",
-                  "Đang tạo yêu cầu xuất bản...",
+                  "Reasoning with post API...",
+                  "Đang reasoning với post API...",
                 )}
               </motion.div>
             ) : null}
@@ -418,13 +368,45 @@ export function PublishWorkspaceAiComposer({
         </ScrollArea>
       </div>
 
+      {canDecide ? (
+        <div className="mt-3 rounded-2xl border border-primary/28 bg-primary/8 p-3">
+          <p className="mb-2 text-xs font-semibold tracking-[0.12em] text-primary uppercase">
+            {copy("Posting confirmation", "Xác nhận đăng bài")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              onClick={() => void handleApprove()}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <Loader2 data-icon="inline-start" className="animate-spin" />
+              ) : (
+                <Check data-icon="inline-start" />
+              )}
+              {copy("Approve", "Approve")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void handleReject()}
+              disabled={isPending}
+            >
+              <X data-icon="inline-start" />
+              {copy("Reject", "Reject")}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       <div className="mt-3 flex gap-2 rounded-2xl border border-border/60 bg-background/75 p-2">
         <Textarea
           value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
+          onChange={(event) => setDraftPrompt(event.target.value)}
           onKeyDown={handlePromptKeyDown}
           rows={2}
           className="min-h-14 border-none bg-transparent shadow-none"
+          disabled={isPending}
           placeholder={copy(
             "Tell AI what to publish and where. Shift+Enter for a new line.",
             "Nói cho AI biết bạn muốn đăng gì và đăng ở đâu. Shift+Enter để xuống dòng.",
@@ -433,11 +415,11 @@ export function PublishWorkspaceAiComposer({
 
         <Button
           type="button"
-          onClick={() => void submitPrompt()}
-          disabled={!prompt.trim() || publishMutation.isPending}
+          onClick={() => void handleSubmitPrompt()}
+          disabled={!prompt.trim() || isPending}
           className="self-end"
         >
-          {publishMutation.isPending ? (
+          {isPending ? (
             <Loader2 data-icon="inline-start" className="animate-spin" />
           ) : (
             <SendHorizontal data-icon="inline-start" />
@@ -446,18 +428,10 @@ export function PublishWorkspaceAiComposer({
         </Button>
       </div>
 
-      {!resolvedUser ? (
-        <Alert className="mt-3 border-amber-500/35 bg-amber-500/10">
-          <AlertTitle>
-            {copy("Draft-only mode active", "Đang ở chế độ chat nháp")}
-          </AlertTitle>
-          <AlertDescription>
-            {copy(
-              "You can still chat and build drafts. Add a publisher profile to send real publish requests.",
-              "Bạn vẫn có thể chat và tạo draft. Hãy thêm publisher profile để gửi publish request thật.",
-            )}
-          </AlertDescription>
-        </Alert>
+      {hasInteracted ? (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          {copy("Config ID", "Config ID")}: {configId}
+        </p>
       ) : null}
     </div>
   );

@@ -1,6 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 
 import {
+  aiAutopilotChatInitialState,
+  aiAutopilotChatReducer,
+  type AiAutopilotChatState,
+} from "@/app/slices/ai-autopilot-chat.slice";
+import {
   activityFeedInitialState,
   activityFeedReducer,
   type ActivityFeedState,
@@ -13,6 +18,7 @@ import {
 
 const RUNTIME_STATE_STORAGE_KEY = "insightforce.runtime.state.v1";
 const ACTIVITY_FEED_STORAGE_KEY = "insightforce.activity.feed.v1";
+const AI_AUTOPILOT_CHAT_STORAGE_KEY = "insightforce.ai-autopilot.chat.v1";
 
 function sanitizeHydratedRuntimeState(
   state: RuntimeTasksState,
@@ -103,26 +109,76 @@ function loadActivityFeedState(): ActivityFeedState | undefined {
   }
 }
 
+function sanitizeHydratedAiAutopilotChat(
+  state: AiAutopilotChatState,
+): AiAutopilotChatState {
+  return {
+    ...aiAutopilotChatInitialState,
+    ...state,
+    messages: Array.isArray(state.messages) ? state.messages.slice(-120) : [],
+    status: state.status === "pending" ? "failed" : state.status,
+    requestId: null,
+    errorMessage:
+      state.status === "pending"
+        ? "Previous request was interrupted because the app reloaded."
+        : state.errorMessage,
+  };
+}
+
+function loadAiAutopilotChatState(): AiAutopilotChatState | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(AI_AUTOPILOT_CHAT_STORAGE_KEY);
+    if (!raw) {
+      return undefined;
+    }
+
+    const parsed = JSON.parse(raw) as AiAutopilotChatState;
+    return sanitizeHydratedAiAutopilotChat(parsed);
+  } catch {
+    return undefined;
+  }
+}
+
 const preloadedRuntimeState = loadRuntimeState();
 const preloadedActivityFeedState = loadActivityFeedState();
+const preloadedAiAutopilotChatState = loadAiAutopilotChatState();
 
 export const store = configureStore({
   reducer: {
+    aiAutopilotChat: aiAutopilotChatReducer,
     activityFeed: activityFeedReducer,
     runtimeTasks: runtimeTasksReducer,
   },
   preloadedState: {
+    aiAutopilotChat:
+      preloadedAiAutopilotChatState ?? aiAutopilotChatInitialState,
     activityFeed: preloadedActivityFeedState ?? activityFeedInitialState,
     runtimeTasks: preloadedRuntimeState ?? runtimeTasksInitialState,
   },
 });
 
 if (typeof window !== "undefined") {
+  let previousAiAutopilotSerialized = "";
   let previousRuntimeSerialized = "";
   let previousActivitySerialized = "";
 
   store.subscribe(() => {
     try {
+      const aiAutopilotSerialized = JSON.stringify(
+        store.getState().aiAutopilotChat,
+      );
+      if (aiAutopilotSerialized !== previousAiAutopilotSerialized) {
+        previousAiAutopilotSerialized = aiAutopilotSerialized;
+        window.localStorage.setItem(
+          AI_AUTOPILOT_CHAT_STORAGE_KEY,
+          aiAutopilotSerialized,
+        );
+      }
+
       const runtimeSerialized = JSON.stringify(store.getState().runtimeTasks);
       if (runtimeSerialized !== previousRuntimeSerialized) {
         previousRuntimeSerialized = runtimeSerialized;

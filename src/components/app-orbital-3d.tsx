@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import type { Group, Mesh } from "three";
 
 // These 3D scenes are currently disabled due to performance concerns, but the component structure and logic are kept intact for easy re-enabling in the future once optimizations are made.
@@ -319,8 +319,11 @@ export function PanelOrbital3D({
   className,
   variant = "crystal",
 }: PanelOrbital3DProps) {
-  const SceneComponent = PANEL_SCENE[variant];
-  const shouldRender3D = useMemo(() => canRenderOrbitalScene(), []);
+  void className;
+  void variant;
+  void PANEL_SCENE;
+  void PANEL_GLOW_CLASS;
+  void canRenderOrbitalScene;
 
   /*   return (
     <div
