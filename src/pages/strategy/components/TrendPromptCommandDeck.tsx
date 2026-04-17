@@ -58,7 +58,11 @@ function summarizePrompt(prompt: string | undefined) {
   return `${normalized.slice(0, 117)}...`;
 }
 
-function signalRateText(isPending: boolean, elapsedMs: number, hasResult: boolean) {
+function signalRateText(
+  isPending: boolean,
+  elapsedMs: number,
+  hasResult: boolean,
+) {
   if (isPending) {
     const elapsedSec = Math.max(0, elapsedMs / 1000);
     const rate = 0.55 + Math.min(1.45, elapsedSec * 0.11);
@@ -136,8 +140,8 @@ export function TrendPromptCommandDeck({
 
   return (
     <Card className="relative overflow-hidden rounded-3xl border-primary/20 bg-linear-to-br from-card via-card/96 to-primary/8">
-      <div className="pointer-events-none absolute -left-16 -top-14 size-56 rounded-full bg-primary/12 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-20 right-0 size-64 rounded-full bg-chart-2/16 blur-3xl" />
+      <div className="pointer-events-none absolute -top-14 -left-16 size-56 rounded-full bg-primary/12 blur-3xl" />
+      <div className="pointer-events-none absolute right-0 -bottom-20 size-64 rounded-full bg-chart-2/16 blur-3xl" />
 
       <CardHeader className="relative border-b border-border/55">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -232,13 +236,17 @@ export function TrendPromptCommandDeck({
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                   {copy("Prompt turns", "Số lượt prompt")}
                 </p>
-                <p className="mt-1 text-sm font-semibold text-foreground">{promptTurns}</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">
+                  {promptTurns}
+                </p>
               </div>
               <div className="rounded-2xl border border-border/60 bg-background/50 p-3">
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                   {copy("Result topics", "Số chủ đề kết quả")}
                 </p>
-                <p className="mt-1 text-sm font-semibold text-foreground">{resultCount}</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">
+                  {resultCount}
+                </p>
               </div>
               <div className="rounded-2xl border border-border/60 bg-background/50 p-3">
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
@@ -272,7 +280,9 @@ export function TrendPromptCommandDeck({
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                   {copy("Confidence", "Độ tin cậy")}
                 </p>
-                <p className="mt-1 text-base font-semibold text-foreground">{confidence}%</p>
+                <p className="mt-1 text-base font-semibold text-foreground">
+                  {confidence}%
+                </p>
               </div>
               <div className="rounded-xl border border-border/60 bg-background/55 p-3">
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
@@ -286,7 +296,9 @@ export function TrendPromptCommandDeck({
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                   {copy("Candidates", "Ứng viên")}
                 </p>
-                <p className="mt-1 text-base font-semibold text-foreground">{inferredCandidates}</p>
+                <p className="mt-1 text-base font-semibold text-foreground">
+                  {inferredCandidates}
+                </p>
               </div>
               <div className="rounded-xl border border-border/60 bg-background/55 p-3">
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
@@ -306,7 +318,9 @@ export function TrendPromptCommandDeck({
                       {stage.icon}
                       {stage.label}
                     </p>
-                    <span className="font-semibold text-foreground">{stage.value}%</span>
+                    <span className="font-semibold text-foreground">
+                      {stage.value}%
+                    </span>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-muted/65">
                     <div
@@ -329,8 +343,14 @@ export function TrendPromptCommandDeck({
               <p className="inline-flex items-center gap-1 font-semibold">
                 <Bot className="size-3.5" />
                 {isPending
-                  ? copy("Engine in focus mode", "Engine đang vào chế độ tập trung")
-                  : copy("Waiting for the next prompt", "Đang chờ prompt tiếp theo")}
+                  ? copy(
+                      "Engine in focus mode",
+                      "Engine đang vào chế độ tập trung",
+                    )
+                  : copy(
+                      "Waiting for the next prompt",
+                      "Đang chờ prompt tiếp theo",
+                    )}
               </p>
               <p className="mt-1">
                 {isPending
@@ -350,7 +370,7 @@ export function TrendPromptCommandDeck({
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                   {copy("Latest narrative brief", "Tóm tắt diễn giải mới nhất")}
                 </p>
-                <p className="mt-1 line-clamp-6 whitespace-pre-wrap text-xs text-muted-foreground">
+                <p className="mt-1 line-clamp-6 text-xs whitespace-pre-wrap text-muted-foreground">
                   {markdownSummary}
                 </p>
               </div>
