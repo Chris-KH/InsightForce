@@ -43,6 +43,46 @@ const SUGGESTED_PROMPTS = [
   "Publish a Reddit + X announcement for a new product drop with link tracking.",
 ];
 
+const QUESTION_PROMPT_PATTERN =
+  /Do you want to post this\??|Bạn có muốn đăng bài này không\??/i;
+const URL_PATTERN = /https?:\/\/[^\s<>")']+/gim;
+const IMAGE_EXTENSION_PATTERN = /\.(png|jpe?g|gif|webp|bmp|svg)(\?[^\s]*)?$/i;
+const IMAGE_HOST_PATTERN =
+  /(^|\.)i\.ibb\.co$|(^|\.)imgur\.com$|(^|\.)unsplash\.com$|(^|\.)cloudinary\.com$/i;
+
+function normalizeUrl(value: string) {
+  return value.replace(/[),.;!?]+$/, "").trim();
+}
+
+function isImageUrl(value: string) {
+  try {
+    const normalized = normalizeUrl(value);
+
+    if (IMAGE_EXTENSION_PATTERN.test(normalized)) {
+      return true;
+    }
+
+    const parsed = new URL(normalized);
+    return IMAGE_HOST_PATTERN.test(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function extractImageUrlsFromText(value: string) {
+  const matches = value.match(URL_PATTERN) ?? [];
+  const unique = new Set<string>();
+
+  for (const candidate of matches) {
+    const normalized = normalizeUrl(candidate);
+    if (normalized && isImageUrl(normalized)) {
+      unique.add(normalized);
+    }
+  }
+
+  return Array.from(unique);
+}
+
 function inferPlatforms(prompt: string): UploadPostPublishPlatform[] {
   const lowered = prompt.toLowerCase();
   const matches = PLATFORM_KEYWORDS.filter((entry) =>
@@ -89,6 +129,20 @@ export function PublishWorkspaceAiComposer() {
     const source = prompt.trim();
     return inferPlatforms(source);
   }, [prompt]);
+
+  const latestQuestionMessageId = useMemo(() => {
+    const latest = [...messages]
+      .reverse()
+      .find((message) =>
+        QUESTION_PROMPT_PATTERN.test(
+          message.kind === "preview" && message.preview
+            ? message.preview.question
+            : message.text,
+        ),
+      );
+
+    return latest?.id ?? null;
+  }, [messages]);
 
   useEffect(() => {
     const viewport = chatScrollRootRef.current?.querySelector<HTMLElement>(
@@ -139,6 +193,15 @@ export function PublishWorkspaceAiComposer() {
 
     setHasInteracted(true);
     await rejectPosting();
+  };
+
+  const handleQuickReply = async (value: "Yes" | "No") => {
+    if (isPending) {
+      return;
+    }
+
+    setHasInteracted(true);
+    await submitAutopilotPrompt(value);
   };
 
   const statusLabel =
@@ -239,7 +302,7 @@ export function PublishWorkspaceAiComposer() {
       </div>
 
       <div ref={chatScrollRootRef}>
-        <ScrollArea className="relative h-80 rounded-2xl border border-primary/22 bg-linear-to-b from-background/90 via-muted/36 to-background/80 p-3 pr-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_36px_rgba(15,23,42,0.08)]">
+        <ScrollArea className="relative h-112 rounded-2xl border border-primary/22 bg-linear-to-b from-background/90 via-muted/36 to-background/80 p-3 pr-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_36px_rgba(15,23,42,0.08)] md:h-128">
           <div className="pointer-events-none absolute top-3 right-3 z-10">
             <Badge
               variant="outline"
@@ -274,76 +337,115 @@ export function PublishWorkspaceAiComposer() {
                 </p>
               </motion.div>
             ) : (
-              messages.map((message) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                  className={cn(
-                    "max-w-[92%] rounded-2xl border px-3 py-2 text-sm",
-                    message.role === "user"
-                      ? "ml-auto border-chart-1/45 bg-linear-to-r from-chart-1/18 via-primary/15 to-chart-2/14 text-foreground shadow-[0_10px_24px_rgba(59,130,246,0.16)]"
-                      : "mr-auto border-border/65 bg-card/88 text-foreground shadow-[0_10px_24px_rgba(15,23,42,0.1)]",
-                    message.kind === "error" &&
-                      "border-rose-500/35 bg-rose-500/10 text-rose-700",
-                    message.kind === "thread" &&
-                      "border-primary/45 bg-primary/10 text-primary",
-                  )}
-                >
-                  <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.12em] uppercase">
-                    {message.role === "user" ? (
-                      copy("You", "Bạn")
-                    ) : (
-                      <>
-                        <Bot className="size-3.5" />
-                        {copy("AI Publisher", "AI Publisher")}
-                      </>
-                    )}
-                  </p>
+              messages.map((message) => {
+                const embeddedImageUrls =
+                  message.kind === "preview" && message.preview
+                    ? message.preview.images
+                    : extractImageUrlsFromText(message.text);
+                const showQuickReply =
+                  message.id === latestQuestionMessageId &&
+                  QUESTION_PROMPT_PATTERN.test(
+                    message.kind === "preview" && message.preview
+                      ? message.preview.question
+                      : message.text,
+                  ) &&
+                  !canDecide &&
+                  !isPending;
 
-                  {message.kind === "preview" && message.preview ? (
-                    <div className="flex flex-col gap-1.5">
-                      <p>
-                        <span className="font-semibold">User:</span>{" "}
-                        {message.preview.user}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Platform:</span>{" "}
-                        {message.preview.platform}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Caption:</span>{" "}
-                        {message.preview.caption}
-                      </p>
-                      {message.preview.images.length > 0 ? (
-                        <div>
-                          <p className="font-semibold">Images:</p>
-                          <ul className="mt-1 flex list-disc flex-col gap-1 pl-5">
-                            {message.preview.images.map((imageUrl) => (
-                              <li key={imageUrl}>
-                                <a
-                                  href={imageUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-primary underline decoration-primary/40 underline-offset-2"
-                                >
-                                  {imageUrl}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ) : null}
-                      <p className="font-semibold">
-                        {message.preview.question}
-                      </p>
-                    </div>
-                  ) : (
-                    <p>{message.text}</p>
-                  )}
-                </motion.div>
-              ))
+                return (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                    className={cn(
+                      "max-w-[92%] rounded-2xl border px-3 py-2 text-sm",
+                      message.role === "user"
+                        ? "ml-auto border-chart-1/45 bg-linear-to-r from-chart-1/18 via-primary/15 to-chart-2/14 text-foreground shadow-[0_10px_24px_rgba(59,130,246,0.16)]"
+                        : "mr-auto border-border/65 bg-card/88 text-foreground shadow-[0_10px_24px_rgba(15,23,42,0.1)]",
+                      message.kind === "error" &&
+                        "border-rose-500/35 bg-rose-500/10 text-rose-700",
+                      message.kind === "thread" &&
+                        "border-primary/45 bg-primary/10 text-primary",
+                    )}
+                  >
+                    <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.12em] uppercase">
+                      {message.role === "user" ? (
+                        copy("You", "Bạn")
+                      ) : (
+                        <>
+                          <Bot className="size-3.5" />
+                          {copy("AI Publisher", "AI Publisher")}
+                        </>
+                      )}
+                    </p>
+
+                    {message.kind === "preview" && message.preview ? (
+                      <div className="flex flex-col gap-1.5">
+                        <p>
+                          <span className="font-semibold">User:</span>{" "}
+                          {message.preview.user}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Platform:</span>{" "}
+                          {message.preview.platform}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Caption:</span>{" "}
+                          {message.preview.caption}
+                        </p>
+                        <p className="font-semibold">Images:</p>
+                        <p className="font-semibold">
+                          {message.preview.question}
+                        </p>
+                      </div>
+                    ) : (
+                      <p>{message.text}</p>
+                    )}
+
+                    {embeddedImageUrls.length > 0 ? (
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                        {embeddedImageUrls.map((imageUrl) => (
+                          <a
+                            key={`${message.id}-${imageUrl}`}
+                            href={imageUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="group overflow-hidden rounded-xl border border-border/60"
+                          >
+                            <img
+                              src={imageUrl}
+                              alt="Generated post visual"
+                              loading="lazy"
+                              className="h-40 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {showQuickReply ? (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => void handleQuickReply("Yes")}
+                        >
+                          {copy("Yes", "Yes")}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void handleQuickReply("No")}
+                        >
+                          {copy("No", "No")}
+                        </Button>
+                      </div>
+                    ) : null}
+                  </motion.div>
+                );
+              })
             )}
 
             {isPending ? (

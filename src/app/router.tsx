@@ -107,6 +107,13 @@ export const router = createBrowserRouter([
                 .AutomationPage,
             }),
           },
+          {
+            path: "profile",
+            lazy: async () => ({
+              Component: (await import("@/pages/profile/ProfilePage"))
+                .ProfilePage,
+            }),
+          },
         ],
       },
     ],

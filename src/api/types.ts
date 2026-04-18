@@ -777,3 +777,80 @@ export type UserSummaryResponse = UserResponse & {
 export type UsersListResponse = {
   users: UserSummaryResponse[];
 };
+
+export type UserContentCategory =
+  | "wellness"
+  | "education"
+  | "finance"
+  | "lifestyle"
+  | "technology"
+  | "business";
+
+export type UserContentFormat =
+  | "short_video"
+  | "long_video"
+  | "carousel"
+  | "single_image"
+  | "thread"
+  | "live_stream";
+
+export type UserVoiceTone =
+  | "mentor"
+  | "expert"
+  | "friendly"
+  | "playful"
+  | "data_driven";
+
+export type UserProfileContentDirection = {
+  categories: UserContentCategory[];
+  preferred_formats: UserContentFormat[];
+  primary_topic: string;
+  audience_persona: string;
+  strategic_goal: string;
+  target_keywords: string[];
+  notes?: string | null;
+};
+
+export type UserProfileSettings = {
+  timezone: string;
+  language: string;
+  posting_cadence: string;
+  voice_tone: UserVoiceTone;
+  content_review_mode: "balanced" | "strict" | "fast";
+};
+
+export type UserProfileResponse = {
+  source?: "api" | "mock";
+  profile: {
+    user_id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    display_name: string;
+    role: string;
+    department?: string | null;
+    phone?: string | null;
+    website?: string | null;
+    location?: string | null;
+    bio?: string | null;
+    avatar_url?: string | null;
+    content_direction: UserProfileContentDirection;
+    settings: UserProfileSettings;
+    updated_at: string;
+  };
+};
+
+export type UserProfileUpdateRequest = {
+  first_name?: string;
+  last_name?: string;
+  display_name?: string;
+  role?: string;
+  department?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  location?: string | null;
+  bio?: string | null;
+  avatar_url?: string | null;
+  content_direction?: Partial<UserProfileContentDirection>;
+  settings?: Partial<UserProfileSettings>;
+};

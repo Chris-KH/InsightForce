@@ -24,6 +24,7 @@ import type {
   ContentGenerateRequest,
   OrchestratorRequest,
   TrendAnalyzeRequest,
+  UserProfileUpdateRequest,
 } from "@/api/types";
 import {
   getUploadPostPublishJob,
@@ -31,7 +32,13 @@ import {
   publishUploadPostContent,
   type GetPublishJobsParams,
 } from "@/api/upload-post.api";
-import { createUser, getUser, getUsers } from "@/api/users.api";
+import {
+  createUser,
+  getUser,
+  getUserProfile,
+  getUsers,
+  updateUserProfile,
+} from "@/api/users.api";
 import { getDefaultGeneralTrendQuery } from "@/lib/trend-query";
 
 const ENABLE_API_POLLING = import.meta.env.VITE_ENABLE_API_POLLING === "true";
@@ -66,6 +73,11 @@ export type PublishJobsQueryParams = GetPublishJobsParams & {
 
 export type PublishJobQueryParams = {
   publishJobId?: string;
+  enabled?: boolean;
+};
+
+export type UserProfileQueryParams = {
+  userId?: string;
   enabled?: boolean;
 };
 
@@ -273,6 +285,46 @@ export function useCreateUserMutation() {
     mutationKey: ["users", "create"],
     mutationFn: createUser,
     onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.users.list });
+    },
+  });
+}
+
+export function userProfileQueryOptions(userId: string) {
+  return queryOptions({
+    queryKey: queryKeys.users.profile(userId),
+    queryFn: ({ signal }) => getUserProfile(userId, { signal }),
+    staleTime: 60_000,
+  });
+}
+
+export function useUserProfileQuery(params: UserProfileQueryParams) {
+  return useQuery({
+    ...userProfileQueryOptions(params.userId ?? ""),
+    enabled: (params.enabled ?? true) && Boolean(params.userId),
+  });
+}
+
+export function useUpdateUserProfileMutation(userId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["users", "profile", "update", userId ?? "unknown"],
+    mutationFn: (payload: UserProfileUpdateRequest) => {
+      if (!userId) {
+        throw new Error("User ID is required for profile update.");
+      }
+
+      return updateUserProfile(userId, payload);
+    },
+    onSuccess: async () => {
+      if (!userId) {
+        return;
+      }
+
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.users.profile(userId),
+      });
       await queryClient.invalidateQueries({ queryKey: queryKeys.users.list });
     },
   });

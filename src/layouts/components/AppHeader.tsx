@@ -97,9 +97,11 @@ export function AppHeader() {
             </Badge>
           ) : null}
           <AppNotificationBell />
-          <Button variant="ghost" size="icon-sm">
-            <UserCircle2 />
-            <span className="sr-only">{copy("Account", "Tài khoản")}</span>
+          <Button variant="ghost" size="icon-sm" asChild>
+            <Link to="/app/profile">
+              <UserCircle2 />
+              <span className="sr-only">{copy("Account", "Tài khoản")}</span>
+            </Link>
           </Button>
           <LanguageSwitcher compact triggerVariant="ghost" />
           <ModeToggle />

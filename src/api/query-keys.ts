@@ -19,6 +19,7 @@ export const queryKeys = {
   users: {
     list: ["users", "list"] as const,
     detail: (userId: string) => ["users", "detail", userId] as const,
+    profile: (userId: string) => ["users", "profile", userId] as const,
   },
   uploadPost: {
     publish: ["upload-post", "publish"] as const,
