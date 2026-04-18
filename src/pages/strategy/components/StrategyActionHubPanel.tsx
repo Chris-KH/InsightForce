@@ -60,7 +60,10 @@ export function StrategyActionHubPanel({
                       {copy("Deep dive insight", "Insight chuyên sâu")}
                     </CardDescription>
                   </div>
-                  <Badge variant="outline" className="rounded-full border-primary/30">
+                  <Badge
+                    variant="outline"
+                    className="rounded-full border-primary/30"
+                  >
                     {formatPercentValue(selectedTopic.trendScore)}
                   </Badge>
                 </div>

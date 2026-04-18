@@ -18,8 +18,13 @@ function buildKeywordSparklineValues(item: TrendPriorityItem) {
   const midpoint = Math.max(item.latestScore - item.momentum * 0.7, 10);
   const shoulder = Math.max(item.latestScore - item.momentum * 0.35, 12);
 
-  return [baseline, midpoint, shoulder, item.latestScore * 0.96, item.latestScore]
-    .map((value) => Math.max(Math.min(value, 100), 0));
+  return [
+    baseline,
+    midpoint,
+    shoulder,
+    item.latestScore * 0.96,
+    item.latestScore,
+  ].map((value) => Math.max(Math.min(value, 100), 0));
 }
 
 function sparklinePoints(values: number[]) {

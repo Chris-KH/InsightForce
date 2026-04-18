@@ -4,7 +4,10 @@ import {
   extractInterestValues,
 } from "@/lib/trend-intelligence";
 
-import type { BilingualCopy, TrendSessionState } from "./strategy-workspace.types";
+import type {
+  BilingualCopy,
+  TrendSessionState,
+} from "./strategy-workspace.types";
 
 export function getDefaultTrendPromptSuggestions(copy: BilingualCopy) {
   return [
@@ -85,13 +88,19 @@ export function toSparklineValues(result: TrendAnalyzeResultItem) {
   const extracted = extractInterestValues(result);
 
   if (extracted.length >= 5) {
-    return extracted.slice(-5).map((value) => Math.max(Math.min(value, 100), 0));
+    return extracted
+      .slice(-5)
+      .map((value) => Math.max(Math.min(value, 100), 0));
   }
 
   const base = Math.max(result.trend_score - 18, 10);
-  return [base, base + 6, base + 10, result.trend_score - 3, result.trend_score].map(
-    (value) => Math.max(Math.min(value, 100), 0),
-  );
+  return [
+    base,
+    base + 6,
+    base + 10,
+    result.trend_score - 3,
+    result.trend_score,
+  ].map((value) => Math.max(Math.min(value, 100), 0));
 }
 
 export function aiStatusText(
@@ -122,7 +131,10 @@ export function aiStatusText(
   }
 
   if (hasRun && topicCount > 0) {
-    return copy(`Found ${topicCount} hot topics`, `Đã tìm thấy ${topicCount} chủ đề nóng`);
+    return copy(
+      `Found ${topicCount} hot topics`,
+      `Đã tìm thấy ${topicCount} chủ đề nóng`,
+    );
   }
 
   return copy(

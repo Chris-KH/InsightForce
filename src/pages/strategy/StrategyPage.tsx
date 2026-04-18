@@ -53,8 +53,14 @@ function StrategyPageContent({ locale }: StrategyPageContentProps) {
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
       <SectionHeader
-        eyebrow={copy("Trend Intelligence Workspace", "Không gian trí tuệ xu hướng")}
-        title={copy("Creator Trend Intelligence Hub", "Hub xu hướng cho creator")}
+        eyebrow={copy(
+          "Trend Intelligence Workspace",
+          "Không gian trí tuệ xu hướng",
+        )}
+        title={copy(
+          "Creator Trend Intelligence Hub",
+          "Hub xu hướng cho creator",
+        )}
         description={copy(
           "Discover what topics are heating up and turn them into content actions in minutes.",
           "Khám phá chủ đề đang nóng và chuyển thành hành động nội dung chỉ trong vài phút.",
@@ -92,7 +98,10 @@ function StrategyPageContent({ locale }: StrategyPageContentProps) {
       {firstError && trendTopics.length === 0 ? (
         <QueryStateCard
           state="error"
-          title={copy("Unable to load trend workspace", "Không thể tải không gian xu hướng")}
+          title={copy(
+            "Unable to load trend workspace",
+            "Không thể tải không gian xu hướng",
+          )}
           description={getQueryErrorMessage(
             firstError,
             "Unable to fetch trend data right now.",

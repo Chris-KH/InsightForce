@@ -19,7 +19,10 @@ export function DashboardHeader({
 }: DashboardHeaderProps) {
   return (
     <SectionHeader
-      eyebrow={copy("Human-in-the-loop Workspace", "Không gian Human-in-the-loop")}
+      eyebrow={copy(
+        "Human-in-the-loop Workspace",
+        "Không gian Human-in-the-loop",
+      )}
       title={copy("Campaign Command Center", "Trung tâm chỉ huy chiến dịch")}
       description={copy(
         "Your executive dashboard to cut through noise, approve strategic moves, and protect creator energy.",

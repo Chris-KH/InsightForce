@@ -52,7 +52,10 @@ export function DashboardPage() {
       {firstError ? (
         <QueryStateCard
           state="error"
-          title={copy("Unable to load full dashboard", "Không thể tải đầy đủ dashboard")}
+          title={copy(
+            "Unable to load full dashboard",
+            "Không thể tải đầy đủ dashboard",
+          )}
           description={getQueryErrorMessage(
             firstError,
             "Unable to load dashboard data right now.",

@@ -95,7 +95,12 @@ function createLineFill(
     return startColor;
   }
 
-  const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  const gradient = ctx.createLinearGradient(
+    0,
+    chartArea.top,
+    0,
+    chartArea.bottom,
+  );
   gradient.addColorStop(0, startColor);
   gradient.addColorStop(1, endColor);
 
@@ -228,7 +233,8 @@ export function useDashboardWorkspaceData(
       }))
       .sort(
         (left, right) =>
-          right.momentum - left.momentum || right.averageScore - left.averageScore,
+          right.momentum - left.momentum ||
+          right.averageScore - left.averageScore,
       )
       .slice(0, 3);
 
@@ -262,7 +268,9 @@ export function useDashboardWorkspaceData(
   }, [copy, trendRecords]);
 
   const competingKeywords = useMemo(() => {
-    const selectedKeywords = keywordPriority.slice(0, 2).map((item) => item.keyword);
+    const selectedKeywords = keywordPriority
+      .slice(0, 2)
+      .map((item) => item.keyword);
 
     if (selectedKeywords.length === 2) {
       return selectedKeywords;
@@ -421,7 +429,8 @@ export function useDashboardWorkspaceData(
       return (
         total +
         record.results.reduce(
-          (innerTotal, result) => innerTotal + Math.max(result.avg_views_per_hour, 0),
+          (innerTotal, result) =>
+            innerTotal + Math.max(result.avg_views_per_hour, 0),
           0,
         )
       );
@@ -524,9 +533,14 @@ export function useDashboardWorkspaceData(
         createdAt: job.created_at,
       }));
 
-    const merged = [...guardianActivities, ...contentActivities, ...scoutActivities]
+    const merged = [
+      ...guardianActivities,
+      ...contentActivities,
+      ...scoutActivities,
+    ]
       .sort(
-        (left, right) => toTimestamp(right.createdAt) - toTimestamp(left.createdAt),
+        (left, right) =>
+          toTimestamp(right.createdAt) - toTimestamp(left.createdAt),
       )
       .slice(0, 12);
 

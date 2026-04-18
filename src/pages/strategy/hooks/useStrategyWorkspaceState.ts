@@ -94,7 +94,11 @@ export function useStrategyWorkspaceState(
 
     const generalTrendData = generalTrendQuery.data ?? latestGeneralTrendRecord;
     return sanitizeTrendResults(generalTrendData?.results);
-  }, [generalTrendQuery.data, latestGeneralTrendRecord, promptResponse?.results]);
+  }, [
+    generalTrendQuery.data,
+    latestGeneralTrendRecord,
+    promptResponse?.results,
+  ]);
 
   const trendTopics = useMemo<TrendTopic[]>(() => {
     return sourceResults.slice(0, 8).map((result) => ({
@@ -110,7 +114,9 @@ export function useStrategyWorkspaceState(
   }, [sourceResults]);
 
   const selectedTopic = useMemo(() => {
-    const fromState = trendTopics.find((topic) => topic.keyword === selectedKeyword);
+    const fromState = trendTopics.find(
+      (topic) => topic.keyword === selectedKeyword,
+    );
     return fromState ?? trendTopics[0];
   }, [selectedKeyword, trendTopics]);
 
@@ -173,7 +179,10 @@ export function useStrategyWorkspaceState(
       suggestions: sessionSuggestions,
     };
 
-    window.localStorage.setItem(trendSessionStorageKey, JSON.stringify(payload));
+    window.localStorage.setItem(
+      trendSessionStorageKey,
+      JSON.stringify(payload),
+    );
   }, [
     initialSessionState.sessionId,
     sessionPrompts,
@@ -207,7 +216,12 @@ export function useStrategyWorkspaceState(
       const normalizedResults = sanitizeTrendResults(action.payload.results);
       setPromptInput("");
       setSessionSuggestions((currentSuggestions) =>
-        buildSessionSuggestions(nextPrompts, normalizedResults, currentSuggestions, copy),
+        buildSessionSuggestions(
+          nextPrompts,
+          normalizedResults,
+          currentSuggestions,
+          copy,
+        ),
       );
 
       if (normalizedResults[0]) {

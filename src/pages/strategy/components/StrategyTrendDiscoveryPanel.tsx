@@ -3,7 +3,10 @@ import { Flame } from "lucide-react";
 import { InlineQueryState } from "@/components/app-query-state";
 import { PanelCard } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
-import { formatCompactNumber, formatPercentValue } from "@/lib/insight-formatters";
+import {
+  formatCompactNumber,
+  formatPercentValue,
+} from "@/lib/insight-formatters";
 import { cn } from "@/lib/utils";
 
 import type { BilingualCopy, TrendTopic } from "./strategy-workspace.types";
@@ -123,7 +126,8 @@ export function StrategyTrendDiscoveryPanel({
                 </div>
 
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {copy("Views/hour", "Lượt xem/giờ")}: {formatCompactNumber(topic.avgViewsPerHour)}
+                  {copy("Views/hour", "Lượt xem/giờ")}:{" "}
+                  {formatCompactNumber(topic.avgViewsPerHour)}
                 </p>
               </button>
             );
