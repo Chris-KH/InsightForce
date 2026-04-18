@@ -62,7 +62,7 @@ export function DashboardStrategicApprovalsPanel({
         "Human-in-the-loop actions requiring your decision before launch.",
         "Các hành động Human-in-the-loop cần bạn quyết định trước khi triển khai.",
       )}
-      className="border-amber-200/80 bg-linear-to-br from-amber-100/45 via-card/96 to-card/96 xl:col-span-2 dark:border-amber-500/30 dark:from-amber-500/12"
+      className="border-amber-200/80 bg-linear-to-br from-amber-100/45 via-card/96 to-card/96 dark:border-amber-500/30 dark:from-amber-500/12"
       action={
         <Badge
           variant="outline"

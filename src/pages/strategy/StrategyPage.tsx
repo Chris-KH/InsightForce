@@ -10,10 +10,7 @@ import { useLocale } from "@/hooks/use-locale";
 import { getQueryErrorMessage } from "@/lib/query-error";
 import { cn } from "@/lib/utils";
 
-import { ActionHub } from "./components/ActionHub";
 import { StrategySavedTrendHistoryPanel } from "./components/StrategySavedTrendHistoryPanel";
-import { StrategyScoutComposerPanel } from "./components/StrategyScoutComposerPanel";
-import { StrategyTrendDiscoveryPanel } from "./components/StrategyTrendDiscoveryPanel";
 import { useStrategyWorkspaceState } from "./hooks/useStrategyWorkspaceState";
 
 export function StrategyPage() {
@@ -30,17 +27,14 @@ function StrategyPageContent({ locale }: StrategyPageContentProps) {
   const copy = useBilingual();
   const {
     promptInput,
-    isTrendAnalyzePending,
-    aiStatus,
-    sessionSuggestions,
     historyRecords,
-    trendTopics,
     selectedTopic,
     firstError,
     isGeneralRefreshFetching,
+    isHistorySearchPending,
+    historySearchError,
     setPromptInput,
     submitPrompt,
-    runSuggestion,
     selectKeyword,
     refreshGeneralTrends,
   } = useStrategyWorkspaceState(copy, locale);
@@ -95,7 +89,7 @@ function StrategyPageContent({ locale }: StrategyPageContentProps) {
         }
       />
 
-      {firstError && trendTopics.length === 0 ? (
+      {firstError && historyRecords.length === 0 ? (
         <QueryStateCard
           state="error"
           title={copy(
@@ -109,40 +103,18 @@ function StrategyPageContent({ locale }: StrategyPageContentProps) {
         />
       ) : null}
 
-      <StrategyScoutComposerPanel
-        copy={copy}
-        promptInput={promptInput}
-        isPending={isTrendAnalyzePending}
-        aiStatus={aiStatus}
-        suggestions={sessionSuggestions}
-        onPromptInputChange={setPromptInput}
-        onPromptSubmit={() => {
-          void submitPrompt();
-        }}
-        onSuggestionSelect={(suggestion) => {
-          void runSuggestion(suggestion);
-        }}
-      />
-
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
-        <StrategyTrendDiscoveryPanel
-          copy={copy}
-          topics={trendTopics}
-          selectedKeyword={selectedTopic?.keyword}
-          isPending={isTrendAnalyzePending}
-          onSelectKeyword={selectKeyword}
-        />
-
-        <div className="xl:sticky xl:top-24 xl:h-fit">
-          <ActionHub copy={copy} selectedTopic={selectedTopic} />
-        </div>
-      </section>
-
       <StrategySavedTrendHistoryPanel
         copy={copy}
         records={historyRecords}
         selectedKeyword={selectedTopic?.keyword}
-        isFetching={isGeneralRefreshFetching}
+        searchInput={promptInput}
+        isFetching={isGeneralRefreshFetching || isHistorySearchPending}
+        isSearchPending={isHistorySearchPending}
+        searchError={historySearchError}
+        onSearchInputChange={setPromptInput}
+        onSearchSubmit={() => {
+          void submitPrompt();
+        }}
         onSelectKeyword={selectKeyword}
       />
     </motion.div>

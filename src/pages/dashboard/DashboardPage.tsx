@@ -7,9 +7,9 @@ import { getQueryErrorMessage } from "@/lib/query-error";
 import { DashboardAgentActivityFeedPanel } from "./components/DashboardAgentActivityFeedPanel";
 import { DashboardHeader } from "./components/DashboardHeader";
 import { DashboardHeroMetrics } from "./components/DashboardHeroMetrics";
-import { DashboardKeywordPriorityPanel } from "./components/DashboardKeywordPriorityPanel";
 import { DashboardStrategicApprovalsPanel } from "./components/DashboardStrategicApprovalsPanel";
 import { DashboardTrendMomentumPanel } from "./components/DashboardTrendMomentumPanel";
+import { DashboardTrendScoreBarPanel } from "./components/DashboardTrendScoreBarPanel";
 import { useDashboardWorkspaceData } from "./hooks/useDashboardWorkspaceData";
 
 export function DashboardPage() {
@@ -25,9 +25,10 @@ export function DashboardPage() {
     publishedJobs,
     pendingJobs,
     strategicProposalText,
-    keywordPriority,
     trendMomentumData,
     trendMomentumOptions,
+    trendScoreBarData,
+    trendScoreBarOptions,
     agentActivityFeed,
     reachableAgents,
     totalAgents,
@@ -84,29 +85,30 @@ export function DashboardPage() {
         pendingJobs={pendingJobs}
       />
 
-      <section className="grid gap-4 xl:grid-cols-3">
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
         <DashboardStrategicApprovalsPanel
           copy={copy}
           strategicProposalText={strategicProposalText}
-        />
-
-        <DashboardKeywordPriorityPanel
-          copy={copy}
-          items={keywordPriority.slice(0, 3)}
-        />
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-2">
-        <DashboardTrendMomentumPanel
-          copy={copy}
-          data={trendMomentumData}
-          options={trendMomentumOptions}
         />
 
         <DashboardAgentActivityFeedPanel
           copy={copy}
           isLoading={isLoading}
           items={agentActivityFeed}
+        />
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-2">
+        <DashboardTrendScoreBarPanel
+          copy={copy}
+          data={trendScoreBarData}
+          options={trendScoreBarOptions}
+        />
+
+        <DashboardTrendMomentumPanel
+          copy={copy}
+          data={trendMomentumData}
+          options={trendMomentumOptions}
         />
       </section>
 

@@ -5,6 +5,7 @@ import {
   useTrendHistoryQuery,
   useUsersQuery,
 } from "@/api";
+import { searchTrendHistory } from "@/api/trends.api";
 import {
   resetStrategyTrendTask,
   runStrategyTrendAnalyze,
@@ -41,6 +42,9 @@ type StrategyWorkspaceState = {
   selectedTopic?: TrendTopic;
   firstError: unknown;
   isGeneralRefreshFetching: boolean;
+  isHistorySearchPending: boolean;
+  historySearchError: string | null;
+  trendSearchError: string | null;
   setPromptInput: (value: string) => void;
   submitPrompt: () => Promise<void>;
   runSuggestion: (suggestion: string) => Promise<void>;
@@ -75,6 +79,13 @@ export function useStrategyWorkspaceState(
     initialSessionState.suggestions,
   );
   const [selectedKeyword, setSelectedKeyword] = useState<string | undefined>();
+  const [historySearchRecords, setHistorySearchRecords] = useState<
+    TrendAnalysisRecordResponse[] | null
+  >(null);
+  const [isHistorySearchPending, setIsHistorySearchPending] = useState(false);
+  const [historySearchError, setHistorySearchError] = useState<string | null>(
+    null,
+  );
 
   const usersQuery = useUsersQuery();
   const trendUserId = usersQuery.data?.users[0]?.id;
@@ -88,14 +99,42 @@ export function useStrategyWorkspaceState(
   const isTrendAnalyzePending = trendAnalyzeTask.status === "pending";
   const promptResponse = trendAnalyzeTask.data;
 
-  const historyRecords = useMemo(
-    () =>
-      [...(trendHistoryQuery.data?.items ?? [])].sort(
-        (left, right) =>
-          Date.parse(right.created_at) - Date.parse(left.created_at),
-      ),
-    [trendHistoryQuery.data?.items],
-  );
+  const historyRecords = useMemo(() => {
+    const records = [
+      ...(historySearchRecords ?? trendHistoryQuery.data?.items ?? []),
+    ];
+
+    if (promptResponse?.results?.length) {
+      const promptAnalysisId = promptResponse.analysis_id ?? null;
+      const alreadyIncluded =
+        promptAnalysisId &&
+        records.some((record) => record.analysis_id === promptAnalysisId);
+
+      if (!alreadyIncluded) {
+        const completedAt = trendAnalyzeTask.completedAt;
+
+        if (completedAt) {
+          records.unshift({
+            ...promptResponse,
+            status: "completed",
+            user_id: trendUserId ?? null,
+            created_at: new Date(completedAt).toISOString(),
+          });
+        }
+      }
+    }
+
+    return records.sort(
+      (left, right) =>
+        Date.parse(right.created_at) - Date.parse(left.created_at),
+    );
+  }, [
+    promptResponse,
+    historySearchRecords,
+    trendAnalyzeTask.completedAt,
+    trendHistoryQuery.data?.items,
+    trendUserId,
+  ]);
 
   const latestGeneralTrendRecord = useMemo(
     () => historyRecords.find((record) => record.results.length > 0),
@@ -189,20 +228,6 @@ export function useStrategyWorkspaceState(
   ]);
 
   useEffect(() => {
-    if (!selectedKeyword && trendTopics[0]) {
-      setSelectedKeyword(trendTopics[0].keyword);
-      return;
-    }
-
-    if (
-      selectedKeyword &&
-      !trendTopics.some((topic) => topic.keyword === selectedKeyword)
-    ) {
-      setSelectedKeyword(trendTopics[0]?.keyword);
-    }
-  }, [selectedKeyword, trendTopics]);
-
-  useEffect(() => {
     const payload: TrendSessionState = {
       sessionId: initialSessionState.sessionId,
       prompts: sessionPrompts,
@@ -237,6 +262,7 @@ export function useStrategyWorkspaceState(
     const action = await dispatch(
       runStrategyTrendAnalyze({
         query: normalizedPrompt,
+        limit: 5,
         user_id: trendUserId,
       }),
     );
@@ -256,11 +282,42 @@ export function useStrategyWorkspaceState(
       if (normalizedResults[0]) {
         setSelectedKeyword(normalizedResults[0].main_keyword);
       }
+
+      await trendHistoryQuery.refetch();
     }
   };
 
   const submitPrompt = async () => {
-    await runTrendScout(promptInput);
+    const normalizedPrompt = promptInput.trim();
+
+    if (!normalizedPrompt || isHistorySearchPending) {
+      if (!normalizedPrompt) {
+        setHistorySearchRecords(null);
+        setHistorySearchError(null);
+      }
+      return;
+    }
+
+    setIsHistorySearchPending(true);
+    setHistorySearchError(null);
+
+    try {
+      const response = await searchTrendHistory({
+        text: normalizedPrompt,
+        user_id: trendUserId ?? null,
+        limit: 20,
+      });
+
+      setHistorySearchRecords(response.items);
+    } catch (error) {
+      setHistorySearchError(
+        error instanceof Error
+          ? error.message
+          : "Unable to search trend history.",
+      );
+    } finally {
+      setIsHistorySearchPending(false);
+    }
   };
 
   return {
@@ -273,6 +330,9 @@ export function useStrategyWorkspaceState(
     selectedTopic,
     firstError: usersQuery.error ?? trendHistoryQuery.error,
     isGeneralRefreshFetching: trendHistoryQuery.isFetching,
+    isHistorySearchPending,
+    historySearchError,
+    trendSearchError: trendAnalyzeTask.errorMessage,
     setPromptInput,
     submitPrompt,
     runSuggestion: runTrendScout,

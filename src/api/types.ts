@@ -610,6 +610,13 @@ export type TrendAnalyzeRequest = {
   user_id?: string | null;
 };
 
+export type TrendHistorySearchRequest = {
+  text?: string | null;
+  keyword?: string | null;
+  user_id?: string | null;
+  limit?: number;
+};
+
 export type TrendInterestPoint = {
   date?: string;
   timestamp?: number;

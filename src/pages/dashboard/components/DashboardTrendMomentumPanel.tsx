@@ -20,8 +20,8 @@ export function DashboardTrendMomentumPanel({
     <PanelCard
       title={copy("Trend Momentum", "Động lượng xu hướng")}
       description={copy(
-        "Head-to-head momentum between two competing trends.",
-        "So sánh trực diện động lượng giữa 2 xu hướng cạnh tranh.",
+        "Interest-over-time movement for the top five active keywords today.",
+        "Biến động interest over time cho 5 keyword nổi bật trong ngày.",
       )}
     >
       <div className="h-80 rounded-2xl border border-border/65 bg-background/60 p-3">

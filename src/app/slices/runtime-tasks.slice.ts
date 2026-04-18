@@ -7,11 +7,12 @@ import {
 import { queryClient } from "@/app/query-client";
 import { orchestrateAgentsPipeline } from "@/api/agents.api";
 import { ApiError } from "@/api/http-client";
-import { getTrendHistory } from "@/api/trends.api";
+import { analyzeTrend } from "@/api/trends.api";
 import type { OrchestratorResponse, TrendAnalyzeResponse } from "@/api/types";
 
 type StrategyTrendPromptRequest = {
   query: string;
+  limit?: number;
   user_id?: string | null;
 };
 
@@ -137,37 +138,24 @@ export const runStrategyTrendAnalyze = createAsyncThunk<
   "runtimeTasks/runStrategyTrendAnalyze",
   async (payload, { rejectWithValue }) => {
     try {
-      const normalizedQuery = payload.query.trim().toLowerCase();
-      const history = await getTrendHistory({
-        userId: payload.user_id ?? undefined,
-        limit: 20,
+      const response = await analyzeTrend({
+        query: payload.query,
+        limit: payload.limit ?? 5,
+        user_id: payload.user_id ?? null,
       });
 
-      const matchingRecord = history.items.find(
-        (record) =>
-          record.results.length > 0 &&
-          record.query.trim().toLowerCase() === normalizedQuery,
-      );
-
-      const latestRecord = [...history.items]
-        .sort(
-          (left, right) =>
-            Date.parse(right.created_at) - Date.parse(left.created_at),
-        )
-        .find((record) => record.results.length > 0);
-
-      const targetRecord = matchingRecord ?? latestRecord;
-
-      if (!targetRecord) {
+      if (response.error || response.results.length === 0) {
         return rejectWithValue(
-          "No saved trend history found for the selected user.",
+          "Trend analysis did not return any keyword results.",
         );
       }
 
-      return targetRecord;
+      await queryClient.invalidateQueries({ queryKey: ["trend", "history"] });
+
+      return response;
     } catch (error) {
       return rejectWithValue(
-        toErrorMessage(error, "Unable to load trend history."),
+        toErrorMessage(error, "Unable to analyze trends."),
       );
     }
   },
