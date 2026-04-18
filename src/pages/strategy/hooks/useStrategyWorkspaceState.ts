@@ -164,10 +164,7 @@ export function useStrategyWorkspaceState(
   }, [sourceResults]);
 
   const selectedTopic = useMemo(() => {
-    const fromState = trendTopics.find(
-      (topic) => topic.keyword === selectedKeyword,
-    );
-    return fromState ?? trendTopics[0];
+    return trendTopics.find((topic) => topic.keyword === selectedKeyword);
   }, [selectedKeyword, trendTopics]);
 
   const reasoningElapsedMs = useMemo(() => {

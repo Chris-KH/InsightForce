@@ -336,33 +336,43 @@ export function AutomationLatestOrchestrationOutput({
                   ))}
                 </div>
 
-                {canShowHardcodedContent ? (
-                  <Alert className="border-emerald-500/35 bg-emerald-500/10">
-                    <AlertTitle>
+                {latestTrendResults.length > 0 ? (
+                  <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+                    <p className="text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">
                       {copy(
-                        "Content generation completed",
-                        "Nội dung đã được tạo hoàn tất",
+                        "Why these trends are happening",
+                        "Vì sao các trend này nổi lên",
                       )}
-                    </AlertTitle>
-                    <AlertDescription>
-                      {copy(
-                        "Trend and content outputs were generated successfully for the selected keyword.",
-                        "Trend và nội dung đã được tạo thành công cho keyword đang chọn.",
-                      )}
-                    </AlertDescription>
-                    {onOpenPublishing ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="mt-3 w-full"
-                        onClick={onOpenPublishing}
-                      >
-                        <SendHorizontal data-icon="inline-start" />
-                        {copy("Continue to Publishing", "Chuyển sang Xuất bản")}
-                      </Button>
-                    ) : null}
-                  </Alert>
+                    </p>
+
+                    <div className="mt-3 grid gap-3">
+                      {latestTrendResults.map((result) => (
+                        <div
+                          key={result.main_keyword}
+                          className="rounded-2xl border border-border/55 bg-card/55 p-3"
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground">
+                              {result.main_keyword}
+                            </p>
+                            <Badge
+                              variant="outline"
+                              className="rounded-full border-primary/25 bg-primary/10 text-[11px] text-primary"
+                            >
+                              {result.trend_score.toFixed(1)}
+                            </Badge>
+                          </div>
+                          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                            {result.why_the_trend_happens ||
+                              copy(
+                                "No reason summary is available for this trend yet.",
+                                "Chưa có phần giải thích cho trend này.",
+                              )}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ) : null}
               </div>
             ) : (
@@ -441,6 +451,45 @@ export function AutomationLatestOrchestrationOutput({
                   copy={copy}
                   latestGeneratedContent={latestGeneratedContent}
                 />
+              </motion.div>
+            </AutomationPriorityItem>
+
+            <AutomationPriorityItem priority="high">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.14,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+              >
+                <Alert className="border-emerald-500/35 bg-emerald-500/10">
+                  <AlertTitle>
+                    {copy(
+                      "Content generation completed",
+                      "Nội dung đã được tạo hoàn tất",
+                    )}
+                  </AlertTitle>
+                  <AlertDescription>
+                    {copy(
+                      "Trend and content outputs were generated successfully for the selected keyword.",
+                      "Trend và nội dung đã được tạo thành công cho keyword đang chọn.",
+                    )}
+                  </AlertDescription>
+                  {onOpenPublishing ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 w-full"
+                      onClick={onOpenPublishing}
+                    >
+                      <SendHorizontal data-icon="inline-start" />
+                      {copy("Continue to Publishing", "Chuyển sang Xuất bản")}
+                    </Button>
+                  ) : null}
+                </Alert>
               </motion.div>
             </AutomationPriorityItem>
           </>

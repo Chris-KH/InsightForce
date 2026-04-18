@@ -173,6 +173,8 @@ export function StrategySavedTrendHistoryPanel({
   const [scriptPreview, setScriptPreview] = useState("");
   const [scriptKeyword, setScriptKeyword] = useState("");
   const [activeScriptKey, setActiveScriptKey] = useState<string | null>(null);
+  const [hoveredRecordKey, setHoveredRecordKey] = useState<string | null>(null);
+  const [clickedRecordKey, setClickedRecordKey] = useState<string | null>(null);
   const contentGenerateMutation = useContentGenerateMutation();
 
   const handleGeneratePostScript = async (
@@ -286,18 +288,28 @@ export function StrategySavedTrendHistoryPanel({
           <ScrollArea className="h-[32rem] pr-2">
             <div className="grid gap-3">
               {records.map((record, index) => {
-                const isSelected = record.results.some(
-                  (result) => result.main_keyword === selectedKeyword,
-                );
+                const recordKey =
+                  record.analysis_id ?? `${record.created_at}-${index}`;
+                const activeRecordKey = hoveredRecordKey ?? clickedRecordKey;
+                const isSelected = activeRecordKey === recordKey;
 
                 return (
                   <article
-                    key={record.analysis_id ?? `${record.created_at}-${index}`}
+                    key={recordKey}
                     className={cn(
-                      "rounded-2xl border border-border/65 bg-background/60 p-4 text-sm transition-colors",
+                      "cursor-pointer rounded-2xl border border-border/65 bg-background/60 p-4 text-sm transition-colors",
                       isSelected &&
                         "border-primary/35 bg-primary/5 shadow-[0_0_0_1px_rgba(59,130,246,0.15)_inset]",
                     )}
+                    onClick={() => {
+                      setClickedRecordKey(recordKey);
+                    }}
+                    onMouseEnter={() => {
+                      setHoveredRecordKey(recordKey);
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredRecordKey(null);
+                    }}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -359,6 +371,7 @@ export function StrategySavedTrendHistoryPanel({
                                 type="button"
                                 className="min-w-0 text-left"
                                 onClick={() => {
+                                  setClickedRecordKey(recordKey);
                                   onSelectKeyword(keyword);
                                 }}
                               >
