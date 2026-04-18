@@ -1,15 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { SendHorizontal, Sparkles, Workflow } from "lucide-react";
 
-import {
-  useAgentsStatusQuery,
-  useHealthQuery,
-  useUploadPostPublishJobsQuery,
-} from "@/api";
-import { BarTrendChart, DoughnutTrendChart } from "@/components/app-data-viz";
-import { InlineQueryState, QueryStateCard } from "@/components/app-query-state";
-import { PanelCard, SectionHeader } from "@/components/app-section";
+import { useHealthQuery } from "@/api";
+import { QueryStateCard } from "@/components/app-query-state";
+import { SectionHeader } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBilingual } from "@/hooks/use-bilingual";
@@ -48,74 +43,12 @@ function readPersistedWorkspaceTab(): AutomationWorkspaceTab {
 
 export function AutomationPage() {
   const copy = useBilingual();
-  const publishJobsParams = useMemo(() => ({ limit: 30 }), []);
   const [workspaceTab, setWorkspaceTab] = useState<AutomationWorkspaceTab>(() =>
     readPersistedWorkspaceTab(),
   );
 
   const healthQuery = useHealthQuery();
-  const agentsStatusQuery = useAgentsStatusQuery();
-  const publishJobsQuery = useUploadPostPublishJobsQuery(publishJobsParams);
-
-  const publishJobs = publishJobsQuery.data?.items ?? [];
-  const pendingCount = publishJobs.filter(
-    (job) => job.status.toLowerCase() === "pending",
-  ).length;
-  const publishedCount = publishJobs.filter(
-    (job) => job.status.toLowerCase() === "published",
-  ).length;
-  const failedCount = publishJobs.filter(
-    (job) => job.status.toLowerCase() === "failed",
-  ).length;
-
-  const processes = agentsStatusQuery.data?.processes ?? [];
-  const onlineAgentsCount = processes.filter(
-    (process) => process.reachable,
-  ).length;
-
-  const queueBarData = {
-    labels: [
-      copy("Pending", "Đang chờ"),
-      copy("Published", "Đã đăng"),
-      copy("Failed", "Lỗi"),
-    ],
-    datasets: [
-      {
-        label: copy("Jobs", "Công việc"),
-        data: [pendingCount, publishedCount, failedCount],
-        backgroundColor: [
-          "rgba(245, 158, 11, 0.78)",
-          "rgba(16, 185, 129, 0.82)",
-          "rgba(248, 113, 113, 0.75)",
-        ],
-        borderRadius: 10,
-      },
-    ],
-  };
-
-  const agentsMixData = useMemo(
-    () => ({
-      labels: [copy("Online", "Hoạt động"), copy("Unavailable", "Gián đoạn")],
-      datasets: [
-        {
-          data: [
-            onlineAgentsCount,
-            Math.max(processes.length - onlineAgentsCount, 0),
-          ],
-          backgroundColor: [
-            "rgba(20, 184, 166, 0.8)",
-            "rgba(251, 146, 60, 0.75)",
-          ],
-          borderWidth: 0,
-        },
-      ],
-    }),
-    [copy, onlineAgentsCount, processes.length],
-  );
-
-  const allQueries = [healthQuery, agentsStatusQuery, publishJobsQuery];
-
-  const firstError = allQueries.find((query) => query.error)?.error;
+  const firstError = healthQuery.error;
 
   const handleWorkspaceTabChange = (value: string) => {
     if (isAutomationWorkspaceTab(value)) {
@@ -238,120 +171,13 @@ export function AutomationPage() {
             >
               <AutomationPriorityGrid>
                 <AutomationPriorityItem priority="high">
-                  <AutomationOrchestrationControlSection
-                    onOpenPublishing={() => setWorkspaceTab("publishing")}
-                  />
+                  <AutomationOrchestrationControlSection />
                 </AutomationPriorityItem>
 
                 <AutomationPriorityItem priority="high">
-                  <AutomationLatestOrchestrationOutput />
-                </AutomationPriorityItem>
-
-                <AutomationPriorityItem priority="medium">
-                  <motion.div
-                    whileHover={{ y: -3 }}
-                    transition={{ duration: 0.2 }}
-                    className="h-full"
-                  >
-                    <PanelCard
-                      title={copy("Runtime Queue Pulse", "Xung nhịp hàng đợi")}
-                      description={copy(
-                        "Operational pressure from pending, published, and failed publish jobs.",
-                        "Áp lực vận hành từ các publish job đang chờ, đã đăng và thất bại.",
-                      )}
-                      className="h-full"
-                      contentClassName="pb-4"
-                      action={
-                        <Badge
-                          variant="outline"
-                          className="rounded-full border-primary/25 bg-background/75 text-primary"
-                        >
-                          {copy("Ops Monitor", "Giám sát vận hành")}
-                        </Badge>
-                      }
-                    >
-                      {publishJobs.length > 0 ? (
-                        <BarTrendChart
-                          data={queueBarData}
-                          className="bg-linear-to-br from-cyan-100/60 via-card to-emerald-100/45 dark:from-cyan-500/12 dark:via-card/90 dark:to-emerald-500/10"
-                        />
-                      ) : (
-                        <InlineQueryState
-                          state="empty"
-                          message={copy(
-                            "No publish jobs found.",
-                            "Chưa có job đăng bài nào.",
-                          )}
-                        />
-                      )}
-
-                      <AutomationHintTooltip
-                        className="mt-2"
-                        label={copy(
-                          "Queue pulse helps identify publishing bottlenecks quickly.",
-                          "Queue pulse giúp phát hiện nhanh điểm nghẽn xuất bản.",
-                        )}
-                        hint={copy(
-                          "A rising Pending bar with a flat Published bar usually indicates API throughput, platform validation, or scheduling bottlenecks.",
-                          "Khi Pending tăng nhưng Published đứng yên, thường là dấu hiệu tắc nghẽn ở thông lượng API, bước kiểm tra nền tảng hoặc lịch đăng.",
-                        )}
-                      />
-                    </PanelCard>
-                  </motion.div>
-                </AutomationPriorityItem>
-
-                <AutomationPriorityItem priority="medium">
-                  <motion.div
-                    whileHover={{ y: -3 }}
-                    transition={{ duration: 0.2 }}
-                    className="h-full"
-                  >
-                    <PanelCard
-                      title={copy("Agent Readiness", "Mức sẵn sàng của agent")}
-                      description={copy(
-                        "Live ratio between online and recovering agent processes.",
-                        "Tỷ lệ trực tiếp giữa process agent đang online và đang khôi phục.",
-                      )}
-                      className="h-full"
-                      contentClassName="pb-4"
-                      action={
-                        <Badge
-                          variant="outline"
-                          className="rounded-full border-primary/25 bg-background/75 text-primary"
-                        >
-                          {onlineAgentsCount}/{processes.length}{" "}
-                          {copy("online", "online")}
-                        </Badge>
-                      }
-                    >
-                      {processes.length > 0 ? (
-                        <DoughnutTrendChart
-                          data={agentsMixData}
-                          className="bg-linear-to-br from-indigo-100/55 via-card to-cyan-100/45 dark:from-indigo-500/12 dark:via-card/90 dark:to-cyan-500/10"
-                        />
-                      ) : (
-                        <InlineQueryState
-                          state="empty"
-                          message={copy(
-                            "No process state available.",
-                            "Chưa có dữ liệu trạng thái process.",
-                          )}
-                        />
-                      )}
-
-                      <AutomationHintTooltip
-                        className="mt-2"
-                        label={copy(
-                          "Readiness ratio tracks service resilience in real time.",
-                          "Tỷ lệ sẵn sàng phản ánh độ ổn định dịch vụ theo thời gian thực.",
-                        )}
-                        hint={copy(
-                          "If online ratio drops below 70%, throttle new publish jobs and run health checks before launching another orchestration cycle.",
-                          "Nếu tỷ lệ online dưới 70%, nên giảm tốc tạo publish job mới và chạy health check trước khi mở phiên orchestration tiếp theo.",
-                        )}
-                      />
-                    </PanelCard>
-                  </motion.div>
+                  <AutomationLatestOrchestrationOutput
+                    onOpenPublishing={() => setWorkspaceTab("publishing")}
+                  />
                 </AutomationPriorityItem>
               </AutomationPriorityGrid>
             </motion.div>

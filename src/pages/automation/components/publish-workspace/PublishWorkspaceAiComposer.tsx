@@ -38,10 +38,12 @@ const PLATFORM_KEYWORDS: Array<{
 ];
 
 const SUGGESTED_PROMPTS = [
+  "Đăng cho tôi các ảnh về chăm sóc da mặt lên Instagram",
+  "Đăng cho tôi luôn",
   "Launch a 5-day Instagram + TikTok teaser sequence for a wellness challenge.",
-  "Create a repost package for YouTube Shorts and Threads with CTA to newsletter.",
-  "Publish a Reddit + X announcement for a new product drop with link tracking.",
 ];
+const QUICK_APPROVE_PROMPT = "Đăng cho tôi luôn";
+const QUICK_DENY_PROMPT = "No";
 
 const QUESTION_PROMPT_PATTERN =
   /Do you want to post this\??|Bạn có muốn đăng bài này không\??/i;
@@ -195,13 +197,15 @@ export function PublishWorkspaceAiComposer() {
     await rejectPosting();
   };
 
-  const handleQuickReply = async (value: "Yes" | "No") => {
+  const handleQuickReply = async (value: "approve" | "deny") => {
     if (isPending) {
       return;
     }
 
     setHasInteracted(true);
-    await submitAutopilotPrompt(value);
+    await submitAutopilotPrompt(
+      value === "approve" ? QUICK_APPROVE_PROMPT : QUICK_DENY_PROMPT,
+    );
   };
 
   const statusLabel =
@@ -429,7 +433,7 @@ export function PublishWorkspaceAiComposer() {
                         <Button
                           type="button"
                           size="sm"
-                          onClick={() => void handleQuickReply("Yes")}
+                          onClick={() => void handleQuickReply("approve")}
                         >
                           {copy("Yes", "Yes")}
                         </Button>
@@ -437,7 +441,7 @@ export function PublishWorkspaceAiComposer() {
                           type="button"
                           size="sm"
                           variant="outline"
-                          onClick={() => void handleQuickReply("No")}
+                          onClick={() => void handleQuickReply("deny")}
                         >
                           {copy("No", "No")}
                         </Button>

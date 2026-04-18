@@ -115,6 +115,7 @@ function sanitizeHydratedAiAutopilotChat(
   return {
     ...aiAutopilotChatInitialState,
     ...state,
+    configId: aiAutopilotChatInitialState.configId,
     messages: Array.isArray(state.messages) ? state.messages.slice(-120) : [],
     status: state.status === "pending" ? "failed" : state.status,
     requestId: null,

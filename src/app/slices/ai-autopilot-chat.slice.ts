@@ -53,6 +53,7 @@ type SubmitAutopilotResult = {
 };
 
 const MAX_CHAT_MESSAGES = 120;
+export const DEMO_AUTOPILOT_CONFIG_ID = "550e8400-e29b-41d4-a716-446655440000";
 
 function createMessageId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -64,14 +65,7 @@ function createDefaultConfigId() {
     return envConfigId.trim();
   }
 
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
-    return crypto.randomUUID();
-  }
-
-  return `config-${Date.now()}`;
+  return DEMO_AUTOPILOT_CONFIG_ID;
 }
 
 function toErrorMessage(error: unknown, fallback: string) {
@@ -152,6 +146,7 @@ export const aiAutopilotChatSlice = createSlice({
       state.draftPrompt = action.payload;
     },
     clearAiAutopilotConversation(state) {
+      state.configId = createDefaultConfigId();
       state.messages = [];
       state.status = "idle";
       state.requestId = null;

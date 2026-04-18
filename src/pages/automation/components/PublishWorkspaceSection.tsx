@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
 
 import {
   useGeneratedContentsQuery,
@@ -18,7 +17,6 @@ import {
 
 import { PublishWorkspaceAiComposer } from "./publish-workspace/PublishWorkspaceAiComposer";
 import { PublishWorkspaceComposer } from "./publish-workspace/PublishWorkspaceComposer";
-import { PublishWorkspaceStateSnapshot } from "./publish-workspace/PublishWorkspaceStateSnapshot";
 import { PublishWorkspaceTimeline } from "./publish-workspace/PublishWorkspaceTimeline";
 
 type PublishingMode = "ai-auto" | "manual";
@@ -54,33 +52,6 @@ export function PublishWorkspaceSection() {
   const generatedContents = generatedContentsQuery.data?.items ?? [];
   const publishJobs = publishJobsQuery.data?.items ?? [];
 
-  const operatorSuggestions = [
-    {
-      key: "ai-first",
-      title: copy("Use AI mode first", "Ưu tiên AI mode trước"),
-      description: copy(
-        "Start with prompt-only publishing, then switch to manual mode only for sensitive metadata edits.",
-        "Bắt đầu với chế độ prompt-only, sau đó mới chuyển sang manual khi cần chỉnh metadata nhạy cảm.",
-      ),
-    },
-    {
-      key: "timeline-validation",
-      title: copy("Validate by timeline", "Kiểm tra bằng timeline"),
-      description: copy(
-        "Confirm status transitions in Publishing Timeline before creating follow-up jobs.",
-        "Xác nhận trạng thái trong Publishing Timeline trước khi tạo thêm job tiếp theo.",
-      ),
-    },
-    {
-      key: "reusable-drafts",
-      title: copy("Keep reusable drafts", "Giữ draft dùng lại"),
-      description: copy(
-        "Use Generated Content Shortcuts to reduce repetitive form filling and keep campaigns consistent.",
-        "Dùng Generated Content Shortcuts để giảm nhập lặp và giữ chiến dịch nhất quán.",
-      ),
-    },
-  ];
-
   useEffect(() => {
     window.localStorage.setItem(PUBLISHING_MODE_STORAGE_KEY, publishingMode);
   }, [publishingMode]);
@@ -92,7 +63,7 @@ export function PublishWorkspaceSection() {
           title={copy("Publishing Workspace", "Không gian xuất bản")}
           description={copy(
             "Merged from Publish Ops to keep automation and publishing in one execution flow.",
-            "Đã gộp từ Publish Ops để giữ tự động hóa và xuất bản trong một luồng thực thi.",
+            "Được gộp từ Publish Ops để giữ cho tự động hóa và xuất bản trong một luồng thực thi.",
           )}
           contentClassName="pb-4"
           action={
@@ -118,7 +89,7 @@ export function PublishWorkspaceSection() {
                 )}
                 hint={copy(
                   "AI mode is faster for campaign drafts. Manual mode is safer when you must fine-tune metadata, schedule, links, and platform mix.",
-                  "AI mode phù hợp khi cần tạo draft nhanh. Manual mode an toàn hơn khi phải tinh chỉnh metadata, lịch đăng, liên kết và phối nền tảng.",
+                  "AI mode phù hợp khi cần tạo draft nhanh. Manual mode an toàn hơn khi phải tinh chỉnh metadata, lịch đăng, liên kết và phối trộn nền tảng.",
                 )}
               />
             </div>
@@ -136,7 +107,10 @@ export function PublishWorkspaceSection() {
               }}
             >
               <ToggleGroupItem value="ai-auto" className="rounded-full">
-                {copy("AI Auto (Prompt only)", "AI tự động (chỉ prompt)")}
+                {copy(
+                  "AI Auto (Prompt only)",
+                  "AI tự động (chỉ prompt)",
+                )}
               </ToggleGroupItem>
               <ToggleGroupItem value="manual" className="rounded-full">
                 {copy("Manual Form", "Form nhập tay")}
@@ -166,24 +140,6 @@ export function PublishWorkspaceSection() {
           )}
         </PanelCard>
       </AutomationPriorityItem>
-
-      <AutomationPriorityItem priority="medium">
-        <PublishWorkspaceStateSnapshot jobs={publishJobs} />
-      </AutomationPriorityItem>
-
-      {operatorSuggestions.map((suggestion) => (
-        <AutomationPriorityItem key={suggestion.key} priority="low">
-          <div className="h-full rounded-2xl border border-border/65 bg-background/70 p-3">
-            <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-              <Sparkles className="size-3.5 text-primary" />
-              {suggestion.title}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {suggestion.description}
-            </p>
-          </div>
-        </AutomationPriorityItem>
-      ))}
     </AutomationPriorityGrid>
   );
 }

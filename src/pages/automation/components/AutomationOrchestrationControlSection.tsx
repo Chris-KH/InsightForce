@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Loader2, PlayCircle, SendHorizontal } from "lucide-react";
+import { Loader2, PlayCircle } from "lucide-react";
 
 import {
   runAutomationOrchestration,
@@ -9,7 +9,6 @@ import {
 } from "@/app/slices/runtime-tasks.slice";
 import { InlineQueryState } from "@/components/app-query-state";
 import { PanelCard } from "@/components/app-section";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,13 +25,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { ReasoningTimeline } from "@/pages/strategy/components/ReasoningTimeline";
 
-type AutomationOrchestrationControlSectionProps = {
-  onOpenPublishing?: () => void;
-};
-
-export function AutomationOrchestrationControlSection({
-  onOpenPublishing,
-}: AutomationOrchestrationControlSectionProps) {
+export function AutomationOrchestrationControlSection() {
   const copy = useBilingual();
   const dispatch = useAppDispatch();
 
@@ -46,20 +39,19 @@ export function AutomationOrchestrationControlSection({
   const [reasoningTick, setReasoningTick] = useState(() => Date.now());
 
   const isOrchestrationPending = orchestrationTask.status === "pending";
-  const latestOrchestrationResponse = orchestrationTask.data;
-
   const prompt = automationForm.prompt;
   const userId = automationForm.userId;
   const saveFiles = automationForm.saveFiles;
+
   const runStatusLabel = isOrchestrationPending
     ? copy("Running", "Đang chạy")
-    : latestOrchestrationResponse
+    : orchestrationTask.data
       ? copy("Completed", "Hoàn tất")
       : copy("Idle", "Sẵn sàng");
 
   const runStatusClassName = isOrchestrationPending
     ? "border-primary/35 bg-primary/10 text-primary"
-    : latestOrchestrationResponse
+    : orchestrationTask.data
       ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-700"
       : "border-border/60 bg-background/70 text-muted-foreground";
 
@@ -136,7 +128,7 @@ export function AutomationOrchestrationControlSection({
               <p className="text-sm text-muted-foreground">
                 {copy(
                   "Provide prompt context, optional workspace user, and choose whether to save artifacts.",
-                  "Nhập bối cảnh prompt, người dùng workspace (tùy chọn) và chọn lưu hay không lưu artifacts.",
+                  "Nhập bối cảnh prompt, người dùng workspace tùy chọn và chọn lưu hay không lưu artifacts.",
                 )}
               </p>
             </div>
@@ -166,7 +158,7 @@ export function AutomationOrchestrationControlSection({
                   <Label htmlFor="automation-user-id">
                     {copy(
                       "Workspace User (optional)",
-                      "Người dùng workspace (tùy chọn)",
+                      "Người dùng workspace tùy chọn",
                     )}
                   </Label>
                   <Input
@@ -227,35 +219,6 @@ export function AutomationOrchestrationControlSection({
                   state="error"
                   message={orchestrationTask.errorMessage}
                 />
-              ) : null}
-
-              {latestOrchestrationResponse ? (
-                <Alert className="border-emerald-500/35 bg-emerald-500/10">
-                  <AlertTitle>
-                    {copy(
-                      "Automation run completed",
-                      "Phiên tự động hóa đã hoàn tất",
-                    )}
-                  </AlertTitle>
-                  <AlertDescription>
-                    {copy(
-                      "Trend and content outputs were generated successfully.",
-                      "Trend và nội dung đã được tạo thành công.",
-                    )}
-                  </AlertDescription>
-                  {onOpenPublishing ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="mt-3"
-                      onClick={onOpenPublishing}
-                    >
-                      <SendHorizontal data-icon="inline-start" />
-                      {copy("Continue to Publishing", "Chuyển sang Xuất bản")}
-                    </Button>
-                  ) : null}
-                </Alert>
               ) : null}
             </form>
           </div>

@@ -1,13 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "motion/react";
+import { ChevronDown, ChevronUp, SendHorizontal } from "lucide-react";
 
 import type { TrendAnalyzeResultItem } from "@/api";
+import { InlineQueryState } from "@/components/app-query-state";
+import { PanelCard } from "@/components/app-section";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/hooks";
 import { useBilingual } from "@/hooks/use-bilingual";
 import {
   formatPlatformLabel,
   normalizeGeneratedContent,
-  toPublishingWindowTokens,
 } from "@/lib/orchestrator-intelligence";
 import {
   extractInterestValues,
@@ -18,12 +23,9 @@ import {
   AutomationPriorityItem,
 } from "@/pages/automation/components/AutomationPriorityGrid";
 
-import { LatestOutputMetadataPanel } from "./latest-output/LatestOutputMetadataPanel";
-import { LatestOutputCreatorOptimizationPanel } from "./latest-output/LatestOutputCreatorOptimizationPanel";
 import { LatestOutputOverviewPanel } from "./latest-output/LatestOutputOverviewPanel";
 import { LatestOutputPlatformPostMixPanel } from "./latest-output/LatestOutputPlatformPostMixPanel";
 import { LatestOutputScriptBlueprintPanel } from "./latest-output/LatestOutputScriptBlueprintPanel";
-import { LatestOutputStoryboardPanel } from "./latest-output/LatestOutputStoryboardPanel";
 import { LatestOutputTrendCharts } from "./latest-output/LatestOutputTrendCharts";
 
 const INTEREST_CURVE_COLORS = [
@@ -40,6 +42,12 @@ const INTEREST_CURVE_COLORS = [
     background: "rgba(249, 115, 22, 0.14)",
   },
 ];
+
+const HARDCODED_CONTENT_KEYWORD = "Chăm sóc da mặt";
+
+type AutomationLatestOrchestrationOutputProps = {
+  onOpenPublishing?: () => void;
+};
 
 function computeAverageTrendScore(results: TrendAnalyzeResultItem[]) {
   if (results.length === 0) {
@@ -71,8 +79,14 @@ function toWrappedAxisLabel(value: string) {
   ];
 }
 
-export function AutomationLatestOrchestrationOutput() {
+export function AutomationLatestOrchestrationOutput({
+  onOpenPublishing,
+}: AutomationLatestOrchestrationOutputProps) {
   const copy = useBilingual();
+  const [selectedContentKeyword, setSelectedContentKeyword] = useState<
+    string | null
+  >(null);
+  const [isContentExpanded, setIsContentExpanded] = useState(true);
   const latestOrchestrationResponse = useAppSelector(
     (state) => state.runtimeTasks.automation.orchestration.data,
   );
@@ -188,23 +202,6 @@ export function AutomationLatestOrchestrationOutput() {
     };
   }, [copy, latestGeneratedContent.platformPosts]);
 
-  const latestPublishingWindows = useMemo(
-    () =>
-      latestGeneratedContent.platformPosts.flatMap((post) => {
-        const windows = toPublishingWindowTokens(post.bestPostTime);
-
-        if (windows.length === 0) {
-          return [];
-        }
-
-        return windows.map((windowLabel) => ({
-          platform: formatPlatformLabel(post.platform),
-          windowLabel,
-        }));
-      }),
-    [latestGeneratedContent.platformPosts],
-  );
-
   const latestHashtags = useMemo(() => {
     const allTags = latestTrendResults.flatMap((result) => result.top_hashtags);
     return [...new Set(allTags.map((tag) => tag.trim()).filter(Boolean))].slice(
@@ -213,6 +210,41 @@ export function AutomationLatestOrchestrationOutput() {
     );
   }, [latestTrendResults]);
 
+  const contentKeywordOptions = useMemo(() => {
+    const trendKeywords = latestTrendResults
+      .map((result) => result.main_keyword.trim())
+      .filter(Boolean);
+    const generatedKeyword = latestGeneratedContent.selectedKeyword.trim();
+
+    return Array.from(
+      new Set(
+        [...trendKeywords, generatedKeyword].filter((keyword) => keyword),
+      ),
+    );
+  }, [latestGeneratedContent.selectedKeyword, latestTrendResults]);
+
+  const selectedTrend = latestTrendResults.find(
+    (result) => result.main_keyword === selectedContentKeyword,
+  );
+
+  const canShowHardcodedContent =
+    selectedContentKeyword === HARDCODED_CONTENT_KEYWORD &&
+    latestGeneratedContent.selectedKeyword === HARDCODED_CONTENT_KEYWORD;
+  const selectedOverviewTrendResults = selectedTrend
+    ? [selectedTrend]
+    : latestTrendResults;
+  const selectedAverageTrendScore =
+    selectedTrend?.trend_score ?? averageLatestTrendScore;
+  const selectedHashtags =
+    selectedTrend && selectedTrend.top_hashtags.length > 0
+      ? selectedTrend.top_hashtags
+      : latestHashtags;
+
+  const handleSelectContentKeyword = (keyword: string) => {
+    setSelectedContentKeyword(keyword);
+    setIsContentExpanded(true);
+  };
+
   if (!latestOrchestrationResponse) {
     return null;
   }
@@ -220,72 +252,10 @@ export function AutomationLatestOrchestrationOutput() {
   return (
     <AutomationPriorityGrid>
       <AutomationPriorityItem priority="high" className="scroll-mt-28">
-        <motion.section
-          id="latest-orchestration-output"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <LatestOutputOverviewPanel
-            copy={copy}
-            latestTrendResults={latestTrendResults}
-            latestGeneratedContent={latestGeneratedContent}
-            averageLatestTrendScore={averageLatestTrendScore}
-            latestTopTrend={latestTopTrend}
-            latestHashtags={latestHashtags}
-            markdownSummary={
-              latestOrchestrationOutput?.trend_analysis.markdown_summary
-            }
-          />
-        </motion.section>
-      </AutomationPriorityItem>
-
-      <AutomationPriorityItem priority="medium">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <LatestOutputPlatformPostMixPanel
-            copy={copy}
-            latestGeneratedContent={latestGeneratedContent}
-            latestPlatformMixData={latestPlatformMixData}
-          />
-        </motion.div>
-      </AutomationPriorityItem>
-
-      <AutomationPriorityItem priority="medium">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <LatestOutputStoryboardPanel
-            copy={copy}
-            sections={latestGeneratedContent.sections}
-          />
-        </motion.div>
-      </AutomationPriorityItem>
-
-      <AutomationPriorityItem priority="high">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <LatestOutputCreatorOptimizationPanel
-            copy={copy}
-            latestGeneratedContent={latestGeneratedContent}
-            latestTrendResults={latestTrendResults}
-          />
-        </motion.div>
-      </AutomationPriorityItem>
-
-      <AutomationPriorityItem priority="medium">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.46, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.46, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
         >
           <LatestOutputTrendCharts
             copy={copy}
@@ -296,33 +266,214 @@ export function AutomationLatestOrchestrationOutput() {
         </motion.div>
       </AutomationPriorityItem>
 
-      <AutomationPriorityItem priority="low">
+      <AutomationPriorityItem priority="high">
         <motion.div
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.48, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
         >
-          <LatestOutputMetadataPanel
-            copy={copy}
-            latestOrchestrationResponse={latestOrchestrationResponse}
-            latestGeneratedContent={latestGeneratedContent}
-          />
+          <PanelCard
+            title={copy(
+              "Create content with keyword",
+              "Tạo nội dung với từ khóa",
+            )}
+            description={copy(
+              "Select a trend keyword to open the generated content workspace for that topic.",
+              "Chọn một keyword xu hướng để mở không gian nội dung đã tạo cho chủ đề đó.",
+            )}
+            action={
+              selectedContentKeyword ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className="rounded-full border-primary/30 bg-primary/10 text-primary"
+                  >
+                    {selectedContentKeyword}
+                  </Badge>
+
+                  {canShowHardcodedContent ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      aria-expanded={isContentExpanded}
+                      onClick={() =>
+                        setIsContentExpanded((current) => !current)
+                      }
+                    >
+                      {isContentExpanded ? (
+                        <ChevronUp data-icon="inline-start" />
+                      ) : (
+                        <ChevronDown data-icon="inline-start" />
+                      )}
+                      {isContentExpanded
+                        ? copy("Collapse content", "Thu gọn nội dung")
+                        : copy("Expand content", "Bung nội dung")}
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null
+            }
+            contentClassName="pb-4"
+          >
+            {contentKeywordOptions.length > 0 ? (
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {contentKeywordOptions.map((keyword) => (
+                    <Button
+                      key={keyword}
+                      type="button"
+                      size="sm"
+                      variant={
+                        selectedContentKeyword === keyword
+                          ? "default"
+                          : "outline"
+                      }
+                      onClick={() => handleSelectContentKeyword(keyword)}
+                    >
+                      {keyword}
+                    </Button>
+                  ))}
+                </div>
+
+                {canShowHardcodedContent ? (
+                  <Alert className="border-emerald-500/35 bg-emerald-500/10">
+                    <AlertTitle>
+                      {copy(
+                        "Content generation completed",
+                        "Nội dung đã được tạo hoàn tất",
+                      )}
+                    </AlertTitle>
+                    <AlertDescription>
+                      {copy(
+                        "Trend and content outputs were generated successfully for the selected keyword.",
+                        "Trend và nội dung đã được tạo thành công cho keyword đang chọn.",
+                      )}
+                    </AlertDescription>
+                    {onOpenPublishing ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 w-full"
+                        onClick={onOpenPublishing}
+                      >
+                        <SendHorizontal data-icon="inline-start" />
+                        {copy("Continue to Publishing", "Chuyển sang Xuất bản")}
+                      </Button>
+                    ) : null}
+                  </Alert>
+                ) : null}
+              </div>
+            ) : (
+              <InlineQueryState
+                state="empty"
+                message={copy(
+                  "No trend keyword is available from the latest run.",
+                  "Chưa có keyword xu hướng từ phiên chạy mới nhất.",
+                )}
+              />
+            )}
+          </PanelCard>
         </motion.div>
       </AutomationPriorityItem>
 
-      <AutomationPriorityItem priority="high">
-        <motion.div
-          initial={{ opacity: 0, y: 22 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.52, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <LatestOutputScriptBlueprintPanel
-            copy={copy}
-            latestGeneratedContent={latestGeneratedContent}
-            latestPublishingWindows={latestPublishingWindows}
-          />
-        </motion.div>
-      </AutomationPriorityItem>
+      {canShowHardcodedContent ? (
+        isContentExpanded ? (
+          <>
+            <AutomationPriorityItem priority="medium">
+              <motion.section
+                id="latest-orchestration-output"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.08,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+              >
+                <LatestOutputOverviewPanel
+                  copy={copy}
+                  latestTrendResults={selectedOverviewTrendResults}
+                  latestGeneratedContent={latestGeneratedContent}
+                  averageLatestTrendScore={selectedAverageTrendScore}
+                  latestTopTrend={selectedTrend ?? latestTopTrend}
+                  latestHashtags={selectedHashtags}
+                  markdownSummary={
+                    latestOrchestrationOutput?.trend_analysis.markdown_summary
+                  }
+                />
+              </motion.section>
+            </AutomationPriorityItem>
+
+            <AutomationPriorityItem priority="medium">
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.1,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+              >
+                <LatestOutputPlatformPostMixPanel
+                  copy={copy}
+                  latestGeneratedContent={latestGeneratedContent}
+                  latestPlatformMixData={latestPlatformMixData}
+                />
+              </motion.div>
+            </AutomationPriorityItem>
+
+            <AutomationPriorityItem priority="high">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.12,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+              >
+                <LatestOutputScriptBlueprintPanel
+                  key={`${selectedContentKeyword}-${latestGeneratedContent.sections
+                    .map((section) => `${section.id}:${section.label}`)
+                    .join("|")}`}
+                  copy={copy}
+                  latestGeneratedContent={latestGeneratedContent}
+                />
+              </motion.div>
+            </AutomationPriorityItem>
+          </>
+        ) : null
+      ) : selectedContentKeyword ? (
+        <AutomationPriorityItem priority="high">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <PanelCard
+              title={copy(
+                "Content workspace not wired yet",
+                "Chưa nối UI nội dung cho keyword này",
+              )}
+              description={copy(
+                "For now, the generated content UI is hardcoded for the skincare keyword.",
+                "Tạm thời UI nội dung đang hardcode cho keyword Chăm sóc da mặt.",
+              )}
+              contentClassName="pb-4"
+            >
+              <InlineQueryState
+                state="empty"
+                message={copy(
+                  'Select "Chăm sóc da mặt" to open the current hardcoded content package.',
+                  'Chọn "Chăm sóc da mặt" để mở gói nội dung hardcode hiện tại.',
+                )}
+              />
+            </PanelCard>
+          </motion.div>
+        </AutomationPriorityItem>
+      ) : null}
     </AutomationPriorityGrid>
   );
 }

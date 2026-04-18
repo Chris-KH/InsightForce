@@ -40,7 +40,7 @@ export function LatestOutputOverviewPanel({
       )}
       contentClassName="pb-4"
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-border/60 bg-background/70 p-3">
           <p className="text-[10px] tracking-[0.13em] text-muted-foreground uppercase">
             {copy("Trend signals", "Tín hiệu trend")}
