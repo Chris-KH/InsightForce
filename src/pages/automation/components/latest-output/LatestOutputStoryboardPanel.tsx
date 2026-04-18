@@ -26,9 +26,10 @@ export function LatestOutputStoryboardPanel({
         "Bộ khung hình tham chiếu tương ứng với từng phân đoạn kịch bản.",
       )}
       className="h-fit"
+      contentClassName="pb-4"
     >
       {sections.length > 0 ? (
-        <ScrollArea className="h-160 pr-3">
+        <ScrollArea className="h-128 pr-3">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
             {sections.map((section, index) => (
               <motion.article

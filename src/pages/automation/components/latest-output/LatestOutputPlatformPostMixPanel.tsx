@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 
-import { DoughnutTrendChart } from "@/components/app-data-viz";
+import { BarTrendChart } from "@/components/app-data-viz";
 import { InlineQueryState } from "@/components/app-query-state";
 import { PanelCard } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
@@ -11,15 +11,68 @@ import {
   type NormalizedGeneratedContent,
 } from "@/lib/orchestrator-intelligence";
 import { formatCompactNumber } from "@/lib/insight-formatters";
+import { AutomationHintTooltip } from "@/pages/automation/components/AutomationHintTooltip";
 
-import type { ChartData } from "chart.js";
+import type { ChartData, ChartOptions } from "chart.js";
 
 type CopyFn = (en: string, vi: string) => string;
 
 type LatestOutputPlatformPostMixPanelProps = {
   copy: CopyFn;
   latestGeneratedContent: NormalizedGeneratedContent;
-  latestPlatformMixData: ChartData<"doughnut"> | null;
+  latestPlatformMixData: ChartData<"bar"> | null;
+};
+
+const platformPostMixBarOptions: ChartOptions<"bar"> = {
+  responsive: true,
+  maintainAspectRatio: false,
+  layout: {
+    padding: {
+      top: 6,
+    },
+  },
+  plugins: {
+    legend: {
+      display: false,
+    },
+    tooltip: {
+      displayColors: false,
+      backgroundColor: "rgba(8, 15, 33, 0.94)",
+      titleColor: "#ffffff",
+      bodyColor: "#e2e8f0",
+      borderColor: "rgba(59, 130, 246, 0.35)",
+      borderWidth: 1,
+    },
+  },
+  scales: {
+    x: {
+      grid: {
+        display: false,
+      },
+      ticks: {
+        autoSkip: false,
+        minRotation: 0,
+        maxRotation: 28,
+        color: "rgba(148, 163, 184, 0.92)",
+        font: {
+          size: 10,
+        },
+      },
+    },
+    y: {
+      beginAtZero: true,
+      ticks: {
+        precision: 0,
+        color: "rgba(148, 163, 184, 0.92)",
+        font: {
+          size: 10,
+        },
+      },
+      grid: {
+        color: "rgba(148, 163, 184, 0.16)",
+      },
+    },
+  },
 };
 
 export function LatestOutputPlatformPostMixPanel({
@@ -31,19 +84,33 @@ export function LatestOutputPlatformPostMixPanel({
     <PanelCard
       title={copy("Platform Post Mix", "Phân bổ post theo nền tảng")}
       description={copy(
-        "Caption package readiness for each social platform in generated_content.platform_posts.",
-        "Mức sẵn sàng gói caption cho từng nền tảng trong generated_content.platform_posts.",
+        "Caption package coverage and hashtag volume by platform in generated_content.platform_posts.",
+        "Mức độ phủ gói caption và khối lượng hashtag theo từng nền tảng trong generated_content.platform_posts.",
       )}
       className="h-fit"
+      contentClassName="pb-4"
     >
+      <AutomationHintTooltip
+        className="mb-2"
+        label={copy(
+          "Bar height equals hashtag volume per platform package.",
+          "Chiều cao cột tương ứng khối lượng hashtag của từng gói nền tảng.",
+        )}
+        hint={copy(
+          "Axis labels use multi-line wrapping and slight rotation so long platform names stay legible without truncation.",
+          "Nhãn trục được tách dòng và xoay nhẹ để tên nền tảng dài vẫn dễ đọc mà không bị cắt mất nội dung.",
+        )}
+      />
+
       {latestPlatformMixData ? (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
-          <DoughnutTrendChart
+          <BarTrendChart
             data={latestPlatformMixData}
+            options={platformPostMixBarOptions}
             className="bg-linear-to-br from-violet-100/55 via-card to-fuchsia-100/45 dark:from-violet-500/12 dark:via-card/90 dark:to-fuchsia-500/10"
           />
         </motion.div>
@@ -58,7 +125,7 @@ export function LatestOutputPlatformPostMixPanel({
       )}
 
       {latestGeneratedContent.platformPosts.length > 0 ? (
-        <ScrollArea className="mt-4 h-120 pr-3">
+        <ScrollArea className="mt-4 h-96 pr-3">
           <div className="space-y-3">
             {latestGeneratedContent.platformPosts.map((post, index) => (
               <motion.div

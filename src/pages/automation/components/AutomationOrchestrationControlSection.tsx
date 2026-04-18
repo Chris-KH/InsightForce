@@ -127,8 +127,8 @@ export function AutomationOrchestrationControlSection({
           </Badge>
         }
       >
-        <div className="grid gap-5 xl:grid-cols-2 xl:items-start">
-          <div className="space-y-4 rounded-2xl border border-border/60 bg-background/70 p-4">
+        <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
+          <div className="space-y-3 rounded-2xl border border-border/60 bg-background/70 p-3">
             <div className="space-y-1">
               <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                 {copy("Run setup", "Thiết lập chạy")}
@@ -142,7 +142,7 @@ export function AutomationOrchestrationControlSection({
             </div>
 
             <form
-              className="space-y-4"
+              className="space-y-3"
               onSubmit={(event) => void handleSubmit(event)}
             >
               <div className="space-y-1.5">
@@ -260,7 +260,7 @@ export function AutomationOrchestrationControlSection({
             </form>
           </div>
 
-          <div className="space-y-3 rounded-2xl border border-border/60 bg-background/65 p-4">
+          <div className="space-y-3 rounded-2xl border border-border/60 bg-background/65 p-3">
             <div className="space-y-1">
               <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                 {copy("Live reasoning", "Suy luận thời gian thực")}

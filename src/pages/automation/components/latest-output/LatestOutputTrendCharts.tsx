@@ -21,13 +21,14 @@ export function LatestOutputTrendCharts({
   latestInterestLineData,
 }: LatestOutputTrendChartsProps) {
   return (
-    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <PanelCard
         title={copy("Trend Score Distribution", "Phân bố điểm trend")}
         description={copy(
           "Score comparison of ranked opportunities returned by orchestrator.",
           "So sánh điểm của các cơ hội đã xếp hạng từ orchestrator.",
         )}
+        contentClassName="pb-4"
       >
         {latestTrendResults.length > 0 ? (
           <BarTrendChart
@@ -51,6 +52,7 @@ export function LatestOutputTrendCharts({
           "Short-horizon momentum from interest_over_day of the strongest trend signals.",
           "Động lượng ngắn hạn từ interest_over_day của các tín hiệu trend mạnh nhất.",
         )}
+        contentClassName="pb-4"
       >
         {latestInterestLineData ? (
           <LineTrendChart

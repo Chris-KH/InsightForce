@@ -38,6 +38,7 @@ export function LatestOutputOverviewPanel({
         "Freshly generated trend intelligence and content package from your latest run.",
         "Gói trend intelligence và nội dung vừa được tạo từ phiên chạy gần nhất.",
       )}
+      contentClassName="pb-4"
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border border-border/60 bg-background/70 p-3">
@@ -77,7 +78,7 @@ export function LatestOutputOverviewPanel({
         </div>
       </div>
 
-      <div className="mt-4 rounded-2xl border border-primary/22 bg-primary/7 p-4">
+      <div className="mt-3 rounded-2xl border border-primary/22 bg-primary/7 p-3">
         <p className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
           {copy("Selected keyword", "Keyword được chọn")}
         </p>
@@ -94,7 +95,7 @@ export function LatestOutputOverviewPanel({
       </div>
 
       {markdownSummary ? (
-        <div className="mt-4 rounded-2xl border border-border/55 bg-background/60 p-4 text-sm text-muted-foreground">
+        <div className="mt-3 rounded-2xl border border-border/55 bg-background/60 p-3 text-sm text-muted-foreground">
           <p className="mb-1 text-xs font-semibold tracking-[0.12em] uppercase">
             {copy("Narrative summary", "Tóm tắt diễn giải")}
           </p>

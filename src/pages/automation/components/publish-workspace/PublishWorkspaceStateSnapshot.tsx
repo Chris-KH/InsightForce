@@ -27,9 +27,10 @@ export function PublishWorkspaceStateSnapshot({
         "Quick summary to inspect queue state at a glance.",
         "Tóm tắt nhanh để kiểm tra trạng thái hàng đợi.",
       )}
+      contentClassName="pb-4"
     >
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+        <div className="rounded-2xl border border-border/65 bg-background/65 p-3">
           <p className="text-xs text-muted-foreground">
             {copy("Pending", "Đang chờ")}
           </p>
@@ -38,7 +39,7 @@ export function PublishWorkspaceStateSnapshot({
             {pendingCount}
           </p>
         </div>
-        <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+        <div className="rounded-2xl border border-border/65 bg-background/65 p-3">
           <p className="text-xs text-muted-foreground">
             {copy("Published", "Đã đăng")}
           </p>
@@ -47,7 +48,7 @@ export function PublishWorkspaceStateSnapshot({
             {publishedCount}
           </p>
         </div>
-        <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+        <div className="rounded-2xl border border-border/65 bg-background/65 p-3">
           <p className="text-xs text-muted-foreground">
             {copy("Total", "Tổng")}
           </p>

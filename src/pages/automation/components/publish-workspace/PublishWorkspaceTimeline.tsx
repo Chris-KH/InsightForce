@@ -109,10 +109,16 @@ export function PublishWorkspaceTimeline({
   }, [sortedJobs, statusFilter]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <p className="mb-3 text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+        <p className="mb-2 text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
           {copy("Publishing Timeline", "Dòng thời gian xuất bản")}
+        </p>
+        <p className="mb-2 text-xs text-muted-foreground">
+          {copy(
+            "Filter by status to isolate queue bottlenecks and failed retries quickly.",
+            "Lọc theo trạng thái để tách nhanh các điểm nghẽn hàng đợi và lần thử lại bị lỗi.",
+          )}
         </p>
         <ToggleGroup
           type="single"
@@ -143,7 +149,7 @@ export function PublishWorkspaceTimeline({
         {isLoading ? (
           <PanelRowsSkeleton rows={7} />
         ) : filteredJobs.length > 0 ? (
-          <ScrollArea className="h-104 pr-3">
+          <ScrollArea className="h-96 pr-3">
             <div className="space-y-3">
               {filteredJobs.map((job) => (
                 <button
@@ -151,7 +157,7 @@ export function PublishWorkspaceTimeline({
                   type="button"
                   onClick={() => onSelectJob(job.id)}
                   className={cn(
-                    "w-full rounded-2xl border border-border/65 bg-background/65 p-4 text-left transition-colors hover:border-primary/35",
+                    "w-full rounded-2xl border border-border/65 bg-background/65 p-3 text-left transition-colors hover:border-primary/35",
                     selectedJobId === job.id ? "border-primary/45" : undefined,
                   )}
                 >
@@ -192,7 +198,7 @@ export function PublishWorkspaceTimeline({
       </div>
 
       <div>
-        <p className="mb-3 text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+        <p className="mb-2 text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
           {copy("Selected Job Detail", "Chi tiết job đã chọn")}
         </p>
         {!selectedJobId ? (
@@ -215,7 +221,7 @@ export function PublishWorkspaceTimeline({
           />
         ) : selectedJobQuery.data ? (
           <div className="grid gap-3">
-            <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+            <div className="rounded-2xl border border-border/65 bg-background/65 p-3">
               <p className="text-xs text-muted-foreground">
                 {copy("Title", "Tiêu đề")}
               </p>
@@ -224,7 +230,7 @@ export function PublishWorkspaceTimeline({
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+              <div className="rounded-2xl border border-border/65 bg-background/65 p-3">
                 <p className="text-xs text-muted-foreground">
                   {copy("Status", "Trạng thái")}
                 </p>
@@ -232,7 +238,7 @@ export function PublishWorkspaceTimeline({
                   {localizeStatus(selectedJobQuery.data.status, copy)}
                 </p>
               </div>
-              <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+              <div className="rounded-2xl border border-border/65 bg-background/65 p-3">
                 <p className="text-xs text-muted-foreground">
                   {copy("Created", "Tạo lúc")}
                 </p>
@@ -241,7 +247,7 @@ export function PublishWorkspaceTimeline({
                 </p>
               </div>
             </div>
-            <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
+            <div className="rounded-2xl border border-border/65 bg-background/65 p-3">
               <p className="text-xs text-muted-foreground">
                 {copy("Platforms", "Nền tảng")}
               </p>

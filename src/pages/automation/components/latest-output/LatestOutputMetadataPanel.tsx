@@ -23,6 +23,7 @@ export function LatestOutputMetadataPanel({
         "Operational identifiers and artifact pointers returned by backend orchestrator.",
         "Định danh vận hành và đường dẫn artifact được trả về từ backend orchestrator.",
       )}
+      contentClassName="pb-4"
     >
       <div className="space-y-3">
         <div className="rounded-2xl border border-border/60 bg-background/70 p-3 text-xs text-muted-foreground">

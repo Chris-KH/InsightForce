@@ -157,9 +157,7 @@ export function PanelCard({
           {action ? <div>{action}</div> : null}
         </div>
       </CardHeader>
-      <CardContent className={cn("pt-4", contentClassName)}>
-        {children}
-      </CardContent>
+      <CardContent className={cn(contentClassName)}>{children}</CardContent>
     </Card>
   );
 }

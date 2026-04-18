@@ -13,8 +13,13 @@ import {
   extractInterestValues,
   sanitizeTrendResults,
 } from "@/lib/trend-intelligence";
+import {
+  AutomationPriorityGrid,
+  AutomationPriorityItem,
+} from "@/pages/automation/components/AutomationPriorityGrid";
 
 import { LatestOutputMetadataPanel } from "./latest-output/LatestOutputMetadataPanel";
+import { LatestOutputCreatorOptimizationPanel } from "./latest-output/LatestOutputCreatorOptimizationPanel";
 import { LatestOutputOverviewPanel } from "./latest-output/LatestOutputOverviewPanel";
 import { LatestOutputPlatformPostMixPanel } from "./latest-output/LatestOutputPlatformPostMixPanel";
 import { LatestOutputScriptBlueprintPanel } from "./latest-output/LatestOutputScriptBlueprintPanel";
@@ -49,6 +54,21 @@ function computeAverageTrendScore(results: TrendAnalyzeResultItem[]) {
 
 function buildInterestLabels(count: number) {
   return Array.from({ length: count }, (_, index) => `T${index + 1}`);
+}
+
+function toWrappedAxisLabel(value: string) {
+  const tokens = value.split(" ").filter(Boolean);
+
+  if (tokens.length <= 1) {
+    return value;
+  }
+
+  const firstLineLength = Math.ceil(tokens.length / 2);
+
+  return [
+    tokens.slice(0, firstLineLength).join(" "),
+    tokens.slice(firstLineLength).join(" "),
+  ];
 }
 
 export function AutomationLatestOrchestrationOutput() {
@@ -148,7 +168,7 @@ export function AutomationLatestOrchestrationOutput() {
 
     return {
       labels: latestGeneratedContent.platformPosts.map((post) =>
-        formatPlatformLabel(post.platform),
+        toWrappedAxisLabel(formatPlatformLabel(post.platform)),
       ),
       datasets: [
         {
@@ -198,74 +218,111 @@ export function AutomationLatestOrchestrationOutput() {
   }
 
   return (
-    <>
-      <motion.section
-        id="latest-orchestration-output"
-        className="grid scroll-mt-28 gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]"
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <LatestOutputOverviewPanel
-          copy={copy}
-          latestTrendResults={latestTrendResults}
-          latestGeneratedContent={latestGeneratedContent}
-          averageLatestTrendScore={averageLatestTrendScore}
-          latestTopTrend={latestTopTrend}
-          latestHashtags={latestHashtags}
-          markdownSummary={
-            latestOrchestrationOutput?.trend_analysis.markdown_summary
-          }
-        />
+    <AutomationPriorityGrid>
+      <AutomationPriorityItem priority="high" className="scroll-mt-28">
+        <motion.section
+          id="latest-orchestration-output"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <LatestOutputOverviewPanel
+            copy={copy}
+            latestTrendResults={latestTrendResults}
+            latestGeneratedContent={latestGeneratedContent}
+            averageLatestTrendScore={averageLatestTrendScore}
+            latestTopTrend={latestTopTrend}
+            latestHashtags={latestHashtags}
+            markdownSummary={
+              latestOrchestrationOutput?.trend_analysis.markdown_summary
+            }
+          />
+        </motion.section>
+      </AutomationPriorityItem>
 
-        <LatestOutputMetadataPanel
-          copy={copy}
-          latestOrchestrationResponse={latestOrchestrationResponse}
-          latestGeneratedContent={latestGeneratedContent}
-        />
-      </motion.section>
+      <AutomationPriorityItem priority="medium">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <LatestOutputPlatformPostMixPanel
+            copy={copy}
+            latestGeneratedContent={latestGeneratedContent}
+            latestPlatformMixData={latestPlatformMixData}
+          />
+        </motion.div>
+      </AutomationPriorityItem>
 
-      <motion.div
-        className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <LatestOutputPlatformPostMixPanel
-          copy={copy}
-          latestGeneratedContent={latestGeneratedContent}
-          latestPlatformMixData={latestPlatformMixData}
-        />
-        <LatestOutputStoryboardPanel
-          copy={copy}
-          sections={latestGeneratedContent.sections}
-        />
-      </motion.div>
+      <AutomationPriorityItem priority="medium">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <LatestOutputStoryboardPanel
+            copy={copy}
+            sections={latestGeneratedContent.sections}
+          />
+        </motion.div>
+      </AutomationPriorityItem>
 
-      <motion.div
-        initial={{ opacity: 0, y: 22 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.52, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <LatestOutputScriptBlueprintPanel
-          copy={copy}
-          latestGeneratedContent={latestGeneratedContent}
-          latestPublishingWindows={latestPublishingWindows}
-        />
-      </motion.div>
+      <AutomationPriorityItem priority="high">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <LatestOutputCreatorOptimizationPanel
+            copy={copy}
+            latestGeneratedContent={latestGeneratedContent}
+            latestTrendResults={latestTrendResults}
+          />
+        </motion.div>
+      </AutomationPriorityItem>
 
-      <motion.div
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.46, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <LatestOutputTrendCharts
-          copy={copy}
-          latestTrendResults={latestTrendResults}
-          latestTrendBarData={latestTrendBarData}
-          latestInterestLineData={latestInterestLineData}
-        />
-      </motion.div>
-    </>
+      <AutomationPriorityItem priority="medium">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.46, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <LatestOutputTrendCharts
+            copy={copy}
+            latestTrendResults={latestTrendResults}
+            latestTrendBarData={latestTrendBarData}
+            latestInterestLineData={latestInterestLineData}
+          />
+        </motion.div>
+      </AutomationPriorityItem>
+
+      <AutomationPriorityItem priority="low">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <LatestOutputMetadataPanel
+            copy={copy}
+            latestOrchestrationResponse={latestOrchestrationResponse}
+            latestGeneratedContent={latestGeneratedContent}
+          />
+        </motion.div>
+      </AutomationPriorityItem>
+
+      <AutomationPriorityItem priority="high">
+        <motion.div
+          initial={{ opacity: 0, y: 22 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.52, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <LatestOutputScriptBlueprintPanel
+            copy={copy}
+            latestGeneratedContent={latestGeneratedContent}
+            latestPublishingWindows={latestPublishingWindows}
+          />
+        </motion.div>
+      </AutomationPriorityItem>
+    </AutomationPriorityGrid>
   );
 }

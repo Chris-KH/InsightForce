@@ -14,8 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { getQueryErrorMessage } from "@/lib/query-error";
+import { AutomationHintTooltip } from "@/pages/automation/components/AutomationHintTooltip";
 import { AutomationLatestOrchestrationOutput } from "@/pages/automation/components/AutomationLatestOrchestrationOutput";
 import { AutomationOrchestrationControlSection } from "@/pages/automation/components/AutomationOrchestrationControlSection";
+import {
+  AutomationPriorityGrid,
+  AutomationPriorityItem,
+} from "@/pages/automation/components/AutomationPriorityGrid";
 import { PublishWorkspaceSection } from "@/pages/automation/components/PublishWorkspaceSection";
 
 type AutomationWorkspaceTab = "orchestration" | "publishing";
@@ -132,7 +137,7 @@ export function AutomationPage() {
 
   return (
     <motion.div
-      className="grid gap-8"
+      className="grid gap-6"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -182,7 +187,7 @@ export function AutomationPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ ...sectionTransition, delay: 0.04 }}
       >
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
             {copy("Workspace mode", "Chế độ làm việc")}
           </p>
@@ -192,12 +197,22 @@ export function AutomationPage() {
               "Orchestration tạo đầu ra xu hướng/nội dung. Publishing chuyển đầu ra đó thành bài đăng sẵn sàng cho từng nền tảng.",
             )}
           </p>
+          <AutomationHintTooltip
+            label={copy(
+              "Layout adapts by priority: High (full row), Medium (half row), Low (one-third row).",
+              "Bố cục tự co giãn theo ưu tiên: High (toàn hàng), Medium (nửa hàng), Low (một phần ba hàng).",
+            )}
+            hint={copy(
+              "Keep mission-critical actions in High cards, supporting analytics in Medium cards, and optional context in Low cards for faster scanning.",
+              "Đặt tác vụ quan trọng ở thẻ High, analytics hỗ trợ ở thẻ Medium, và thông tin phụ ở thẻ Low để quét thông tin nhanh hơn.",
+            )}
+          />
         </div>
 
         <Tabs
           value={workspaceTab}
           onValueChange={handleWorkspaceTabChange}
-          className="gap-6"
+          className="gap-4"
         >
           <TabsList variant="line" className="w-full justify-start">
             <TabsTrigger value="orchestration">
@@ -213,100 +228,139 @@ export function AutomationPage() {
           <TabsContent
             value="orchestration"
             forceMount
-            className="flex flex-col gap-8"
+            className="flex flex-col gap-6"
           >
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...sectionTransition, delay: 0.04 }}
-              className="flex flex-col gap-8"
+              className="flex flex-col gap-4"
             >
-              <AutomationOrchestrationControlSection
-                onOpenPublishing={() => setWorkspaceTab("publishing")}
-              />
-              <AutomationLatestOrchestrationOutput />
+              <AutomationPriorityGrid>
+                <AutomationPriorityItem priority="high">
+                  <AutomationOrchestrationControlSection
+                    onOpenPublishing={() => setWorkspaceTab("publishing")}
+                  />
+                </AutomationPriorityItem>
 
-              <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                <motion.div
-                  whileHover={{ y: -3 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <PanelCard
-                    title={copy("Runtime Queue Pulse", "Xung nhịp hàng đợi")}
-                    description={copy(
-                      "Operational pressure from pending, published, and failed publish jobs.",
-                      "Áp lực vận hành từ các publish job đang chờ, đã đăng và thất bại.",
-                    )}
-                    action={
-                      <Badge
-                        variant="outline"
-                        className="rounded-full border-primary/25 bg-background/75 text-primary"
-                      >
-                        {copy("Ops Monitor", "Giám sát vận hành")}
-                      </Badge>
-                    }
+                <AutomationPriorityItem priority="high">
+                  <AutomationLatestOrchestrationOutput />
+                </AutomationPriorityItem>
+
+                <AutomationPriorityItem priority="medium">
+                  <motion.div
+                    whileHover={{ y: -3 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full"
                   >
-                    {publishJobs.length > 0 ? (
-                      <BarTrendChart
-                        data={queueBarData}
-                        className="bg-linear-to-br from-cyan-100/60 via-card to-emerald-100/45 dark:from-cyan-500/12 dark:via-card/90 dark:to-emerald-500/10"
-                      />
-                    ) : (
-                      <InlineQueryState
-                        state="empty"
-                        message={copy(
-                          "No publish jobs found.",
-                          "Chưa có job đăng bài nào.",
+                    <PanelCard
+                      title={copy("Runtime Queue Pulse", "Xung nhịp hàng đợi")}
+                      description={copy(
+                        "Operational pressure from pending, published, and failed publish jobs.",
+                        "Áp lực vận hành từ các publish job đang chờ, đã đăng và thất bại.",
+                      )}
+                      className="h-full"
+                      contentClassName="pb-4"
+                      action={
+                        <Badge
+                          variant="outline"
+                          className="rounded-full border-primary/25 bg-background/75 text-primary"
+                        >
+                          {copy("Ops Monitor", "Giám sát vận hành")}
+                        </Badge>
+                      }
+                    >
+                      {publishJobs.length > 0 ? (
+                        <BarTrendChart
+                          data={queueBarData}
+                          className="bg-linear-to-br from-cyan-100/60 via-card to-emerald-100/45 dark:from-cyan-500/12 dark:via-card/90 dark:to-emerald-500/10"
+                        />
+                      ) : (
+                        <InlineQueryState
+                          state="empty"
+                          message={copy(
+                            "No publish jobs found.",
+                            "Chưa có job đăng bài nào.",
+                          )}
+                        />
+                      )}
+
+                      <AutomationHintTooltip
+                        className="mt-2"
+                        label={copy(
+                          "Queue pulse helps identify publishing bottlenecks quickly.",
+                          "Queue pulse giúp phát hiện nhanh điểm nghẽn xuất bản.",
+                        )}
+                        hint={copy(
+                          "A rising Pending bar with a flat Published bar usually indicates API throughput, platform validation, or scheduling bottlenecks.",
+                          "Khi Pending tăng nhưng Published đứng yên, thường là dấu hiệu tắc nghẽn ở thông lượng API, bước kiểm tra nền tảng hoặc lịch đăng.",
                         )}
                       />
-                    )}
-                  </PanelCard>
-                </motion.div>
+                    </PanelCard>
+                  </motion.div>
+                </AutomationPriorityItem>
 
-                <motion.div
-                  whileHover={{ y: -3 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <PanelCard
-                    title={copy("Agent Readiness", "Mức sẵn sàng của agent")}
-                    description={copy(
-                      "Live ratio between online and recovering agent processes.",
-                      "Tỷ lệ trực tiếp giữa process agent đang online và đang khôi phục.",
-                    )}
-                    action={
-                      <Badge
-                        variant="outline"
-                        className="rounded-full border-primary/25 bg-background/75 text-primary"
-                      >
-                        {onlineAgentsCount}/{processes.length}{" "}
-                        {copy("online", "online")}
-                      </Badge>
-                    }
+                <AutomationPriorityItem priority="medium">
+                  <motion.div
+                    whileHover={{ y: -3 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full"
                   >
-                    {processes.length > 0 ? (
-                      <DoughnutTrendChart
-                        data={agentsMixData}
-                        className="bg-linear-to-br from-indigo-100/55 via-card to-cyan-100/45 dark:from-indigo-500/12 dark:via-card/90 dark:to-cyan-500/10"
-                      />
-                    ) : (
-                      <InlineQueryState
-                        state="empty"
-                        message={copy(
-                          "No process state available.",
-                          "Chưa có dữ liệu trạng thái process.",
+                    <PanelCard
+                      title={copy("Agent Readiness", "Mức sẵn sàng của agent")}
+                      description={copy(
+                        "Live ratio between online and recovering agent processes.",
+                        "Tỷ lệ trực tiếp giữa process agent đang online và đang khôi phục.",
+                      )}
+                      className="h-full"
+                      contentClassName="pb-4"
+                      action={
+                        <Badge
+                          variant="outline"
+                          className="rounded-full border-primary/25 bg-background/75 text-primary"
+                        >
+                          {onlineAgentsCount}/{processes.length}{" "}
+                          {copy("online", "online")}
+                        </Badge>
+                      }
+                    >
+                      {processes.length > 0 ? (
+                        <DoughnutTrendChart
+                          data={agentsMixData}
+                          className="bg-linear-to-br from-indigo-100/55 via-card to-cyan-100/45 dark:from-indigo-500/12 dark:via-card/90 dark:to-cyan-500/10"
+                        />
+                      ) : (
+                        <InlineQueryState
+                          state="empty"
+                          message={copy(
+                            "No process state available.",
+                            "Chưa có dữ liệu trạng thái process.",
+                          )}
+                        />
+                      )}
+
+                      <AutomationHintTooltip
+                        className="mt-2"
+                        label={copy(
+                          "Readiness ratio tracks service resilience in real time.",
+                          "Tỷ lệ sẵn sàng phản ánh độ ổn định dịch vụ theo thời gian thực.",
+                        )}
+                        hint={copy(
+                          "If online ratio drops below 70%, throttle new publish jobs and run health checks before launching another orchestration cycle.",
+                          "Nếu tỷ lệ online dưới 70%, nên giảm tốc tạo publish job mới và chạy health check trước khi mở phiên orchestration tiếp theo.",
                         )}
                       />
-                    )}
-                  </PanelCard>
-                </motion.div>
-              </div>
+                    </PanelCard>
+                  </motion.div>
+                </AutomationPriorityItem>
+              </AutomationPriorityGrid>
             </motion.div>
           </TabsContent>
 
           <TabsContent
             value="publishing"
             forceMount
-            className="flex flex-col gap-8"
+            className="flex flex-col gap-6"
           >
             <motion.div
               initial={{ opacity: 0, y: 12 }}
