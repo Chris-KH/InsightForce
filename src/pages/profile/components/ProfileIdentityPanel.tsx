@@ -87,6 +87,7 @@ export function ProfileIdentityPanel({
         "Thông tin nhận diện và định vị hiển thị trong toàn hệ thống.",
       )}
       className="h-full"
+      contentClassName="pt-3"
     >
       <div className="grid gap-4">
         <div className="relative overflow-hidden rounded-2xl border border-border/65 bg-muted/35 p-3">

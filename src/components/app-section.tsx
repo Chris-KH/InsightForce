@@ -117,6 +117,7 @@ type PanelProps = {
   description?: string;
   action?: ReactNode;
   className?: string;
+  contentClassName?: string;
   children: ReactNode;
 };
 
@@ -125,6 +126,7 @@ export function PanelCard({
   description,
   action,
   className,
+  contentClassName,
   children,
 }: PanelProps) {
   return (
@@ -140,7 +142,7 @@ export function PanelCard({
         <div className="absolute -top-28 -right-24 size-44 rounded-full bg-primary/13 blur-3xl dark:bg-primary/10" />
       </div>
 
-      <CardHeader className="border-b border-border/50 pb-5">
+      <CardHeader className="border-b border-border/50 pb-4">
         <div className="flex items-start justify-between gap-4">
           <div>
             <CardTitle className="font-heading text-2xl font-semibold text-foreground">
@@ -155,7 +157,9 @@ export function PanelCard({
           {action ? <div>{action}</div> : null}
         </div>
       </CardHeader>
-      <CardContent className="pt-6">{children}</CardContent>
+      <CardContent className={cn("pt-4", contentClassName)}>
+        {children}
+      </CardContent>
     </Card>
   );
 }

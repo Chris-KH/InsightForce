@@ -160,6 +160,7 @@ export function ProfileHRDashboardPanel({
         "Snapshot of profile readiness and an audit trail of profile changes.",
         "Tổng quan mức sẵn sàng hồ sơ và nhật ký thay đổi thông tin.",
       )}
+      contentClassName="pt-3"
       action={
         <Badge
           variant="outline"

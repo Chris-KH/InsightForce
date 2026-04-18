@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { RefreshCw, Save, UserCircle2 } from "lucide-react";
+import { UserCircle2 } from "lucide-react";
 
 import {
   useUpdateUserProfileMutation,
@@ -13,7 +13,6 @@ import type {
 import { InlineQueryState, QueryStateCard } from "@/components/app-query-state";
 import { PanelCard, SectionHeader } from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -27,6 +26,7 @@ import { useBilingual } from "@/hooks/use-bilingual";
 import { formatDateTime } from "@/lib/insight-formatters";
 import { getQueryErrorMessage } from "@/lib/query-error";
 import { ProfileContentDirectionTab } from "@/pages/profile/components/ProfileContentDirectionTab";
+import { ProfileDraftActionBar } from "@/pages/profile/components/ProfileDraftActionBar";
 import { ProfileHRDashboardPanel } from "@/pages/profile/components/ProfileHRDashboardPanel";
 import { ProfileIdentityPanel } from "@/pages/profile/components/ProfileIdentityPanel";
 import { ProfilePersonalTab } from "@/pages/profile/components/ProfilePersonalTab";
@@ -112,8 +112,8 @@ export function ProfilePage() {
 
     const incomingProfile = profileQuery.data.profile;
     const shouldHydrateDraft =
-      !draftProfile ||
-      draftProfile.user_id !== incomingProfile.user_id ||
+      !savedProfile ||
+      savedProfile.user_id !== incomingProfile.user_id ||
       !wasDirtyRef.current;
 
     setSavedProfile(incomingProfile);
@@ -137,13 +137,7 @@ export function ProfilePage() {
     );
 
     wasDirtyRef.current = false;
-  }, [
-    activeUser?.id,
-    copy,
-    draftProfile,
-    initializeTimeline,
-    profileQuery.data,
-  ]);
+  }, [activeUser?.id, copy, initializeTimeline, profileQuery.data]);
 
   const isProfileLoading = profileQuery.isLoading && !profileQuery.data;
   const baseProfile = savedProfile;
@@ -276,49 +270,26 @@ export function ProfilePage() {
           "Quản lý nhận diện, định hướng nội dung và tùy chọn xuất bản cho các workflow tự động hóa.",
         )}
         action={
-          <div className="flex flex-wrap items-center gap-2">
-            <Select
-              value={selectedUserId}
-              onValueChange={setSelectedUserId}
-              disabled={users.length === 0}
-            >
-              <SelectTrigger className="w-56">
-                <SelectValue
-                  placeholder={copy("Select user", "Chọn người dùng")}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.email}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleResetProfile}
-              disabled={!isDirty || updateProfileMutation.isPending}
-            >
-              <RefreshCw data-icon="inline-start" />
-              {copy("Reset", "Đặt lại")}
-            </Button>
-
-            <Button
-              type="button"
-              onClick={() => {
-                void handleSaveProfile();
-              }}
-              disabled={!isDirty || updateProfileMutation.isPending}
-            >
-              <Save data-icon="inline-start" />
-              {copy("Save Changes", "Lưu thay đổi")}
-            </Button>
-          </div>
+          <Select
+            value={selectedUserId}
+            onValueChange={setSelectedUserId}
+            disabled={users.length === 0}
+          >
+            <SelectTrigger className="w-56">
+              <SelectValue
+                placeholder={copy("Select user", "Chọn người dùng")}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.email}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         }
       />
 
@@ -360,12 +331,6 @@ export function ProfilePage() {
         />
       ) : (
         <>
-          <ProfileHRDashboardPanel
-            profile={draftProfile}
-            isDirty={isDirty}
-            timeline={timelineEvents}
-          />
-
           <div className="grid gap-6 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
             <ProfileIdentityPanel
               profile={draftProfile}
@@ -388,6 +353,7 @@ export function ProfilePage() {
                 "Structured tabs to manage personal data, content direction, and operational preferences.",
                 "Các tab được cấu trúc để quản lý thông tin cá nhân, định hướng nội dung và tùy chọn vận hành.",
               )}
+              contentClassName="pt-3"
               action={
                 <Badge
                   variant="outline"
@@ -399,7 +365,7 @@ export function ProfilePage() {
                 </Badge>
               }
             >
-              <Tabs defaultValue="personal" className="gap-5">
+              <Tabs defaultValue="personal" className="gap-3">
                 <TabsList
                   variant="line"
                   className="w-full justify-start overflow-x-auto"
@@ -415,21 +381,21 @@ export function ProfilePage() {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="personal" className="pt-1">
+                <TabsContent value="personal" className="pt-0">
                   <ProfilePersonalTab
                     profile={draftProfile}
                     onUpdate={handleUpdateProfile}
                   />
                 </TabsContent>
 
-                <TabsContent value="direction" className="pt-1">
+                <TabsContent value="direction" className="pt-0">
                   <ProfileContentDirectionTab
                     profile={draftProfile}
                     onUpdateContentDirection={handleUpdateContentDirection}
                   />
                 </TabsContent>
 
-                <TabsContent value="preferences" className="pt-1">
+                <TabsContent value="preferences" className="pt-0">
                   <ProfilePreferencesTab
                     profile={draftProfile}
                     onUpdateSettings={handleUpdateSettings}
@@ -438,6 +404,21 @@ export function ProfilePage() {
               </Tabs>
             </PanelCard>
           </div>
+
+          <ProfileDraftActionBar
+            isDirty={isDirty}
+            isSaving={updateProfileMutation.isPending}
+            onReset={handleResetProfile}
+            onSave={() => {
+              void handleSaveProfile();
+            }}
+          />
+
+          <ProfileHRDashboardPanel
+            profile={draftProfile}
+            isDirty={isDirty}
+            timeline={timelineEvents}
+          />
         </>
       )}
 

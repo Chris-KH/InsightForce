@@ -26,6 +26,9 @@ type ProfilePreferencesTabProps = {
   onUpdateSettings: (patch: Partial<UserProfile["settings"]>) => void;
 };
 
+const TOGGLE_ITEM_ACTIVE_CLASS =
+  "rounded-full border-border/80 data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground";
+
 export function ProfilePreferencesTab({
   profile,
   onUpdateSettings,
@@ -158,7 +161,7 @@ export function ProfilePreferencesTab({
             <ToggleGroupItem
               key={option.value}
               value={option.value}
-              className="rounded-full"
+              className={TOGGLE_ITEM_ACTIVE_CLASS}
             >
               {localizeOptionLabel(option, copy)}
             </ToggleGroupItem>
