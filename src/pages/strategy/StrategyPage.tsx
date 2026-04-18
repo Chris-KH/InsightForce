@@ -52,8 +52,8 @@ function StrategyPageContent({ locale }: StrategyPageContentProps) {
           "Không gian trí tuệ xu hướng",
         )}
         title={copy(
-          "Creator Trend Intelligence Hub",
-          "Hub xu hướng cho creator",
+          "Trend History & Keyword Search",
+          "Lịch sử xu hướng & tìm kiếm keyword",
         )}
         description={copy(
           "Discover what topics are heating up and turn them into content actions in minutes.",

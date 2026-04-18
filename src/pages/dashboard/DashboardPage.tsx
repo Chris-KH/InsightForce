@@ -98,17 +98,17 @@ export function DashboardPage() {
         />
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-2">
-        <DashboardTrendScoreBarPanel
-          copy={copy}
-          data={trendScoreBarData}
-          options={trendScoreBarOptions}
-        />
-
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
         <DashboardTrendMomentumPanel
           copy={copy}
           data={trendMomentumData}
           options={trendMomentumOptions}
+        />
+
+        <DashboardTrendScoreBarPanel
+          copy={copy}
+          data={trendScoreBarData}
+          options={trendScoreBarOptions}
         />
       </section>
 

@@ -37,7 +37,7 @@ export const APP_NAV_ITEMS: NavItem[] = [
   },
   {
     key: "strategy",
-    label: { en: "Strategy", vi: "Chiến lược" },
+    label: { en: "Trends", vi: "Xu hướng" },
     path: "/app/strategy",
     icon: Compass,
     group: "primary",

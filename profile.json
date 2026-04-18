@@ -1,0 +1,49 @@
+{
+  "email": "lifehack.creator@example.com",
+  "display_name": "Góc Nhỏ Thông Minh",
+  "phone_number": "+84 912 345 678",
+  "location": "Ho Chi Minh City, Vietnam",
+  "avatar_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrqZGvb9e5uldxXG2scoB4lw-PbexUaZQf9YCg-6xhwuH_sIuwLnfRX35aLZcFSSGrtUt22InF6iXL9BWyuNwN5-nA8EDOt-UopX2Sw0I&s=10",
+  "about_me": "Tôi xây dựng nội dung giúp người xem sống gọn gàng, thông minh và bình tĩnh hơn mỗi ngày. Phong cách của tôi là gần gũi, thực tế, có tính giáo dục nhưng không lên lớp. Tôi thích biến những vấn đề nhỏ trong đời sống thành các mẹo dễ làm, các câu chuyện ngắn có bài học, và những góc nhìn giúp người xem cải thiện thói quen sống.",
+  "content_preferences": {
+    "content_groups": [
+      "Mẹo vặt cuộc sống",
+      "Lifehack gia đình",
+      "Tổ chức nhà cửa",
+      "Thói quen cá nhân",
+      "Câu chuyện giáo dục",
+      "Kỹ năng sống"
+    ],
+    "priority_formats": [
+      "Bài post nhiều ảnh",
+      "Chuỗi bài viết"
+    ],
+    "keyword_hashtags": [
+      "meovatcuocsong",
+      "lifehack",
+      "songthongminh",
+      "thoiquentot",
+      "nhacuasachgon",
+      "ky nang song",
+      "meohaymoingay",
+      "cauchuyengiaoduc"
+    ],
+    "audience_persona": "Người Việt từ 22-40 tuổi, bận rộn với công việc và gia đình, muốn học các mẹo đơn giản để sống ngăn nắp hơn, tiết kiệm thời gian hơn và cải thiện bản thân qua những câu chuyện dễ hiểu, thực tế.",
+    "focus_content_goal": "Xây dựng một kênh nội dung đáng tin cậy về mẹo vặt đời sống và giáo dục thói quen, giúp người xem lưu bài, chia sẻ cho bạn bè và quay lại mỗi ngày để học thêm một điều nhỏ nhưng hữu ích."
+  },
+  "options": {
+    "timezone": "Asia/Saigon",
+    "linked_platforms": [
+      "facebook",
+      "instagram",
+      "tiktok"
+    ],
+    "default_visibility": "public",
+    "default_post_times": {
+      "facebook": "20:00",
+      "instagram": "21:00",
+      "tiktok": "19:30"
+    },
+    "weekly_content_frequency": 5
+  }
+}

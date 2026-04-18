@@ -683,6 +683,7 @@ export function useDashboardWorkspaceData(
             display: false,
           },
           ticks: {
+            display: false,
             color: "#64748b",
             font: {
               size: 11,
