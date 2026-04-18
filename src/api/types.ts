@@ -34,7 +34,7 @@ export type UploadVideoResponse = {
 
 export type HealthResponse = {
   status: string;
-  service: string;
+  service?: string;
 };
 
 export type AgentProcessStatus = {
@@ -590,7 +590,7 @@ export type UploadPostPostAnalyticsEnvelope = {
   payload: UploadPostPostAnalyticsPayload;
 };
 
-export type PostAgentDecision = "asking" | "approve" | "reject";
+export type PostAgentDecision = "asking" | "approve" | "deny";
 
 export type PostAgentRequest = {
   prompt: string;
@@ -623,6 +623,7 @@ export type TrendAnalyzeResultItem = {
   interest_over_day: Array<number | TrendInterestPoint>;
   avg_views_per_hour: number;
   recommended_action: string;
+  top_videos: string[];
   top_hashtags: string[];
   google?: Record<string, unknown> | null;
   tiktok?: Record<string, unknown> | null;
@@ -668,22 +669,32 @@ export type GeneratedContentThumbnail = {
   output_path: string;
 };
 
-export type GeneratedContentVideoScriptSection = {
-  timestamp: string;
-  label: string;
-  narration: string;
-  notes: string;
-  thumbnail?: GeneratedContentThumbnail | null;
+export type GeneratedContentPostContent = {
+  post_type: string;
+  title: string;
+  hook: string;
+  caption: string;
+  description: string;
+  body: string;
+  call_to_action: string;
+  hashtags: string[];
+  tone: string;
+  personalization_notes: string[];
 };
 
-export type GeneratedContentVideoScript = {
+export type GeneratedContentImageItem = {
+  index: number;
   title: string;
-  duration_estimate: string;
-  hook: string;
-  sections: GeneratedContentVideoScriptSection[];
-  call_to_action: string;
-  captions_style: string;
-  music_mood: string;
+  description: string;
+  prompt: string;
+  style: string;
+  size: string;
+  output_path: string;
+  id: string;
+  image_url: string;
+  local_path: string;
+  created_at: string;
+  image_store_error: string;
 };
 
 export type GeneratedContentPlatformPost = {
@@ -691,7 +702,8 @@ export type GeneratedContentPlatformPost = {
   hashtags: string[];
   cta: string;
   best_post_time: string;
-  thumbnail_description: string;
+  image_notes: string;
+  thumbnail_description?: string;
 };
 
 export type GeneratedContentPlatformPosts = {
@@ -701,32 +713,41 @@ export type GeneratedContentPlatformPosts = {
   [platform: string]: GeneratedContentPlatformPost | undefined;
 };
 
+export type GeneratedContentPublishing = {
+  default_visibility: string;
+  recommended_platforms: string[];
+  timezone: string;
+  weekly_content_frequency: number;
+};
+
 export type OrchestratorGeneratedContent = {
   selected_keyword: string;
   main_title: string;
-  video_script: GeneratedContentVideoScript;
+  post_content: GeneratedContentPostContent;
+  image_set: GeneratedContentImageItem[];
   platform_posts: GeneratedContentPlatformPosts;
-  thumbnail?: GeneratedContentThumbnail | null;
-  music_background: string;
+  publishing: GeneratedContentPublishing;
   error?: Record<string, unknown> | null;
 };
 
 export type GeneratedContentResponse = {
-  id: string;
+  id?: string | null;
   user_id?: string | null;
   trend_analysis_id?: string | null;
-  selected_keyword?: string | null;
-  main_title?: string | null;
-  video_script:
-    | GeneratedContentVideoScript
-    | Record<string, unknown>
-    | Array<unknown>;
+  selected_keyword: string;
+  main_title: string;
+  post_content: GeneratedContentPostContent | Record<string, unknown>;
+  image_set: GeneratedContentImageItem[] | Array<unknown>;
   platform_posts: GeneratedContentPlatformPosts | Record<string, unknown>;
-  thumbnail?: GeneratedContentThumbnail | Record<string, unknown> | null;
-  music_background?: string | null;
-  raw_output: Record<string, unknown>;
+  publishing: GeneratedContentPublishing | Record<string, unknown>;
+  error?: Record<string, unknown> | null;
   status: string;
   created_at: string;
+  // Legacy compatibility for older persisted rows and historical UI flows.
+  video_script?: Record<string, unknown> | Array<unknown>;
+  thumbnail?: GeneratedContentThumbnail | Record<string, unknown> | null;
+  music_background?: string | null;
+  raw_output?: Record<string, unknown>;
 };
 
 export type GeneratedContentsListResponse = {
@@ -735,13 +756,18 @@ export type GeneratedContentsListResponse = {
 
 export type OrchestratorRequest = {
   prompt: string;
-  save_files?: boolean;
   user_id?: string | null;
+  save_files?: boolean;
+  include_raw_response?: boolean;
 };
 
 export type OrchestratedOutput = {
   trend_analysis: TrendAnalyzeResponse;
   generated_content: OrchestratorGeneratedContent;
+  persistence_skipped?: {
+    reason?: string;
+    details?: unknown[];
+  };
 };
 
 export type OrchestratorResponse = {
@@ -754,17 +780,43 @@ export type OrchestratorResponse = {
   output_file?: string | null;
 };
 
+export type UserContentPreferences = {
+  content_groups: string[];
+  priority_formats: string[];
+  keyword_hashtags: string[];
+  audience_persona: string;
+  focus_content_goal: string;
+};
+
+export type UserOptions = {
+  timezone: string;
+  linked_platforms: string[];
+  default_visibility: string;
+  default_post_times: Record<string, string>;
+  weekly_content_frequency: number;
+};
+
 export type UserCreateRequest = {
   email: string;
-  name?: string | null;
-  plan?: string | null;
+  display_name?: string | null;
+  phone_number?: string | null;
+  location?: string | null;
+  avatar_url?: string | null;
+  about_me?: string | null;
+  content_preferences?: Partial<UserContentPreferences>;
+  options?: Partial<UserOptions>;
 };
 
 export type UserResponse = {
   id: string;
   email: string;
-  name?: string | null;
-  plan?: string | null;
+  display_name?: string | null;
+  phone_number?: string | null;
+  location?: string | null;
+  avatar_url?: string | null;
+  about_me?: string | null;
+  content_preferences: UserContentPreferences;
+  options: UserOptions;
   created_at: string;
 };
 

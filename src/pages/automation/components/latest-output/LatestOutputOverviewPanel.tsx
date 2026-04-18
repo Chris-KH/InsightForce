@@ -61,7 +61,7 @@ export function LatestOutputOverviewPanel({
 
         <div className="rounded-2xl border border-border/60 bg-background/70 p-3">
           <p className="text-[10px] tracking-[0.13em] text-muted-foreground uppercase">
-            {copy("Storyboard sections", "Số phân đoạn")}
+            {copy("Image cards", "Số ảnh")}
           </p>
           <p className="mt-1 text-base font-semibold text-foreground">
             {formatCompactNumber(latestGeneratedContent.sections.length)}
@@ -89,6 +89,7 @@ export function LatestOutputOverviewPanel({
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
           {latestGeneratedContent.mainTitle ||
+            latestGeneratedContent.description ||
             latestGeneratedContent.videoScriptTitle ||
             "--"}
         </p>

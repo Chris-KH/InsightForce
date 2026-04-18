@@ -7,12 +7,13 @@ import {
 import { queryClient } from "@/app/query-client";
 import { orchestrateAgentsPipeline } from "@/api/agents.api";
 import { ApiError } from "@/api/http-client";
-import { analyzeTrend } from "@/api/trends.api";
-import type {
-  OrchestratorResponse,
-  TrendAnalyzeRequest,
-  TrendAnalyzeResponse,
-} from "@/api/types";
+import { getTrendHistory } from "@/api/trends.api";
+import type { OrchestratorResponse, TrendAnalyzeResponse } from "@/api/types";
+
+type StrategyTrendPromptRequest = {
+  query: string;
+  user_id?: string | null;
+};
 
 type AsyncTaskStatus = "idle" | "pending" | "succeeded" | "failed";
 
@@ -43,7 +44,15 @@ export type RuntimeTasksState = {
 };
 
 const DEFAULT_AUTOMATION_PROMPT =
-  "Suggest a 7-day content plan to increase organic engagement for a lifestyle creator.";
+  import.meta.env.VITE_DEFAULT_ORCHESTRATION_PROMPT?.trim() ||
+  "Chủ đề cụ thể đang trend trong ngày hôm nay về mẹo vặt sức khỏe là gì và tôi nên tạo nội dung như thế nào?";
+
+const DEFAULT_AUTOMATION_USER_ID =
+  import.meta.env.VITE_INSIGHTFORGE_DEFAULT_USER_ID?.trim() ||
+  "eb892952-0f26-45e1-860b-1dc7d572c553";
+
+const DEFAULT_AUTOMATION_SAVE_FILES =
+  import.meta.env.VITE_DEFAULT_ORCHESTRATION_SAVE_FILES === "true";
 
 const initialAsyncTaskState = <TData>(): AsyncTaskState<TData> => ({
   status: "idle",
@@ -59,8 +68,8 @@ export const runtimeTasksInitialState: RuntimeTasksState = {
   automation: {
     form: {
       prompt: DEFAULT_AUTOMATION_PROMPT,
-      userId: "",
-      saveFiles: true,
+      userId: DEFAULT_AUTOMATION_USER_ID,
+      saveFiles: DEFAULT_AUTOMATION_SAVE_FILES,
     },
     orchestration: initialAsyncTaskState<OrchestratorResponse>(),
   },
@@ -120,7 +129,7 @@ export const runAutomationOrchestration = createAsyncThunk<
 
 export const runStrategyTrendAnalyze = createAsyncThunk<
   TrendAnalyzeResponse,
-  TrendAnalyzeRequest,
+  StrategyTrendPromptRequest,
   {
     rejectValue: string;
   }
@@ -128,10 +137,37 @@ export const runStrategyTrendAnalyze = createAsyncThunk<
   "runtimeTasks/runStrategyTrendAnalyze",
   async (payload, { rejectWithValue }) => {
     try {
-      return await analyzeTrend(payload);
+      const normalizedQuery = payload.query.trim().toLowerCase();
+      const history = await getTrendHistory({
+        userId: payload.user_id ?? undefined,
+        limit: 20,
+      });
+
+      const matchingRecord = history.items.find(
+        (record) =>
+          record.results.length > 0 &&
+          record.query.trim().toLowerCase() === normalizedQuery,
+      );
+
+      const latestRecord = [...history.items]
+        .sort(
+          (left, right) =>
+            Date.parse(right.created_at) - Date.parse(left.created_at),
+        )
+        .find((record) => record.results.length > 0);
+
+      const targetRecord = matchingRecord ?? latestRecord;
+
+      if (!targetRecord) {
+        return rejectWithValue(
+          "No saved trend history found for the selected user.",
+        );
+      }
+
+      return targetRecord;
     } catch (error) {
       return rejectWithValue(
-        toErrorMessage(error, "Unable to analyze trend prompt."),
+        toErrorMessage(error, "Unable to load trend history."),
       );
     }
   },
@@ -161,6 +197,10 @@ export const runtimeTasksSlice = createSlice({
       if (state.strategy.trendAnalyze.status === "failed") {
         state.strategy.trendAnalyze.status = "idle";
       }
+    },
+    resetStrategyTrendTask(state) {
+      state.strategy.trendAnalyze =
+        initialAsyncTaskState<TrendAnalyzeResponse>();
     },
   },
   extraReducers: (builder) => {
@@ -225,7 +265,7 @@ export const runtimeTasksSlice = createSlice({
         state.strategy.trendAnalyze.status = "failed";
         state.strategy.trendAnalyze.completedAt = Date.now();
         state.strategy.trendAnalyze.errorMessage =
-          action.payload ?? "Unable to analyze trend prompt.";
+          action.payload ?? "Unable to load trend history.";
       });
   },
 });
@@ -233,6 +273,7 @@ export const runtimeTasksSlice = createSlice({
 export const {
   clearAutomationError,
   clearStrategyTrendError,
+  resetStrategyTrendTask,
   setAutomationPrompt,
   setAutomationSaveFiles,
   setAutomationUserId,

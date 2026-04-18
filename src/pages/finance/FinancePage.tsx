@@ -60,7 +60,12 @@ export function FinancePage() {
   const copy = useBilingual();
 
   const usersQuery = useUsersQuery();
-  const trendHistoryQuery = useTrendHistoryQuery({ limit: 20 });
+  const trendUserId = usersQuery.data?.users[0]?.id;
+  const trendHistoryQuery = useTrendHistoryQuery({
+    userId: trendUserId,
+    limit: 20,
+    enabled: Boolean(trendUserId),
+  });
   const generatedContentsQuery = useGeneratedContentsQuery({ limit: 40 });
   const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 60 });
 

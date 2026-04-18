@@ -55,11 +55,11 @@ function toText(value: unknown, fallback = "") {
 
 function buildScriptPrompt(topic: TrendTopic) {
   return [
-    `Create a short-form Vietnamese video script about: ${topic.keyword}.`,
-    `Goal: maximize retention and conversion.`,
+    `Create a Vietnamese multi-image social post about: ${topic.keyword}.`,
+    `Goal: maximize retention and conversion while keeping the message practical.`,
     `Trend score: ${topic.trendScore}.`,
     `Growth momentum: ${topic.growthPercent.toFixed(1)}%.`,
-    `Use practical hook, 3 concise sections, and CTA.`,
+    `Return post_content with hook, caption, body, call_to_action, hashtags, and personalization_notes.`,
   ].join(" ");
 }
 
@@ -68,40 +68,50 @@ function formatGeneratedScript(
   topic: TrendTopic,
   copy: BilingualCopy,
 ) {
-  const videoScript = response.video_script;
+  const postContent = response.post_content;
 
-  if (isRecord(videoScript)) {
+  if (isRecord(postContent)) {
     const title =
-      toText(videoScript.title) ||
+      toText(postContent.title) ||
       toText(response.main_title) ||
-      copy(`Script for ${topic.keyword}`, `Kịch bản cho ${topic.keyword}`);
-    const hook = toText(videoScript.hook);
-    const callToAction = toText(videoScript.call_to_action);
-    const sectionsRaw = Array.isArray(videoScript.sections)
-      ? videoScript.sections
-      : [];
+      copy(`Post draft for ${topic.keyword}`, `Bản nháp cho ${topic.keyword}`);
+    const hook = toText(postContent.hook);
+    const caption = toText(postContent.caption);
+    const body = toText(postContent.body);
+    const callToAction = toText(postContent.call_to_action);
+    const hashtags = Array.isArray(postContent.hashtags)
+      ? postContent.hashtags
+          .map((tag) => toText(tag))
+          .filter(Boolean)
+          .join(" ")
+      : "";
+    const personalizationNotes = Array.isArray(
+      postContent.personalization_notes,
+    )
+      ? postContent.personalization_notes
+          .map((note) => toText(note))
+          .filter(Boolean)
+          .join("\n- ")
+      : "";
 
-    const sections = sectionsRaw
-      .map((section) => {
-        if (!isRecord(section)) {
-          return "";
-        }
-
-        const label = toText(section.label);
-        const narration = toText(section.narration);
-        const notes = toText(section.notes);
-
-        return [label, narration, notes].filter(Boolean).join("\n");
-      })
+    return [
+      title,
+      hook,
+      caption,
+      body,
+      callToAction,
+      hashtags ? `Hashtags: ${hashtags}` : "",
+      personalizationNotes
+        ? `Personalization notes:\n- ${personalizationNotes}`
+        : "",
+    ]
       .filter(Boolean)
       .join("\n\n");
-
-    return [title, hook, sections, callToAction].filter(Boolean).join("\n\n");
   }
 
   return copy(
-    `Opening Hook: ${topic.keyword} is trending right now and this is why people cannot stop watching.\n\nBody:\n1. Quick myth-busting insight.\n2. Practical step anyone can apply in 30 seconds.\n3. Real-world context and emotional anchor.\n\nCTA: Save this and follow for more creator-ready trend scripts.`,
-    `Hook mở đầu: ${topic.keyword} đang tăng mạnh và đây là lý do khiến người xem không thể rời mắt.\n\nNội dung chính:\n1. Giải mã nhanh một hiểu lầm phổ biến.\n2. Một bước thực hành ai cũng áp dụng được trong 30 giây.\n3. Bối cảnh thực tế gắn với cảm xúc người xem.\n\nCTA: Lưu video này và theo dõi để nhận thêm kịch bản xu hướng cho creator.`,
+    `Generated post package is missing structured post_content fields for ${topic.keyword}.`,
+    `Gói nội dung tạo ra đang thiếu cấu trúc post_content cho ${topic.keyword}.`,
   );
 }
 
@@ -164,14 +174,7 @@ export function ActionHub({ copy, selectedTopic }: ActionHubProps) {
 
       setScriptPreview(formatGeneratedScript(generated, selectedTopic, copy));
     } catch {
-      // Fallback mock content keeps the flow testable when generation API is unavailable.
-      setScriptPreview(
-        copy(
-          `Opening Hook: ${selectedTopic.keyword} is exploding this week. Here is the creator playbook.\n\nBody:\n- Why this trend matters now\n- What your audience wants to hear next\n- How to frame your story in under 45s\n\nCTA: Follow for tomorrow's trend brief.`,
-          `Hook mở đầu: ${selectedTopic.keyword} đang bùng nổ tuần này. Đây là playbook dành cho creator.\n\nNội dung:\n- Vì sao xu hướng này quan trọng ngay lúc này\n- Khán giả muốn nghe điều gì tiếp theo\n- Cách kể câu chuyện trong dưới 45 giây\n\nCTA: Theo dõi để nhận brief xu hướng ngày mai.`,
-        ),
-      );
-
+      setScriptPreview("");
       toast.error(
         copy(
           "Unable to generate script right now",

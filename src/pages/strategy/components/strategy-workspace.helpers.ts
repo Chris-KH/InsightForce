@@ -9,8 +9,20 @@ import type {
   TrendSessionState,
 } from "./strategy-workspace.types";
 
+const DEMO_FAST_PATH_TREND_PROMPT =
+  "Chủ đề cụ thể đang trend trong ngày hôm nay về mẹo vặt sức khỏe là gì và tôi nên tạo nội dung như thế nào?";
+
+function withDemoFastPathSuggestion(suggestions: string[]) {
+  const unique = [
+    DEMO_FAST_PATH_TREND_PROMPT,
+    ...suggestions.filter((item) => item !== DEMO_FAST_PATH_TREND_PROMPT),
+  ];
+
+  return unique.slice(0, 10);
+}
+
 export function getDefaultTrendPromptSuggestions(copy: BilingualCopy) {
-  return [
+  return withDemoFastPathSuggestion([
     copy("Find health trends in Vietnam", "Tìm xu hướng sức khỏe tại Việt Nam"),
     copy(
       "Find educational trends for parents",
@@ -28,7 +40,7 @@ export function getDefaultTrendPromptSuggestions(copy: BilingualCopy) {
       "Find rising short-video topics this week",
       "Tìm chủ đề video ngắn đang tăng tuần này",
     ),
-  ];
+  ]);
 }
 
 export function loadTrendSessionState(
@@ -38,7 +50,7 @@ export function loadTrendSessionState(
   const fallback: TrendSessionState = {
     sessionId: createTrendSessionId(),
     prompts: [],
-    suggestions: defaultSuggestions,
+    suggestions: withDemoFastPathSuggestion(defaultSuggestions),
   };
 
   if (typeof window === "undefined") {
@@ -63,7 +75,7 @@ export function loadTrendSessionState(
         : fallback.prompts,
       suggestions:
         Array.isArray(parsed.suggestions) && parsed.suggestions.length > 0
-          ? parsed.suggestions.slice(0, 10)
+          ? withDemoFastPathSuggestion(parsed.suggestions)
           : fallback.suggestions,
     };
   } catch {

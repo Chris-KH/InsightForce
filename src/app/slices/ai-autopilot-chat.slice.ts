@@ -192,13 +192,13 @@ export const aiAutopilotChatSlice = createSlice({
           });
         }
 
-        if (decision === "reject") {
+        if (decision === "deny") {
           appendMessage(state, {
             id: createMessageId("user"),
             role: "user",
             createdAt: Date.now(),
             kind: "text",
-            text: "Reject",
+            text: "Deny",
           });
         }
       })
@@ -263,7 +263,7 @@ export const aiAutopilotChatSlice = createSlice({
           return;
         }
 
-        if (decision === "reject") {
+        if (decision === "deny") {
           state.status = "completed";
           state.activeThreadId = null;
           if (!parsed.text) {

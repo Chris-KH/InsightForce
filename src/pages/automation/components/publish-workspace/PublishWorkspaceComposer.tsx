@@ -112,7 +112,7 @@ export function PublishWorkspaceComposer({
       .filter(Boolean);
 
   const applyGeneratedContent = (record: GeneratedContentResponse) => {
-    setGeneratedContentIdInput(record.id);
+    setGeneratedContentIdInput(record.id ?? null);
 
     if (!title.trim()) {
       setTitle(record.main_title ?? record.selected_keyword ?? "");

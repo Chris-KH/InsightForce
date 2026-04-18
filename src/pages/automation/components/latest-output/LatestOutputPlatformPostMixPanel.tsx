@@ -157,6 +157,10 @@ export function LatestOutputPlatformPostMixPanel({
                 <p className="mt-1 text-xs text-muted-foreground">
                   {copy("CTA", "Kêu gọi hành động (CTA)")}: {post.cta || "--"}
                 </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {copy("Image notes", "Ghi chú hình ảnh")}:{" "}
+                  {post.imageNotes || "--"}
+                </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {post.hashtags.map((tag) => (
                     <Badge

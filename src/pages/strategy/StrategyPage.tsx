@@ -11,6 +11,7 @@ import { getQueryErrorMessage } from "@/lib/query-error";
 import { cn } from "@/lib/utils";
 
 import { ActionHub } from "./components/ActionHub";
+import { StrategySavedTrendHistoryPanel } from "./components/StrategySavedTrendHistoryPanel";
 import { StrategyScoutComposerPanel } from "./components/StrategyScoutComposerPanel";
 import { StrategyTrendDiscoveryPanel } from "./components/StrategyTrendDiscoveryPanel";
 import { useStrategyWorkspaceState } from "./hooks/useStrategyWorkspaceState";
@@ -32,6 +33,7 @@ function StrategyPageContent({ locale }: StrategyPageContentProps) {
     isTrendAnalyzePending,
     aiStatus,
     sessionSuggestions,
+    historyRecords,
     trendTopics,
     selectedTopic,
     firstError,
@@ -135,6 +137,14 @@ function StrategyPageContent({ locale }: StrategyPageContentProps) {
           <ActionHub copy={copy} selectedTopic={selectedTopic} />
         </div>
       </section>
+
+      <StrategySavedTrendHistoryPanel
+        copy={copy}
+        records={historyRecords}
+        selectedKeyword={selectedTopic?.keyword}
+        isFetching={isGeneralRefreshFetching}
+        onSelectKeyword={selectKeyword}
+      />
     </motion.div>
   );
 }

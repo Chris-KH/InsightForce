@@ -22,6 +22,7 @@ import {
   useHealthQuery,
   useTrendHistoryQuery,
   useUploadPostPublishJobsQuery,
+  useUsersQuery,
 } from "@/api";
 import { formatPercentValue } from "@/lib/insight-formatters";
 
@@ -124,13 +125,20 @@ export function useDashboardWorkspaceData(
 ): DashboardWorkspaceData {
   const healthQuery = useHealthQuery();
   const agentsQuery = useAgentsStatusQuery();
-  const trendHistoryQuery = useTrendHistoryQuery({ limit: 14 });
+  const usersQuery = useUsersQuery();
+  const trendUserId = usersQuery.data?.users[0]?.id;
+  const trendHistoryQuery = useTrendHistoryQuery({
+    userId: trendUserId,
+    limit: 14,
+    enabled: Boolean(trendUserId),
+  });
   const generatedContentsQuery = useGeneratedContentsQuery({ limit: 14 });
   const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 14 });
 
   const allQueries = [
     healthQuery,
     agentsQuery,
+    usersQuery,
     trendHistoryQuery,
     generatedContentsQuery,
     publishJobsQuery,

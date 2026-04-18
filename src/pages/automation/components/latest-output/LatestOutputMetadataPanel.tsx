@@ -54,18 +54,26 @@ export function LatestOutputMetadataPanel({
 
         <div className="rounded-2xl border border-border/60 bg-background/70 p-3 text-xs text-muted-foreground">
           <p>
-            {copy("Run duration profile", "Hồ sơ thời lượng")}:{" "}
-            {latestGeneratedContent.durationEstimate || "60s"}
+            {copy("Default visibility", "Quyền riêng tư mặc định")}:{" "}
+            {latestGeneratedContent.publishing.defaultVisibility || "--"}
           </p>
           <p className="mt-1">
-            {copy("Music mood", "Sắc thái nhạc")}:{" "}
-            {latestGeneratedContent.musicMood ||
-              latestGeneratedContent.musicBackground ||
-              "--"}
+            {copy("Timezone", "Múi giờ")}:{" "}
+            {latestGeneratedContent.publishing.timezone || "--"}
           </p>
           <p className="mt-1">
-            {copy("Captions style", "Phong cách phụ đề")}:{" "}
-            {latestGeneratedContent.captionsStyle || "--"}
+            {copy("Weekly content frequency", "Tần suất nội dung mỗi tuần")}:{" "}
+            {latestGeneratedContent.publishing.weeklyContentFrequency > 0
+              ? latestGeneratedContent.publishing.weeklyContentFrequency
+              : "--"}
+          </p>
+          <p className="mt-1">
+            {copy("Recommended platforms", "Nền tảng đề xuất")}:{" "}
+            {latestGeneratedContent.publishing.recommendedPlatforms.length > 0
+              ? latestGeneratedContent.publishing.recommendedPlatforms.join(
+                  ", ",
+                )
+              : "--"}
           </p>
         </div>
 

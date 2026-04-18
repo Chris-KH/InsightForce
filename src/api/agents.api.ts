@@ -1,5 +1,4 @@
 import { ApiError, httpClient } from "@/api/http-client";
-import { getMockAgentsStatus, withApiMockFallback } from "@/api/mock-fallback";
 import type {
   AgentsStatusResponse,
   OrchestratedOutput,
@@ -8,6 +7,7 @@ import type {
 } from "@/api/types";
 
 const AGENTS_BASE_PATH = "/api/v1/agents";
+const ORCHESTRATE_TIMEOUT_MS = 420_000;
 
 type UnknownRecord = Record<string, unknown>;
 type RequestOptions = {
@@ -93,13 +93,21 @@ function hasMeaningfulGeneratedContent(output: OrchestratedOutput): boolean {
     return true;
   }
 
-  const videoScript = generated.video_script;
+  const postContent = generated.post_content;
   if (
-    (videoScript.title ?? "").trim() ||
-    (videoScript.hook ?? "").trim() ||
-    (videoScript.call_to_action ?? "").trim() ||
-    videoScript.sections.length > 0
+    (postContent.title ?? "").trim() ||
+    (postContent.hook ?? "").trim() ||
+    (postContent.caption ?? "").trim() ||
+    (postContent.description ?? "").trim() ||
+    (postContent.body ?? "").trim() ||
+    (postContent.call_to_action ?? "").trim() ||
+    (postContent.hashtags ?? []).length > 0 ||
+    (postContent.personalization_notes ?? []).length > 0
   ) {
+    return true;
+  }
+
+  if ((generated.image_set ?? []).length > 0) {
     return true;
   }
 
@@ -129,7 +137,10 @@ function getBackendErrorText(value: unknown): string {
 
   if (isRecord(value)) {
     const detail =
-      toText(value.message) || toText(value.detail) || toText(value.type);
+      toText(value.message) ||
+      toText(value.detail) ||
+      toText(value.reason) ||
+      toText(value.type);
     if (detail) {
       return detail;
     }
@@ -146,6 +157,19 @@ function resolveOrchestrationFailureReason(
   const generatedError = getBackendErrorText(
     response.output.generated_content.error,
   );
+  const persistenceSkipped = getBackendErrorText(
+    response.output.persistence_skipped,
+  );
+
+  if (response.status.trim().toLowerCase() === "failed") {
+    return (
+      generatedError ||
+      trendError ||
+      persistenceSkipped ||
+      rawStatus.message ||
+      "Backend orchestration failed to produce a valid result."
+    );
+  }
 
   if (rawStatus.state === "failed") {
     return (
@@ -172,20 +196,34 @@ function resolveOrchestrationFailureReason(
 }
 
 export function getAgentsStatus(options: RequestOptions = {}) {
-  return withApiMockFallback(
-    "agents.status",
-    () =>
-      httpClient.get<AgentsStatusResponse>(`${AGENTS_BASE_PATH}/status`, {
-        signal: options.signal,
-      }),
-    () => getMockAgentsStatus(),
-  );
+  return httpClient.get<AgentsStatusResponse>(`${AGENTS_BASE_PATH}/status`, {
+    signal: options.signal,
+  });
 }
 
 export async function orchestrateAgentsPipeline(payload: OrchestratorRequest) {
+  const normalizedPrompt = payload.prompt.trim();
+  const normalizedUserId = payload.user_id?.trim() || null;
+  const saveFiles = payload.save_files ?? false;
+
+  const query = {
+    include_raw_response: payload.include_raw_response ?? false,
+    save_files: saveFiles,
+  };
+
+  const requestBody = {
+    prompt: normalizedPrompt,
+    user_id: normalizedUserId,
+    save_files: saveFiles,
+  };
+
   const response = await httpClient.post<OrchestratorResponse>(
     `${AGENTS_BASE_PATH}/orchestrate`,
-    payload,
+    requestBody,
+    {
+      query,
+      timeoutMs: ORCHESTRATE_TIMEOUT_MS,
+    },
   );
 
   const failureReason = resolveOrchestrationFailureReason(response);

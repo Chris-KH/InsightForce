@@ -43,7 +43,7 @@ export function useAiAutopilotChat() {
     return dispatch(
       submitAiAutopilotPrompt({
         prompt: "",
-        decision: "reject",
+        decision: "deny",
       }),
     );
   }, [dispatch]);

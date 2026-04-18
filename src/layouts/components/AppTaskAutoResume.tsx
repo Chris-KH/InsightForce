@@ -181,7 +181,6 @@ export function AppTaskAutoResume() {
     void dispatch(
       runStrategyTrendAnalyze({
         query,
-        limit: 5,
       }),
     );
   }, [

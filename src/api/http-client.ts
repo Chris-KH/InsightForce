@@ -20,6 +20,7 @@ type RequestOptions = {
   query?: QueryParams;
   signal?: AbortSignal;
   headers?: HeadersInit;
+  timeoutMs?: number;
 };
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(
@@ -139,6 +140,7 @@ export const httpClient = {
       params: options.query,
       signal: options.signal,
       headers: normalizeHeaders(options.headers),
+      timeout: options.timeoutMs,
     });
   },
   post<T>(path: string, body?: unknown, options: RequestOptions = {}) {
@@ -149,6 +151,7 @@ export const httpClient = {
       params: options.query,
       signal: options.signal,
       headers: normalizeHeaders(options.headers),
+      timeout: options.timeoutMs,
     });
   },
   put<T>(path: string, body?: unknown, options: RequestOptions = {}) {
@@ -159,6 +162,7 @@ export const httpClient = {
       params: options.query,
       signal: options.signal,
       headers: normalizeHeaders(options.headers),
+      timeout: options.timeoutMs,
     });
   },
   patch<T>(path: string, body?: unknown, options: RequestOptions = {}) {
@@ -169,6 +173,7 @@ export const httpClient = {
       params: options.query,
       signal: options.signal,
       headers: normalizeHeaders(options.headers),
+      timeout: options.timeoutMs,
     });
   },
   delete<T>(path: string, options: RequestOptions = {}) {
@@ -178,6 +183,7 @@ export const httpClient = {
       params: options.query,
       signal: options.signal,
       headers: normalizeHeaders(options.headers),
+      timeout: options.timeoutMs,
     });
   },
 };

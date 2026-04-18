@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { useTrendGeneralQuery, useTrendHistoryQuery } from "@/api";
-import { runStrategyTrendAnalyze } from "@/app/slices/runtime-tasks.slice";
+import {
+  type TrendAnalysisRecordResponse,
+  useTrendHistoryQuery,
+  useUsersQuery,
+} from "@/api";
+import {
+  resetStrategyTrendTask,
+  runStrategyTrendAnalyze,
+} from "@/app/slices/runtime-tasks.slice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import {
   buildSessionSuggestions,
@@ -22,12 +29,14 @@ import type {
 } from "../components/strategy-workspace.types";
 
 const TREND_SESSION_STORAGE_KEY_PREFIX = "insightforce.trend.session.v3";
+const STRATEGY_STALE_PENDING_MS = 30_000;
 
 type StrategyWorkspaceState = {
   promptInput: string;
   isTrendAnalyzePending: boolean;
   aiStatus: string;
   sessionSuggestions: string[];
+  historyRecords: TrendAnalysisRecordResponse[];
   trendTopics: TrendTopic[];
   selectedTopic?: TrendTopic;
   firstError: unknown;
@@ -67,18 +76,30 @@ export function useStrategyWorkspaceState(
   );
   const [selectedKeyword, setSelectedKeyword] = useState<string | undefined>();
 
-  const generalTrendQuery = useTrendGeneralQuery({ limit: 8, enabled: false });
-  const trendHistoryQuery = useTrendHistoryQuery({ limit: 16 });
+  const usersQuery = useUsersQuery();
+  const trendUserId = usersQuery.data?.users[0]?.id;
+
+  const trendHistoryQuery = useTrendHistoryQuery({
+    userId: trendUserId,
+    limit: 16,
+    enabled: Boolean(trendUserId),
+  });
 
   const isTrendAnalyzePending = trendAnalyzeTask.status === "pending";
   const promptResponse = trendAnalyzeTask.data;
 
-  const latestGeneralTrendRecord = useMemo(
+  const historyRecords = useMemo(
     () =>
-      (trendHistoryQuery.data?.items ?? []).find(
-        (record) => record.results.length > 0,
+      [...(trendHistoryQuery.data?.items ?? [])].sort(
+        (left, right) =>
+          Date.parse(right.created_at) - Date.parse(left.created_at),
       ),
     [trendHistoryQuery.data?.items],
+  );
+
+  const latestGeneralTrendRecord = useMemo(
+    () => historyRecords.find((record) => record.results.length > 0),
+    [historyRecords],
   );
 
   const sourceResults = useMemo(() => {
@@ -87,13 +108,8 @@ export function useStrategyWorkspaceState(
       return promptResults;
     }
 
-    const generalTrendData = generalTrendQuery.data ?? latestGeneralTrendRecord;
-    return sanitizeTrendResults(generalTrendData?.results);
-  }, [
-    generalTrendQuery.data,
-    latestGeneralTrendRecord,
-    promptResponse?.results,
-  ]);
+    return sanitizeTrendResults(latestGeneralTrendRecord?.results);
+  }, [latestGeneralTrendRecord, promptResponse?.results]);
 
   const trendTopics = useMemo<TrendTopic[]>(() => {
     return sourceResults.slice(0, 8).map((result) => ({
@@ -154,6 +170,25 @@ export function useStrategyWorkspaceState(
   }, [isTrendAnalyzePending, trendAnalyzeTask.startedAt]);
 
   useEffect(() => {
+    if (!isTrendAnalyzePending || !trendAnalyzeTask.startedAt) {
+      return;
+    }
+
+    const elapsed = Date.now() - trendAnalyzeTask.startedAt;
+    if (elapsed < STRATEGY_STALE_PENDING_MS) {
+      return;
+    }
+
+    dispatch(resetStrategyTrendTask());
+  }, [
+    dispatch,
+    isTrendAnalyzePending,
+    reasoningTick,
+    trendAnalyzeTask.startedAt,
+    trendAnalyzeTask.status,
+  ]);
+
+  useEffect(() => {
     if (!selectedKeyword && trendTopics[0]) {
       setSelectedKeyword(trendTopics[0].keyword);
       return;
@@ -187,7 +222,7 @@ export function useStrategyWorkspaceState(
 
   const runTrendScout = async (rawPrompt: string) => {
     const normalizedPrompt = rawPrompt.trim();
-    if (!normalizedPrompt || isTrendAnalyzePending) {
+    if (!normalizedPrompt || isTrendAnalyzePending || !trendUserId) {
       return;
     }
 
@@ -202,7 +237,7 @@ export function useStrategyWorkspaceState(
     const action = await dispatch(
       runStrategyTrendAnalyze({
         query: normalizedPrompt,
-        limit: 8,
+        user_id: trendUserId,
       }),
     );
 
@@ -233,16 +268,17 @@ export function useStrategyWorkspaceState(
     isTrendAnalyzePending,
     aiStatus,
     sessionSuggestions,
+    historyRecords,
     trendTopics,
     selectedTopic,
-    firstError: generalTrendQuery.error ?? trendHistoryQuery.error,
-    isGeneralRefreshFetching: generalTrendQuery.isFetching,
+    firstError: usersQuery.error ?? trendHistoryQuery.error,
+    isGeneralRefreshFetching: trendHistoryQuery.isFetching,
     setPromptInput,
     submitPrompt,
     runSuggestion: runTrendScout,
     selectKeyword: setSelectedKeyword,
     refreshGeneralTrends: async () => {
-      await generalTrendQuery.refetch();
+      await trendHistoryQuery.refetch();
     },
   };
 }

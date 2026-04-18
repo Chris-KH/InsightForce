@@ -1,137 +1,18 @@
 import { httpClient } from "@/api/http-client";
-import { withApiMockFallback } from "@/api/mock-fallback";
 import type {
+  UserCreateRequest,
   UserProfileResponse,
   UserProfileUpdateRequest,
-  UserCreateRequest,
   UserResponse,
-  UserSummaryResponse,
   UsersListResponse,
 } from "@/api/types";
 
 const USERS_BASE_PATH = "/api/v1/users";
-const USERS_STORAGE_KEY = "insightforce.mock.users-list.v1";
-const PROFILE_STORAGE_KEY_PREFIX = "insightforce.mock.user-profile.v2";
+const PROFILE_STORAGE_KEY_PREFIX = "insightforce.local.user-profile.v3";
 
 type RequestOptions = {
   signal?: AbortSignal;
 };
-
-function daysAgo(days: number) {
-  return new Date(Date.now() - days * 86_400_000).toISOString();
-}
-
-function buildDefaultMockUsersList(): UsersListResponse {
-  return {
-    users: [
-      {
-        id: "user-minh-nguyen",
-        email: "creator@insightforce.local",
-        name: "Minh Nguyen",
-        plan: "pro",
-        created_at: daysAgo(42),
-        trend_analysis_count: 14,
-        generated_content_count: 31,
-        publish_job_count: 18,
-      },
-      {
-        id: "user-linh-tran",
-        email: "linh.tran@insightforce.local",
-        name: "Linh Tran",
-        plan: "starter",
-        created_at: daysAgo(28),
-        trend_analysis_count: 9,
-        generated_content_count: 17,
-        publish_job_count: 11,
-      },
-      {
-        id: "user-khanh-le",
-        email: "khanh.le@insightforce.local",
-        name: "Khanh Le",
-        plan: "enterprise",
-        created_at: daysAgo(11),
-        trend_analysis_count: 22,
-        generated_content_count: 44,
-        publish_job_count: 27,
-      },
-    ],
-  };
-}
-
-function readMockUsersList(): UsersListResponse {
-  if (typeof window === "undefined") {
-    return buildDefaultMockUsersList();
-  }
-
-  try {
-    const raw = window.localStorage.getItem(USERS_STORAGE_KEY);
-    if (!raw) {
-      return buildDefaultMockUsersList();
-    }
-
-    const parsed = JSON.parse(raw) as UsersListResponse;
-    if (!Array.isArray(parsed.users) || parsed.users.length === 0) {
-      return buildDefaultMockUsersList();
-    }
-
-    return {
-      users: parsed.users,
-    };
-  } catch {
-    return buildDefaultMockUsersList();
-  }
-}
-
-function writeMockUsersList(payload: UsersListResponse) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(payload));
-  } catch {
-    // Ignore localStorage write failures.
-  }
-}
-
-function toSafeUserId(email: string) {
-  const safePart = email
-    .toLowerCase()
-    .split("@")[0]
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return `user-${safePart || "creator"}`;
-}
-
-function deriveNameFromEmail(email: string) {
-  const localPart = email.split("@")[0] ?? "creator";
-  return localPart
-    .replace(/[._-]+/g, " ")
-    .replace(/\b\w/g, (segment) => segment.toUpperCase())
-    .trim();
-}
-
-function splitDisplayName(displayName: string | null | undefined) {
-  const normalizedName = (displayName ?? "").trim();
-  if (!normalizedName) {
-    return {
-      firstName: "Insight",
-      lastName: "Creator",
-      fullName: "Insight Creator",
-    };
-  }
-
-  const parts = normalizedName.split(/\s+/);
-  const firstName = parts[0] ?? "Insight";
-  const lastName = parts.slice(1).join(" ") || "Creator";
-
-  return {
-    firstName,
-    lastName,
-    fullName: `${firstName} ${lastName}`.trim(),
-  };
-}
 
 type UserProfile = UserProfileResponse["profile"];
 
@@ -221,6 +102,35 @@ function sanitizeStringArray(value: unknown) {
   }
 
   return items;
+}
+
+function splitDisplayName(displayName: string | null | undefined) {
+  const normalizedName = (displayName ?? "").trim();
+  if (!normalizedName) {
+    return {
+      firstName: "Insight",
+      lastName: "Creator",
+      fullName: "Insight Creator",
+    };
+  }
+
+  const parts = normalizedName.split(/\s+/);
+  const firstName = parts[0] ?? "Insight";
+  const lastName = parts.slice(1).join(" ") || "Creator";
+
+  return {
+    firstName,
+    lastName,
+    fullName: `${firstName} ${lastName}`.trim(),
+  };
+}
+
+function deriveNameFromEmail(email: string) {
+  const localPart = email.split("@")[0] ?? "creator";
+  return localPart
+    .replace(/[._-]+/g, " ")
+    .replace(/\b\w/g, (segment) => segment.toUpperCase())
+    .trim();
 }
 
 function mapValues(values: string[], dictionary: Record<string, string>) {
@@ -444,167 +354,33 @@ function normalizeUserProfileResponse(response: UserProfileResponse) {
   } satisfies UserProfileResponse;
 }
 
-function ensureMockUserSummary(userId: string): UserSummaryResponse {
-  const currentList = readMockUsersList();
-  const existing = currentList.users.find((user) => user.id === userId);
-  if (existing) {
-    return existing;
-  }
-
-  const synthetic: UserSummaryResponse = {
-    id: userId,
-    email: `${userId}@insightforce.local`,
-    name: deriveNameFromEmail(userId),
-    plan: "starter",
-    created_at: new Date().toISOString(),
-    trend_analysis_count: 0,
-    generated_content_count: 0,
-    publish_job_count: 0,
-  };
-
-  writeMockUsersList({ users: [synthetic, ...currentList.users] });
-  return synthetic;
-}
-
-function syncMockUserSummaryFromProfile(
-  profile: UserProfileResponse["profile"],
-) {
-  const currentList = readMockUsersList();
-  const existingIndex = currentList.users.findIndex(
-    (user) => user.id === profile.user_id,
-  );
-  const existing = existingIndex >= 0 ? currentList.users[existingIndex] : null;
-
-  const nextSummary: UserSummaryResponse = {
-    id: profile.user_id,
-    email: profile.email,
-    name: profile.display_name,
-    plan: existing?.plan ?? "starter",
-    created_at: existing?.created_at ?? new Date().toISOString(),
-    trend_analysis_count: existing?.trend_analysis_count ?? 0,
-    generated_content_count: existing?.generated_content_count ?? 0,
-    publish_job_count: existing?.publish_job_count ?? 0,
-  };
-
-  if (existingIndex >= 0) {
-    const nextUsers = [...currentList.users];
-    nextUsers[existingIndex] = nextSummary;
-    writeMockUsersList({ users: nextUsers });
-    return;
-  }
-
-  writeMockUsersList({ users: [nextSummary, ...currentList.users] });
-}
-
 function getProfileStorageKey(userId: string) {
   return `${PROFILE_STORAGE_KEY_PREFIX}.${userId}`;
 }
 
-function buildDefaultMockUserProfile(
-  userId: string,
-  userSummary?: UserSummaryResponse,
-): UserProfileResponse {
-  const createdAt = new Date().toISOString();
-  const nameParts = splitDisplayName("Góc Nhỏ Thông Minh");
-
-  const roleByPlan =
-    userSummary?.plan === "enterprise"
-      ? "Head of Content"
-      : userSummary?.plan === "pro"
-        ? "Creator Strategist"
-        : "Content Operator";
-
-  return normalizeUserProfileResponse({
-    source: "mock",
-    profile: {
-      user_id: userId,
-      email: "lifehack.creator@example.com",
-      first_name: nameParts.firstName,
-      last_name: nameParts.lastName,
-      display_name: "Góc Nhỏ Thông Minh",
-      role: roleByPlan,
-      department: "Growth Studio",
-      phone_number: "+84 912 345 678",
-      website: "https://insightforce.app",
-      location: "Ho Chi Minh City, Vietnam",
-      about_me:
-        "Tôi xây dựng nội dung giúp người xem sống gọn gàng, thông minh và bình tĩnh hơn mỗi ngày. Phong cách của tôi là gần gũi, thực tế, có tính giáo dục nhưng không lên lớp. Tôi thích biến những vấn đề nhỏ trong đời sống thành các mẹo dễ làm, các câu chuyện ngắn có bài học, và những góc nhìn giúp người xem cải thiện thói quen sống.",
-      avatar_url:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&q=80",
-      content_preferences: {
-        content_groups: [
-          "Mẹo vặt cuộc sống",
-          "Lifehack gia đình",
-          "Tổ chức nhà cửa",
-          "Thói quen cá nhân",
-          "Câu chuyện giáo dục",
-          "Kỹ năng sống",
-        ],
-        priority_formats: ["Bài post nhiều ảnh", "Chuỗi bài viết"],
-        primary_topic: "Mẹo sống gọn gàng và thông minh mỗi ngày",
-        audience_persona:
-          "Người Việt từ 22-40 tuổi, bận rộn với công việc và gia đình, muốn học các mẹo đơn giản để sống ngăn nắp hơn, tiết kiệm thời gian hơn và cải thiện bản thân qua những câu chuyện dễ hiểu, thực tế.",
-        focus_content_goal:
-          "Xây dựng một kênh nội dung đáng tin cậy về mẹo vặt đời sống và giáo dục thói quen, giúp người xem lưu bài, chia sẻ cho bạn bè và quay lại mỗi ngày để học thêm một điều nhỏ nhưng hữu ích.",
-        keyword_hashtags: [
-          "meovatcuocsong",
-          "lifehack",
-          "songthongminh",
-          "thoiquentot",
-          "nhacuasachgon",
-          "ky nang song",
-          "meohaymoingay",
-          "cauchuyengiaoduc",
-        ],
-        notes:
-          "Ưu tiên nội dung thực tế, áp dụng được ngay và luôn có điểm rút ra cuối bài.",
-      },
-      options: {
-        timezone: "Asia/Saigon",
-        linked_platforms: [...DEFAULT_LINKED_PLATFORMS],
-        default_visibility: "public",
-        default_post_times: {
-          ...DEFAULT_POST_TIMES,
-        },
-        weekly_content_frequency: 5,
-        language: "vi",
-        voice_tone: "friendly",
-        content_review_mode: "balanced",
-      },
-      updated_at: createdAt,
-    },
-  });
-}
-
-function readMockProfile(
-  userId: string,
-  userSummary?: UserSummaryResponse,
-): UserProfileResponse {
+function readStoredProfile(userId: string): UserProfileResponse | null {
   if (typeof window === "undefined") {
-    return buildDefaultMockUserProfile(userId, userSummary);
+    return null;
   }
 
   try {
     const raw = window.localStorage.getItem(getProfileStorageKey(userId));
     if (!raw) {
-      return buildDefaultMockUserProfile(userId, userSummary);
+      return null;
     }
 
     const parsed = JSON.parse(raw) as UserProfileResponse;
-    if (!parsed.profile?.user_id) {
-      return buildDefaultMockUserProfile(userId, userSummary);
+    if (!parsed?.profile?.user_id) {
+      return null;
     }
 
-    return normalizeUserProfileResponse({
-      ...parsed,
-      source: "mock",
-    });
+    return normalizeUserProfileResponse(parsed);
   } catch {
-    return buildDefaultMockUserProfile(userId, userSummary);
+    return null;
   }
 }
 
-function writeMockProfile(profile: UserProfileResponse) {
+function writeStoredProfile(profile: UserProfileResponse) {
   if (typeof window === "undefined") {
     return;
   }
@@ -619,168 +395,163 @@ function writeMockProfile(profile: UserProfileResponse) {
   }
 }
 
-export function createUser(payload: UserCreateRequest) {
-  return withApiMockFallback(
-    "users.create",
-    () => httpClient.post<UserResponse>(USERS_BASE_PATH, payload),
-    () => {
-      const email = payload.email.trim().toLowerCase();
-      const currentList = readMockUsersList();
-      const existing = currentList.users.find(
-        (user) => user.email.toLowerCase() === email,
-      );
+function toUserProfileResponse(user: UserResponse): UserProfileResponse {
+  const derivedDisplayName =
+    user.display_name ?? deriveNameFromEmail(user.email);
+  const nameParts = splitDisplayName(derivedDisplayName);
 
-      if (existing) {
-        return {
-          id: existing.id,
-          email: existing.email,
-          name: existing.name,
-          plan: existing.plan,
-          created_at: existing.created_at,
-        };
-      }
-
-      const now = new Date().toISOString();
-      const baseUserId = toSafeUserId(email);
-      const usedIds = new Set(currentList.users.map((user) => user.id));
-      let uniqueUserId = baseUserId;
-      let suffix = 1;
-
-      while (usedIds.has(uniqueUserId)) {
-        uniqueUserId = `${baseUserId}-${suffix}`;
-        suffix += 1;
-      }
-
-      const createdUser: UserSummaryResponse = {
-        id: uniqueUserId,
-        email,
-        name: payload.name ?? deriveNameFromEmail(email),
-        plan: payload.plan ?? "starter",
-        created_at: now,
-        trend_analysis_count: 0,
-        generated_content_count: 0,
-        publish_job_count: 0,
-      };
-
-      writeMockUsersList({ users: [createdUser, ...currentList.users] });
-
-      return {
-        id: createdUser.id,
-        email: createdUser.email,
-        name: createdUser.name,
-        plan: createdUser.plan,
-        created_at: createdUser.created_at,
-      };
+  return normalizeUserProfileResponse({
+    source: "api",
+    profile: {
+      user_id: user.id,
+      email: user.email,
+      first_name: nameParts.firstName,
+      last_name: nameParts.lastName,
+      display_name: derivedDisplayName,
+      role: "Content Creator",
+      department: null,
+      phone_number: user.phone_number ?? null,
+      website: null,
+      location: user.location ?? null,
+      about_me: user.about_me ?? null,
+      avatar_url: user.avatar_url ?? null,
+      content_preferences: {
+        content_groups: sanitizeStringArray(
+          user.content_preferences?.content_groups,
+        ),
+        priority_formats: sanitizeStringArray(
+          user.content_preferences?.priority_formats,
+        ),
+        keyword_hashtags: sanitizeStringArray(
+          user.content_preferences?.keyword_hashtags,
+        ),
+        audience_persona: user.content_preferences?.audience_persona ?? "",
+        focus_content_goal: user.content_preferences?.focus_content_goal ?? "",
+        primary_topic: "",
+        notes: null,
+      },
+      options: {
+        timezone: user.options?.timezone ?? "Asia/Saigon",
+        linked_platforms: sanitizeStringArray(user.options?.linked_platforms),
+        default_visibility:
+          user.options?.default_visibility === "private" ||
+          user.options?.default_visibility === "friends"
+            ? user.options.default_visibility
+            : "public",
+        default_post_times: normalizeDefaultPostTimes(
+          user.options?.default_post_times,
+        ),
+        weekly_content_frequency: toWeeklyFrequency(
+          user.options?.weekly_content_frequency,
+          5,
+        ),
+        language: "vi",
+        voice_tone: "friendly",
+        content_review_mode: "balanced",
+      },
+      updated_at: user.created_at,
     },
-  );
+  });
+}
+
+function mergeLocalProfile(
+  apiProfile: UserProfileResponse,
+  localProfile: UserProfileResponse,
+): UserProfileResponse {
+  if (apiProfile.profile.user_id !== localProfile.profile.user_id) {
+    return apiProfile;
+  }
+
+  return normalizeUserProfileResponse({
+    source: "api",
+    profile: {
+      ...apiProfile.profile,
+      ...localProfile.profile,
+      content_preferences: {
+        ...apiProfile.profile.content_preferences,
+        ...localProfile.profile.content_preferences,
+      },
+      options: {
+        ...apiProfile.profile.options,
+        ...localProfile.profile.options,
+        default_post_times: {
+          ...apiProfile.profile.options.default_post_times,
+          ...localProfile.profile.options.default_post_times,
+        },
+      },
+      updated_at:
+        localProfile.profile.updated_at ?? apiProfile.profile.updated_at,
+    },
+  });
+}
+
+export function createUser(payload: UserCreateRequest) {
+  return httpClient.post<UserResponse>(USERS_BASE_PATH, payload);
 }
 
 export function getUsers(options: RequestOptions = {}) {
-  return withApiMockFallback(
-    "users.list",
-    () =>
-      httpClient.get<UsersListResponse>(USERS_BASE_PATH, {
-        signal: options.signal,
-      }),
-    () => {
-      const users = readMockUsersList();
-      writeMockUsersList(users);
-      return users;
-    },
-  );
+  return httpClient.get<UsersListResponse>(USERS_BASE_PATH, {
+    signal: options.signal,
+  });
 }
 
 export function getUser(userId: string, options: RequestOptions = {}) {
-  return withApiMockFallback(
-    `users.detail.${userId}`,
-    () =>
-      httpClient.get<UserResponse>(
-        `${USERS_BASE_PATH}/${encodeURIComponent(userId)}`,
-        {
-          signal: options.signal,
-        },
-      ),
-    () => {
-      const user = ensureMockUserSummary(userId);
-
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        plan: user.plan,
-        created_at: user.created_at,
-      };
+  return httpClient.get<UserResponse>(
+    `${USERS_BASE_PATH}/${encodeURIComponent(userId)}`,
+    {
+      signal: options.signal,
     },
   );
 }
 
-export function getUserProfile(userId: string, options: RequestOptions = {}) {
-  return withApiMockFallback(
-    `users.profile.${userId}`,
-    async () => {
-      const response = await httpClient.get<UserProfileResponse>(
-        `${USERS_BASE_PATH}/${encodeURIComponent(userId)}/profile`,
-        {
-          signal: options.signal,
-        },
-      );
+export async function getUserProfile(
+  userId: string,
+  options: RequestOptions = {},
+) {
+  const user = await getUser(userId, options);
+  const apiProfile = toUserProfileResponse(user);
+  const localProfile = readStoredProfile(userId);
 
-      return normalizeUserProfileResponse(response);
-    },
-    () => {
-      const userSummary = ensureMockUserSummary(userId);
-      const profile = readMockProfile(userId, userSummary);
-      writeMockProfile(profile);
-      syncMockUserSummaryFromProfile(profile.profile);
-      return profile;
-    },
-  );
+  if (!localProfile) {
+    return apiProfile;
+  }
+
+  return mergeLocalProfile(apiProfile, localProfile);
 }
 
-export function updateUserProfile(
+export async function updateUserProfile(
   userId: string,
   payload: UserProfileUpdateRequest,
 ) {
-  return withApiMockFallback(
-    `users.profile.update.${userId}`,
-    async () => {
-      const response = await httpClient.put<UserProfileResponse>(
-        `${USERS_BASE_PATH}/${encodeURIComponent(userId)}/profile`,
-        payload,
-      );
+  // Backend currently exposes read-only user profile endpoints for UI.
+  // Keep local profile persistence until backend update endpoint is available.
+  const current = readStoredProfile(userId) ?? (await getUserProfile(userId));
 
-      return normalizeUserProfileResponse(response);
+  const mergedProfile = {
+    ...current.profile,
+    ...payload,
+    content_preferences: {
+      ...current.profile.content_preferences,
+      ...(payload.content_preferences ?? {}),
     },
-    () => {
-      const current = readMockProfile(userId);
-      const mergedProfile = {
-        ...current.profile,
-        ...payload,
-        content_preferences: {
-          ...current.profile.content_preferences,
-          ...(payload.content_preferences ?? {}),
-        },
-        options: {
-          ...current.profile.options,
-          ...(payload.options ?? {}),
-          default_post_times: {
-            ...current.profile.options.default_post_times,
-            ...(payload.options?.default_post_times ?? {}),
-          },
-        },
-      } as Partial<UserProfile>;
-
-      const next: UserProfileResponse = {
-        source: "mock",
-        profile: {
-          ...normalizeProfile(mergedProfile),
-          updated_at: new Date().toISOString(),
-        },
-      };
-
-      writeMockProfile(next);
-      syncMockUserSummaryFromProfile(next.profile);
-      return next;
+    options: {
+      ...current.profile.options,
+      ...(payload.options ?? {}),
+      default_post_times: {
+        ...current.profile.options.default_post_times,
+        ...(payload.options?.default_post_times ?? {}),
+      },
     },
-  );
+  } as Partial<UserProfile>;
+
+  const next: UserProfileResponse = {
+    source: "mock",
+    profile: {
+      ...normalizeProfile(mergedProfile),
+      updated_at: new Date().toISOString(),
+    },
+  };
+
+  writeStoredProfile(next);
+  return next;
 }

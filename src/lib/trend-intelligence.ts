@@ -58,6 +58,7 @@ export function sanitizeTrendResults(
       avg_views_per_hour: Number.isFinite(result.avg_views_per_hour)
         ? result.avg_views_per_hour
         : 0,
+      top_videos: (result.top_videos ?? []).filter(Boolean),
       top_hashtags: (result.top_hashtags ?? []).filter(Boolean),
       interest_over_day: result.interest_over_day ?? [],
       recommended_action: result.recommended_action?.trim() || "",

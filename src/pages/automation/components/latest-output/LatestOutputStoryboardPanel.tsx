@@ -22,8 +22,8 @@ export function LatestOutputStoryboardPanel({
         "Thư viện xem trước storyboard",
       )}
       description={copy(
-        "Visual references generated for each script segment.",
-        "Bộ khung hình tham chiếu tương ứng với từng phân đoạn kịch bản.",
+        "Visual references generated for each image card in the post set.",
+        "Bộ khung hình tham chiếu tương ứng với từng ảnh trong bộ nội dung.",
       )}
       className="h-fit"
       contentClassName="pb-4"
@@ -61,11 +61,11 @@ export function LatestOutputStoryboardPanel({
                     {section.label}
                   </p>
                   <p className="line-clamp-2 text-xs text-muted-foreground">
-                    {section.thumbnailPrompt || section.narration || "--"}
+                    {section.imagePrompt || section.narration || "--"}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
                     {copy("Output path", "Đường dẫn đầu ra")}:{" "}
-                    {section.thumbnailOutputPath ||
+                    {section.imageOutputPath ||
                       copy("(mock-only)", "(chỉ mô phỏng)")}
                   </p>
                 </div>

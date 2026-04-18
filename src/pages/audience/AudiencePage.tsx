@@ -12,6 +12,7 @@ import {
   useGeneratedContentsQuery,
   useTrendHistoryQuery,
   useUploadPostPublishJobsQuery,
+  useUsersQuery,
 } from "@/api";
 import type {
   TrendAnalysisRecordResponse,
@@ -62,7 +63,14 @@ function normalizeTrendSignals(raw: TrendAnalysisRecordResponse | undefined) {
 export function AudiencePage() {
   const copy = useBilingual();
 
-  const trendHistoryQuery = useTrendHistoryQuery({ limit: 20 });
+  const usersQuery = useUsersQuery();
+  const trendUserId = usersQuery.data?.users[0]?.id;
+
+  const trendHistoryQuery = useTrendHistoryQuery({
+    userId: trendUserId,
+    limit: 20,
+    enabled: Boolean(trendUserId),
+  });
   const generatedContentsQuery = useGeneratedContentsQuery({ limit: 20 });
   const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 20 });
 
@@ -143,6 +151,7 @@ export function AudiencePage() {
   const generatedContents = generatedContentsQuery.data?.items ?? [];
 
   const allQueries = [
+    usersQuery,
     trendHistoryQuery,
     generatedContentsQuery,
     publishJobsQuery,

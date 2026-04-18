@@ -15,7 +15,6 @@ import {
 import { getHealthStatus } from "@/api/health.api";
 import { queryKeys } from "@/api/query-keys";
 import {
-  analyzeTrend,
   getTrendAnalysisDetail,
   getTrendHistory,
   type GetTrendHistoryParams,
@@ -23,7 +22,6 @@ import {
 import type {
   ContentGenerateRequest,
   OrchestratorRequest,
-  TrendAnalyzeRequest,
   UserProfileUpdateRequest,
 } from "@/api/types";
 import {
@@ -39,15 +37,8 @@ import {
   getUsers,
   updateUserProfile,
 } from "@/api/users.api";
-import { getDefaultGeneralTrendQuery } from "@/lib/trend-query";
 
 const ENABLE_API_POLLING = import.meta.env.VITE_ENABLE_API_POLLING === "true";
-
-export type TrendGeneralQueryParams = {
-  query?: string;
-  limit?: number;
-  enabled?: boolean;
-};
 
 export type TrendHistoryQueryParams = GetTrendHistoryParams & {
   enabled?: boolean;
@@ -92,35 +83,6 @@ export function healthQueryOptions() {
 
 export function useHealthQuery() {
   return useQuery(healthQueryOptions());
-}
-
-export function trendGeneralQueryOptions(params: TrendGeneralQueryParams = {}) {
-  const normalizedQuery = params.query?.trim();
-  const query =
-    normalizedQuery && normalizedQuery.length >= 2
-      ? normalizedQuery
-      : getDefaultGeneralTrendQuery();
-  const limit = Math.max(1, Math.min(5, params.limit ?? 5));
-
-  return queryOptions({
-    queryKey: queryKeys.trend.general(query, limit),
-    queryFn: ({ signal }) => analyzeTrend({ query, limit }, { signal }),
-    staleTime: 15 * 60 * 1000,
-  });
-}
-
-export function useTrendGeneralQuery(params: TrendGeneralQueryParams = {}) {
-  return useQuery({
-    ...trendGeneralQueryOptions(params),
-    enabled: params.enabled ?? false,
-  });
-}
-
-export function useTrendAnalyzeMutation() {
-  return useMutation({
-    mutationKey: ["trend", "analyze"],
-    mutationFn: (payload: TrendAnalyzeRequest) => analyzeTrend(payload),
-  });
 }
 
 export function trendHistoryQueryOptions(params: TrendHistoryQueryParams = {}) {

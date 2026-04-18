@@ -76,9 +76,9 @@ export function getMockAgentsStatus(): AgentsStatusResponse {
       },
       {
         name: "trend_agent",
-        url: "/api/v1/trends/analyze",
+        url: "/api/v1/trends/history",
         reachable: true,
-        detail: "Using fallback analyzer",
+        detail: "Using fallback trend history",
       },
       {
         name: "content_agent",
@@ -129,6 +129,7 @@ export function getMockTrendAnalyze(query: string): TrendAnalyzeResponse {
       avg_views_per_hour: 1200 - index * 190,
       recommended_action:
         "Ship one short content experiment today and track retention milestones at 3s, 8s, and 15s.",
+      top_videos: [],
       top_hashtags: buildHashtags(keyword),
       google: null,
       tiktok: null,
