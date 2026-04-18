@@ -1,449 +1,175 @@
-import { useMemo } from "react";
-import {
-  AlertTriangle,
-  BarChart3,
-  Coins,
-  Eye,
-  History,
-  Sparkles,
-  Wallet,
-} from "lucide-react";
+import type { ChartData, ChartOptions } from "chart.js";
+import { Coins, ReceiptText, TrendingUp } from "lucide-react";
 
-import {
-  useGeneratedContentsQuery,
-  useTrendHistoryQuery,
-  useUploadPostPublishJobsQuery,
-  useUsersQuery,
-} from "@/api";
-import type { TrendAnalysisRecordResponse } from "@/api/types";
-import {
-  BarTrendChart,
-  DoughnutTrendChart,
-  LineTrendChart,
-} from "@/components/app-data-viz";
-import {
-  InlineQueryState,
-  MetricCardsSkeleton,
-  PanelRowsSkeleton,
-  QueryStateCard,
-} from "@/components/app-query-state";
+import { BarTrendChart } from "@/components/app-data-viz";
 import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useBilingual } from "@/hooks/use-bilingual";
-import {
-  formatCompactNumber,
-  formatDateTime,
-  formatPercentFromRatio,
-  formatPercentValue,
-} from "@/lib/insight-formatters";
-import { localizeStatus } from "@/lib/localized-status";
-import { getQueryErrorMessage } from "@/lib/query-error";
 
-function groupJobsByDay(items: Array<{ created_at: string }>) {
-  const buckets = new Map<string, number>();
+const platformRevenue = [
+  { platform: "Instagram", amount: 62_000, color: "rgba(236, 72, 153, 0.82)" },
+  { platform: "TikTok", amount: 48_000, color: "rgba(20, 184, 166, 0.82)" },
+  { platform: "Facebook", amount: 21_000, color: "rgba(59, 130, 246, 0.78)" },
+];
 
-  for (const item of items) {
-    const date = item.created_at.slice(0, 10);
-    buckets.set(date, (buckets.get(date) ?? 0) + 1);
-  }
+const vndFormatter = new Intl.NumberFormat("vi-VN", {
+  style: "currency",
+  currency: "VND",
+  maximumFractionDigits: 0,
+});
 
-  return [...buckets.entries()].sort((left, right) =>
-    left[0].localeCompare(right[0]),
-  );
-}
+const totalRevenue = platformRevenue.reduce(
+  (sum, item) => sum + item.amount,
+  0,
+);
 
-const EMPTY_TREND_SIGNALS: TrendAnalysisRecordResponse["results"] = [];
+const topPlatform = platformRevenue.reduce((top, item) =>
+  item.amount > top.amount ? item : top,
+);
+
+const revenueChartData: ChartData<"bar"> = {
+  labels: platformRevenue.map((item) => item.platform),
+  datasets: [
+    {
+      label: "VND",
+      data: platformRevenue.map((item) => item.amount),
+      backgroundColor: platformRevenue.map((item) => item.color),
+      borderRadius: 10,
+    },
+  ],
+};
+
+const revenueChartOptions: ChartOptions<"bar"> = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      displayColors: false,
+      callbacks: {
+        label: (context) => vndFormatter.format(Number(context.parsed.y ?? 0)),
+      },
+    },
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: {
+        color: "rgba(148, 163, 184, 0.92)",
+        font: { size: 10 },
+      },
+    },
+    y: {
+      beginAtZero: true,
+      grid: { color: "rgba(148, 163, 184, 0.16)" },
+      ticks: {
+        color: "rgba(148, 163, 184, 0.92)",
+        font: { size: 10 },
+        callback: (value) => `${Number(value) / 1000}k`,
+      },
+    },
+  },
+};
 
 export function FinancePage() {
   const copy = useBilingual();
 
-  const usersQuery = useUsersQuery();
-  const trendUserId = usersQuery.data?.users[0]?.id;
-  const trendHistoryQuery = useTrendHistoryQuery({
-    userId: trendUserId,
-    limit: 20,
-    enabled: Boolean(trendUserId),
-  });
-  const generatedContentsQuery = useGeneratedContentsQuery({ limit: 40 });
-  const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 60 });
-
-  const latestTrendRecord = useMemo<TrendAnalysisRecordResponse | undefined>(
-    () =>
-      (trendHistoryQuery.data?.items ?? []).find(
-        (record) => record.results.length > 0,
-      ),
-    [trendHistoryQuery.data?.items],
-  );
-
-  const allQueries = [
-    usersQuery,
-    trendHistoryQuery,
-    generatedContentsQuery,
-    publishJobsQuery,
-  ];
-
-  const isInitialLoading = allQueries.some(
-    (query) => query.isLoading && !query.data,
-  );
-  const isLoading = allQueries.some((query) => query.isLoading);
-  const firstError = allQueries.find((query) => query.error)?.error;
-
-  const publishJobs = publishJobsQuery.data?.items ?? [];
-  const generatedContents = generatedContentsQuery.data?.items ?? [];
-  const trendSignals = latestTrendRecord?.results ?? EMPTY_TREND_SIGNALS;
-
-  const publishedJobsCount = publishJobs.filter(
-    (job) => job.status.toLowerCase() === "published",
-  ).length;
-  const failedJobsCount = publishJobs.filter(
-    (job) => job.status.toLowerCase() === "failed",
-  ).length;
-  const pendingJobsCount = publishJobs.filter(
-    (job) => job.status.toLowerCase() === "pending",
-  ).length;
-
-  const completedJobs = publishedJobsCount + failedJobsCount;
-  const publishSuccessRatio =
-    completedJobs > 0 ? publishedJobsCount / completedJobs : 0;
-
-  const averageTrendScore = trendSignals.length
-    ? trendSignals.reduce((sum, item) => sum + item.trend_score, 0) /
-      trendSignals.length
-    : 0;
-
-  const jobsTimeline = groupJobsByDay(publishJobs).slice(-10);
-
-  const jobsTimelineData = {
-    labels: jobsTimeline.map(([date]) => date.slice(5)),
-    datasets: [
-      {
-        label: copy("Jobs", "Công việc"),
-        data: jobsTimeline.map(([, value]) => value),
-        borderColor: "rgba(6, 182, 212, 0.9)",
-        backgroundColor: "rgba(6, 182, 212, 0.2)",
-        tension: 0.36,
-        fill: true,
-        pointRadius: 3,
-      },
-    ],
-  };
-
-  const publishMixData = {
-    labels: [
-      copy("Published", "Đã đăng"),
-      copy("Pending", "Đang chờ"),
-      copy("Failed", "Lỗi"),
-    ],
-    datasets: [
-      {
-        data: [publishedJobsCount, pendingJobsCount, failedJobsCount],
-        backgroundColor: [
-          "rgba(16, 185, 129, 0.82)",
-          "rgba(245, 158, 11, 0.78)",
-          "rgba(248, 113, 113, 0.74)",
-        ],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  const trendBarData = useMemo(
-    () => ({
-      labels: trendSignals.map((item) => item.main_keyword),
-      datasets: [
-        {
-          label: copy("Trend score", "Điểm xu hướng"),
-          data: trendSignals.map((item) => item.trend_score),
-          backgroundColor: "rgba(59, 130, 246, 0.76)",
-          borderRadius: 10,
-        },
-      ],
-    }),
-    [copy, trendSignals],
-  );
-
   return (
     <div className="grid gap-8">
       <SectionHeader
-        eyebrow={copy("Finance Intelligence", "Trí tuệ tài chính")}
-        title={copy("Creator Finance Control", "Điều phối tài chính creator")}
+        eyebrow={copy("Finance", "Tài chính")}
+        title={copy("Revenue Snapshot", "Tổng quan doanh thu")}
         description={copy(
-          "Financial health from delivery outcomes, throughput, and trend momentum instead of deprecated profile/account endpoints.",
-          "Sức khỏe tài chính được đo từ kết quả xuất bản, thông lượng nội dung và động lượng trend thay vì các endpoint profile/account đã loại bỏ.",
+          "A compact view of creator revenue across the main platforms.",
+          "Góc nhìn gọn về doanh thu creator trên các nền tảng chính.",
         )}
         action={
           <Badge
             variant="outline"
-            className="rounded-full border-primary/25 bg-background/80 px-3 py-1.5 text-primary"
+            className="rounded-full border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-amber-300"
           >
-            <Sparkles className="mr-2 size-3.5" />
-            {copy("Clean API Surface", "Bề mặt API đã làm sạch")}
+            {copy("Demo snapshot", "Bản demo")}
           </Badge>
         }
       />
 
-      {firstError ? (
-        <QueryStateCard
-          state="error"
-          title={copy("Finance Data Error", "Lỗi dữ liệu tài chính")}
-          description={getQueryErrorMessage(
-            firstError,
-            "Unable to load finance metrics.",
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard
+          label={copy("Total Revenue", "Tổng tiền kiếm được")}
+          value={vndFormatter.format(totalRevenue)}
+          detail={copy(
+            "Across tracked platforms",
+            "Từ các nền tảng đang theo dõi",
           )}
+          icon={<Coins className="size-5" />}
         />
-      ) : null}
-
-      {isInitialLoading ? (
-        <MetricCardsSkeleton />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label={copy("Accounts", "Tài khoản")}
-            value={formatCompactNumber(usersQuery.data?.users.length ?? 0)}
-            icon={<Wallet className="size-5" />}
-            detail={copy(
-              "Available workspace identities",
-              "Danh tính workspace khả dụng",
-            )}
-          />
-          <MetricCard
-            label={copy("Publishing Success", "Tỷ lệ xuất bản thành công")}
-            value={formatPercentFromRatio(publishSuccessRatio)}
-            icon={<Coins className="size-5" />}
-            detail={copy(
-              "Published / completed jobs",
-              "Đã đăng trên tổng job đã hoàn tất",
-            )}
-          />
-          <MetricCard
-            label={copy("Content Throughput", "Thông lượng nội dung")}
-            value={formatCompactNumber(generatedContents.length)}
-            icon={<History className="size-5" />}
-            detail={copy(
-              "Generated content in current window",
-              "Nội dung đã tạo trong cửa sổ hiện tại",
-            )}
-          />
-          <MetricCard
-            label={copy("Trend Momentum", "Động lượng xu hướng")}
-            value={formatPercentValue(averageTrendScore)}
-            icon={<Eye className="size-5" />}
-            detail={copy(
-              "Average score from live trend map",
-              "Điểm trung bình từ bản đồ trend trực tiếp",
-            )}
-          />
-        </div>
-      )}
-
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <PanelCard
-          title={copy("Publishing Trendline", "Đường xu hướng xuất bản")}
-          description={copy(
-            "Daily number of publish jobs to monitor execution rhythm.",
-            "Số lượng publish job theo ngày để theo dõi nhịp thực thi.",
+        <MetricCard
+          label={copy("Top Platform", "Nền tảng cao nhất")}
+          value={topPlatform.platform}
+          detail={vndFormatter.format(topPlatform.amount)}
+          icon={<TrendingUp className="size-5" />}
+        />
+        <MetricCard
+          label={copy("Tracked Platforms", "Nền tảng theo dõi")}
+          value={String(platformRevenue.length)}
+          detail={copy(
+            "Instagram, TikTok, Facebook",
+            "Instagram, TikTok, Facebook",
           )}
-        >
-          {jobsTimeline.length > 0 ? (
-            <LineTrendChart
-              data={jobsTimelineData}
-              className="bg-linear-to-br from-cyan-100/60 via-card to-sky-100/45 dark:from-cyan-500/12 dark:via-card/90 dark:to-sky-500/10"
-            />
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No timeline data for publish jobs yet.",
-                "Chưa có dữ liệu timeline cho publish job.",
-              )}
-            />
-          )}
-        </PanelCard>
-
-        <PanelCard
-          title={copy("Publish Outcome Mix", "Tỷ trọng kết quả xuất bản")}
-          description={copy(
-            "Share of published, pending, and failed jobs.",
-            "Tỷ trọng các job đã đăng, đang chờ và thất bại.",
-          )}
-        >
-          {publishJobs.length > 0 ? (
-            <DoughnutTrendChart
-              data={publishMixData}
-              className="bg-linear-to-br from-emerald-100/55 via-card to-amber-100/45 dark:from-emerald-500/12 dark:via-card/90 dark:to-amber-500/10"
-            />
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No publish jobs available.",
-                "Chưa có job đăng bài khả dụng.",
-              )}
-            />
-          )}
-        </PanelCard>
+          icon={<ReceiptText className="size-5" />}
+        />
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <PanelCard
-          title={copy("Trend Investment Priority", "Ưu tiên đầu tư theo trend")}
+          title={copy("Revenue By Platform", "Doanh thu theo nền tảng")}
           description={copy(
-            "Use trend score to decide which themes deserve production budget first.",
-            "Dùng điểm trend để quyết định chủ đề nào nên ưu tiên ngân sách sản xuất.",
+            "VND amount grouped by social channel.",
+            "Số tiền VND được nhóm theo từng kênh mạng xã hội.",
           )}
         >
-          {trendSignals.length > 0 ? (
-            <BarTrendChart
-              data={trendBarData}
-              className="bg-linear-to-br from-indigo-100/55 via-card to-blue-100/45 dark:from-indigo-500/12 dark:via-card/90 dark:to-blue-500/10"
-            />
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No trend score data available.",
-                "Chưa có dữ liệu điểm trend.",
-              )}
-            />
-          )}
+          <BarTrendChart
+            data={revenueChartData}
+            options={revenueChartOptions}
+            className="bg-linear-to-br from-emerald-100/55 via-card to-sky-100/45 dark:from-emerald-500/12 dark:via-card/90 dark:to-sky-500/10"
+          />
         </PanelCard>
 
         <PanelCard
-          title={copy(
-            "Recent Financially Relevant Activity",
-            "Hoạt động gần đây liên quan tài chính",
-          )}
+          title={copy("Platform Payouts", "Số tiền từng nền tảng")}
           description={copy(
-            "Recent publish jobs and trend sessions that can impact your spending decisions.",
-            "Các publish job và phiên trend gần đây có thể ảnh hưởng quyết định chi phí.",
+            "A short breakdown for quick review.",
+            "Bảng chia nhỏ để kiểm tra nhanh.",
           )}
         >
-          {isLoading ? (
-            <PanelRowsSkeleton rows={5} />
-          ) : (
-            <>
-              {publishJobs.length === 0 &&
-              (trendHistoryQuery.data?.items.length ?? 0) === 0 ? (
-                <InlineQueryState
-                  state="empty"
-                  message={copy(
-                    "No activity found yet.",
-                    "Chưa có hoạt động nào.",
-                  )}
-                />
-              ) : (
-                <ScrollArea className="h-96 pr-3">
-                  <div className="space-y-3">
-                    {publishJobs.slice(0, 5).map((job) => (
-                      <div
-                        key={job.id}
-                        className="rounded-2xl border border-border/65 bg-background/65 p-4"
-                      >
-                        <p className="text-sm font-semibold text-foreground">
-                          {job.title}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {copy("Status", "Trạng thái")}:{" "}
-                          {localizeStatus(job.status, copy)}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {copy("Created", "Tạo lúc")}:{" "}
-                          {formatDateTime(job.created_at)}
-                        </p>
-                      </div>
-                    ))}
-
-                    {trendHistoryQuery.data?.items.slice(0, 3).map((record) => (
-                      <div
-                        key={
-                          record.analysis_id ??
-                          `${record.query}-${record.created_at}`
-                        }
-                        className="rounded-2xl border border-border/65 bg-background/65 p-4"
-                      >
-                        <p className="text-sm font-semibold text-foreground">
-                          {record.query}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {copy("Trend session", "Phiên xu hướng")}:{" "}
-                          {formatDateTime(record.created_at)}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {copy("Insights", "Số insight")}:{" "}
-                          {record.results.length}
-                        </p>
-                      </div>
-                    ))}
+          <div className="space-y-3">
+            {platformRevenue.map((item) => (
+              <div
+                key={item.platform}
+                className="flex items-center justify-between gap-4 rounded-2xl border border-border/65 bg-background/65 p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="size-3 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {item.platform}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {copy("Recorded amount", "Tiền ghi nhận")}
+                    </p>
                   </div>
-                </ScrollArea>
-              )}
-            </>
-          )}
+                </div>
+                <p className="text-sm font-semibold text-foreground">
+                  {vndFormatter.format(item.amount)}
+                </p>
+              </div>
+            ))}
+          </div>
         </PanelCard>
       </div>
-
-      <PanelCard
-        title={copy("Financial Guardrails", "Rào chắn tài chính")}
-        description={copy(
-          "Action-first reminders to reduce failed output and wasted posting cycles.",
-          "Nhắc nhở ưu tiên hành động để giảm đầu ra lỗi và chu kỳ đăng bài lãng phí.",
-        )}
-      >
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <Alert className="border-amber-500/30 bg-amber-500/10">
-            <AlertTriangle />
-            <AlertTitle>
-              {copy("Before Scheduling", "Trước khi lên lịch")}
-            </AlertTitle>
-            <AlertDescription>
-              {copy(
-                "Only schedule jobs when trend direction and generated content are already reviewed.",
-                "Chỉ lên lịch khi hướng trend và nội dung tạo ra đã được kiểm tra.",
-              )}
-            </AlertDescription>
-          </Alert>
-
-          <Alert className="border-blue-500/30 bg-blue-500/10">
-            <BarChart3 className="text-primary" />
-            <AlertTitle>{copy("Failure Follow-up", "Theo dõi lỗi")}</AlertTitle>
-            <AlertDescription>
-              <p>
-                {copy("Failed jobs", "Job thất bại")}:{" "}
-                {formatCompactNumber(failedJobsCount)}
-              </p>
-              <p className="mt-1.5">
-                {copy(
-                  "Review title, platforms, and scheduling window before re-run.",
-                  "Rà soát tiêu đề, nền tảng và khung thời gian trước khi chạy lại.",
-                )}
-              </p>
-            </AlertDescription>
-          </Alert>
-        </div>
-      </PanelCard>
-
-      <PanelCard
-        title={copy("Finance Notes", "Ghi chú tài chính")}
-        description={copy(
-          "Deprecated Upload-Post account/profile endpoints were removed from this view to match backend documentation.",
-          "Các endpoint Upload-Post account/profile đã bị loại khỏi trang này để khớp với tài liệu backend.",
-        )}
-      >
-        <Alert className="border-border/65 bg-background/65">
-          <BarChart3 className="text-primary" />
-          <AlertTitle>
-            {copy("Current source of truth", "Nguồn dữ liệu hiện hành")}
-          </AlertTitle>
-          <AlertDescription className="mt-1">
-            {copy(
-              "This page now uses users, trends, generated contents, and publish jobs only.",
-              "Trang này hiện chỉ dùng users, trends, generated contents và publish jobs.",
-            )}
-          </AlertDescription>
-        </Alert>
-      </PanelCard>
     </div>
   );
 }

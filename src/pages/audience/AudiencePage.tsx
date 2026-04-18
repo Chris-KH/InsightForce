@@ -1,477 +1,225 @@
-import { useMemo } from "react";
-import {
-  Hash,
-  MessageCircle,
-  Radar,
-  Sparkles,
-  Users,
-  Video,
-} from "lucide-react";
+import type { ChartData, ChartOptions } from "chart.js";
+import { Eye, Heart, Lightbulb, MessageCircle, Users } from "lucide-react";
 
+import { DoughnutTrendChart } from "@/components/app-data-viz";
 import {
-  useGeneratedContentsQuery,
-  useTrendHistoryQuery,
-  useUploadPostPublishJobsQuery,
-  useUsersQuery,
-} from "@/api";
-import type {
-  TrendAnalysisRecordResponse,
-  TrendAnalyzeResultItem,
-} from "@/api/types";
-import { BarTrendChart, DoughnutTrendChart } from "@/components/app-data-viz";
-import {
-  InlineQueryState,
-  MetricCardsSkeleton,
-  PanelRowsSkeleton,
-  QueryStateCard,
-} from "@/components/app-query-state";
-import { MetricCard, PanelCard, SectionHeader } from "@/components/app-section";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+  MetricCard,
+  PanelCard,
+  ProgressBar,
+  SectionHeader,
+} from "@/components/app-section";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useBilingual } from "@/hooks/use-bilingual";
 import {
   formatCompactNumber,
-  formatDateTime,
-  formatPercentValue,
+  formatPercentFromRatio,
 } from "@/lib/insight-formatters";
-import { localizeStatus } from "@/lib/localized-status";
-import { getQueryErrorMessage } from "@/lib/query-error";
 
-type TrendSignal = {
-  keyword: string;
-  score: number;
-  why: string;
-  recommendation: string;
-  tags: string[];
-  avgViewsPerHour: number;
+const audienceSnapshot = {
+  totalViews: 12840,
+  reactions: 870,
+  comments: 44,
+  followers: 1240,
 };
 
-function normalizeTrendSignals(raw: TrendAnalysisRecordResponse | undefined) {
-  const source: TrendAnalyzeResultItem[] = raw?.results ?? [];
+const platformPostMix = [
+  { platform: "Instagram", ratio: 0.42, color: "rgba(236, 72, 153, 0.82)" },
+  { platform: "TikTok", ratio: 0.34, color: "rgba(20, 184, 166, 0.82)" },
+  { platform: "Facebook", ratio: 0.24, color: "rgba(59, 130, 246, 0.78)" },
+];
 
-  return source.map<TrendSignal>((item) => ({
-    keyword: item.main_keyword,
-    score: item.trend_score,
-    why: item.why_the_trend_happens,
-    recommendation: item.recommended_action,
-    tags: item.top_hashtags,
-    avgViewsPerHour: item.avg_views_per_hour,
-  }));
-}
+const positiveComments = [
+  {
+    en: "Clean visuals and easy to follow. Saved this for tonight.",
+    vi: "Ảnh nhìn sạch và dễ hiểu, lưu lại để tối làm theo.",
+  },
+  {
+    en: "Short, practical tips for busy people.",
+    vi: "Mẹo ngắn gọn, hợp với người bận rộn.",
+  },
+  {
+    en: "This carousel is easy to share with friends.",
+    vi: "Carousel này dễ share cho bạn bè.",
+  },
+];
+
+const audienceBehaviorCues = [
+  {
+    en: "Prioritize 4-5 image carousels with concise captions.",
+    vi: "Ưu tiên carousel 4-5 ảnh với caption ngắn, dễ lưu lại.",
+  },
+  {
+    en: "Keep the hook practical and avoid overstating results.",
+    vi: "Giữ hook thực tế, tránh nói quá về hiệu quả.",
+  },
+  {
+    en: "Push Instagram and TikTok first, then use a longer Facebook caption.",
+    vi: "Đẩy Instagram và TikTok trước, Facebook dùng bản caption dài hơn.",
+  },
+];
+
+const platformPostMixData: ChartData<"doughnut"> = {
+  labels: platformPostMix.map((item) => item.platform),
+  datasets: [
+    {
+      data: platformPostMix.map((item) => Math.round(item.ratio * 100)),
+      backgroundColor: platformPostMix.map((item) => item.color),
+      borderWidth: 0,
+    },
+  ],
+};
+
+const platformPostMixOptions: ChartOptions<"doughnut"> = {
+  responsive: true,
+  maintainAspectRatio: false,
+  cutout: "68%",
+  plugins: {
+    legend: {
+      position: "bottom",
+      labels: {
+        color: "rgba(148, 163, 184, 0.92)",
+        boxWidth: 10,
+        boxHeight: 10,
+      },
+    },
+    tooltip: {
+      displayColors: false,
+      callbacks: {
+        label: (context) => `${context.label}: ${context.parsed}%`,
+      },
+    },
+  },
+};
 
 export function AudiencePage() {
   const copy = useBilingual();
 
-  const usersQuery = useUsersQuery();
-  const trendUserId = usersQuery.data?.users[0]?.id;
-
-  const trendHistoryQuery = useTrendHistoryQuery({
-    userId: trendUserId,
-    limit: 20,
-    enabled: Boolean(trendUserId),
-  });
-  const generatedContentsQuery = useGeneratedContentsQuery({ limit: 20 });
-  const publishJobsQuery = useUploadPostPublishJobsQuery({ limit: 20 });
-
-  const latestTrendRecord = useMemo(
-    () =>
-      (trendHistoryQuery.data?.items ?? []).find(
-        (record) => record.results.length > 0,
-      ),
-    [trendHistoryQuery.data?.items],
-  );
-
-  const trendSignals = useMemo(
-    () => normalizeTrendSignals(latestTrendRecord),
-    [latestTrendRecord],
-  );
-
-  const topSignal = trendSignals[0];
-
-  const topHashtags = useMemo(
-    (): string[] =>
-      Array.from(
-        new Set<string>(
-          trendSignals
-            .flatMap((item: TrendSignal) => item.tags)
-            .map((tag: string) => tag.trim())
-            .filter(Boolean),
-        ),
-      ).slice(0, 12),
-    [trendSignals],
-  );
-
-  const trendBarData = useMemo(
-    () => ({
-      labels: trendSignals.map((item: TrendSignal) => item.keyword),
-      datasets: [
-        {
-          label: copy("Trend score", "Điểm xu hướng"),
-          data: trendSignals.map((item: TrendSignal) => item.score),
-          backgroundColor: "rgba(20, 184, 166, 0.78)",
-          borderRadius: 10,
-        },
-      ],
-    }),
-    [copy, trendSignals],
-  );
-
-  const publishJobs = publishJobsQuery.data?.items ?? [];
-  const publishedJobsCount = publishJobs.filter(
-    (job) => job.status.toLowerCase() === "published",
-  ).length;
-  const pendingJobsCount = publishJobs.filter(
-    (job) => job.status.toLowerCase() === "pending",
-  ).length;
-  const failedJobsCount = publishJobs.filter(
-    (job) => job.status.toLowerCase() === "failed",
-  ).length;
-
-  const publishMixData = {
-    labels: [
-      copy("Published", "Đã đăng"),
-      copy("Pending", "Đang chờ"),
-      copy("Failed", "Lỗi"),
-    ],
-    datasets: [
-      {
-        data: [publishedJobsCount, pendingJobsCount, failedJobsCount],
-        backgroundColor: [
-          "rgba(16, 185, 129, 0.82)",
-          "rgba(245, 158, 11, 0.78)",
-          "rgba(248, 113, 113, 0.75)",
-        ],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  const trendHistoryItems = trendHistoryQuery.data?.items ?? [];
-  const generatedContents = generatedContentsQuery.data?.items ?? [];
-
-  const allQueries = [
-    usersQuery,
-    trendHistoryQuery,
-    generatedContentsQuery,
-    publishJobsQuery,
-  ];
-
-  const isInitialLoading = allQueries.some(
-    (query) => query.isLoading && !query.data,
-  );
-  const isLoading = allQueries.some((query) => query.isLoading);
-  const firstError = allQueries.find((query) => query.error)?.error;
-
   return (
     <div className="grid gap-8">
       <SectionHeader
-        eyebrow={copy("Audience Intelligence", "Trí tuệ khán giả")}
-        title={copy("Audience Behavior Radar", "Radar hành vi khán giả")}
+        eyebrow={copy("Audience", "Khán giả")}
+        title={copy("Audience Snapshot", "Tổng quan khán giả")}
         description={copy(
-          "Audience direction synthesized from trend momentum, recent strategy runs, and publishing outcomes.",
-          "Định hướng khán giả được tổng hợp từ nhịp xu hướng, các lần chạy chiến lược gần đây và kết quả xuất bản.",
+          "A compact snapshot of audience performance and content direction.",
+          "Snapshot gọn về hiệu quả khán giả và hướng nội dung tiếp theo.",
         )}
         action={
           <Badge
             variant="outline"
-            className="rounded-full border-primary/25 bg-background/80 px-3 py-1.5 text-primary"
+            className="rounded-full border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-amber-300"
           >
-            <Sparkles className="mr-2 size-3.5" />
-            {copy("Docs-Aligned Signals", "Tín hiệu đúng theo docs")}
+            {copy("Demo snapshot", "Bản demo")}
           </Badge>
         }
       />
 
-      {firstError ? (
-        <QueryStateCard
-          state="error"
-          title={copy("Unable To Load Signals", "Không thể tải tín hiệu")}
-          description={getQueryErrorMessage(
-            firstError,
-            "Unable to load audience data right now.",
-          )}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label={copy("Total Views", "Tổng lượt xem")}
+          value={formatCompactNumber(audienceSnapshot.totalViews)}
+          detail={copy("Across recent posts", "Trên các bài gần đây")}
+          icon={<Eye className="size-5" />}
         />
-      ) : null}
-
-      {isInitialLoading ? (
-        <MetricCardsSkeleton />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label={copy(
-              "Active Trend Signals",
-              "Tín hiệu trend đang hoạt động",
-            )}
-            value={formatCompactNumber(trendSignals.length)}
-            detail={copy(
-              "General trend map for this session",
-              "Bản đồ trend tổng quát cho phiên hiện tại",
-            )}
-            icon={<Radar className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Top Hashtag Set", "Bộ hashtag nổi bật")}
-            value={formatCompactNumber(topHashtags.length)}
-            detail={copy(
-              "Unique tags across strongest trends",
-              "Hashtag duy nhất trong các trend mạnh nhất",
-            )}
-            icon={<Hash className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Generated Content Packs", "Gói nội dung đã tạo")}
-            value={formatCompactNumber(generatedContents.length)}
-            detail={copy(
-              "Ready for publishing selection",
-              "Sẵn sàng cho bước chọn và đăng",
-            )}
-            icon={<Video className="size-5" />}
-          />
-          <MetricCard
-            label={copy("Published Jobs", "Công việc đã đăng")}
-            value={formatCompactNumber(publishedJobsCount)}
-            detail={copy(
-              "Recent jobs marked as published",
-              "Các công việc gần đây có trạng thái đã đăng",
-            )}
-            icon={<Users className="size-5" />}
-          />
-        </div>
-      )}
-
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <PanelCard
-          title={copy("Trend Momentum", "Động lượng xu hướng")}
-          description={copy(
-            "Score comparison between active trend signals.",
-            "So sánh điểm số giữa các tín hiệu xu hướng đang hoạt động.",
-          )}
-        >
-          {trendSignals.length > 0 ? (
-            <BarTrendChart
-              data={trendBarData}
-              className="bg-linear-to-br from-teal-100/60 via-card to-cyan-100/45 dark:from-teal-500/12 dark:via-card/90 dark:to-cyan-500/10"
-            />
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No trend signals available yet.",
-                "Chưa có tín hiệu xu hướng khả dụng.",
-              )}
-            />
-          )}
-        </PanelCard>
-
-        <PanelCard
-          title={copy("Publishing Outcome Mix", "Tỷ trọng kết quả đăng bài")}
-          description={copy(
-            "Distribution of recent publishing outcomes.",
-            "Phân bổ kết quả xuất bản gần đây.",
-          )}
-        >
-          {publishJobs.length > 0 ? (
-            <DoughnutTrendChart
-              data={publishMixData}
-              className="bg-linear-to-br from-lime-100/55 via-card to-amber-100/45 dark:from-lime-500/12 dark:via-card/90 dark:to-amber-500/10"
-            />
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No publish jobs found for charting.",
-                "Chưa có publish job để dựng biểu đồ.",
-              )}
-            />
-          )}
-        </PanelCard>
+        <MetricCard
+          label={copy("Reactions", "Lượt react")}
+          value={formatCompactNumber(audienceSnapshot.reactions)}
+          detail={copy("Likes and quick reactions", "Like và tương tác nhanh")}
+          icon={<Heart className="size-5" />}
+        />
+        <MetricCard
+          label={copy("Comments", "Bình luận")}
+          value={formatCompactNumber(audienceSnapshot.comments)}
+          detail={copy("Public comment volume", "Số bình luận công khai")}
+          icon={<MessageCircle className="size-5" />}
+        />
+        <MetricCard
+          label={copy("Followers", "Người theo dõi")}
+          value={formatCompactNumber(audienceSnapshot.followers)}
+          detail={copy("Estimated active base", "Tệp theo dõi ước tính")}
+          icon={<Users className="size-5" />}
+        />
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         <PanelCard
-          title={copy("Audience Cues", "Gợi ý hành vi khán giả")}
+          title={copy("Platform Post Mix", "Tỷ trọng đăng bài")}
           description={copy(
-            "Actionable cues from strongest trend context.",
-            "Gợi ý có thể hành động từ bối cảnh xu hướng mạnh nhất.",
+            "Current posting split between the main social platforms.",
+            "Tỷ trọng đăng bài hiện tại giữa các nền tảng chính.",
           )}
         >
-          <div className="space-y-3">
-            {isLoading ? (
-              <PanelRowsSkeleton rows={4} />
-            ) : topSignal ? (
-              <>
-                <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
-                  <p className="text-sm font-semibold text-foreground">
-                    {topSignal.keyword}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {copy("Trend score", "Điểm xu hướng")}:{" "}
-                    {formatPercentValue(topSignal.score)}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-foreground">
-                    {topSignal.why ||
-                      copy(
-                        "Insight explanation is still being updated.",
-                        "Phần diễn giải đang được cập nhật.",
-                      )}
-                  </p>
-                </div>
+          <DoughnutTrendChart
+            data={platformPostMixData}
+            options={platformPostMixOptions}
+            className="bg-linear-to-br from-fuchsia-100/55 via-card to-cyan-100/45 dark:from-fuchsia-500/12 dark:via-card/90 dark:to-cyan-500/10"
+          />
 
-                <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
-                  <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                    {copy("Recommended action", "Hành động đề xuất")}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-foreground">
-                    {topSignal.recommendation ||
-                      copy(
-                        "Continue monitoring this signal before scaling.",
-                        "Tiếp tục theo dõi tín hiệu này trước khi mở rộng.",
-                      )}
-                  </p>
+          <div className="mt-5 grid gap-3">
+            {platformPostMix.map((item) => (
+              <div key={item.platform} className="space-y-2">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="font-medium text-foreground">
+                    {item.platform}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {formatPercentFromRatio(item.ratio)}
+                  </span>
                 </div>
-
-                <div className="rounded-2xl border border-border/65 bg-background/65 p-4">
-                  <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                    {copy(
-                      "Average views per hour",
-                      "Lượt xem trung bình mỗi giờ",
-                    )}
-                  </p>
-                  <p className="mt-2 text-xl font-semibold text-foreground">
-                    {formatCompactNumber(topSignal.avgViewsPerHour)}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <InlineQueryState
-                state="empty"
-                message={copy(
-                  "No audience cues available from trend analysis.",
-                  "Chưa có gợi ý khán giả từ dữ liệu trend.",
-                )}
-              />
-            )}
+                <ProgressBar value={item.ratio * 100} />
+              </div>
+            ))}
           </div>
         </PanelCard>
 
         <PanelCard
-          title={copy(
-            "Recent Strategy Activity",
-            "Hoạt động chiến lược gần đây",
-          )}
+          title={copy("Positive Comments", "Một vài bình luận tích cực")}
           description={copy(
-            "Latest trend sessions and publish outputs.",
-            "Các phiên trend và kết quả publish mới nhất.",
+            "Short samples that signal what the audience currently likes.",
+            "Một vài mẫu ngắn cho thấy khán giả đang thích điều gì.",
           )}
         >
-          {isLoading ? (
-            <PanelRowsSkeleton rows={5} />
-          ) : trendHistoryItems.length === 0 && publishJobs.length === 0 ? (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No recent strategy activity available.",
-                "Chưa có hoạt động chiến lược gần đây.",
-              )}
-            />
-          ) : (
-            <ScrollArea className="h-96 pr-3">
-              <div className="space-y-3">
-                {trendHistoryItems.slice(0, 4).map((record) => (
-                  <div
-                    key={
-                      record.analysis_id ??
-                      `${record.query}-${record.created_at}`
-                    }
-                    className="rounded-2xl border border-border/65 bg-background/65 p-4"
-                  >
-                    <p className="text-sm font-semibold text-foreground">
-                      {record.query}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {copy("Created", "Khởi tạo")}:{" "}
-                      {formatDateTime(record.created_at)}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {copy("Insights", "Số insight")}: {record.results.length}
-                    </p>
+          <div className="space-y-3">
+            {positiveComments.map((comment) => (
+              <div
+                key={comment.en}
+                className="rounded-2xl border border-border/65 bg-background/65 p-4"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border border-primary/25 bg-primary/10 text-primary">
+                    <MessageCircle className="size-4" />
                   </div>
-                ))}
-
-                {publishJobs.slice(0, 4).map((job) => (
-                  <div
-                    key={job.id}
-                    className="rounded-2xl border border-border/65 bg-background/65 p-4"
-                  >
-                    <p className="text-sm font-semibold text-foreground">
-                      {job.title}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {copy("Status", "Trạng thái")}:{" "}
-                      {localizeStatus(job.status, copy)}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {copy("Platforms", "Nền tảng")}:{" "}
-                      {job.platforms.join(", ")}
-                    </p>
-                  </div>
-                ))}
+                  <p className="text-sm leading-6 text-foreground">
+                    "{copy(comment.en, comment.vi)}"
+                  </p>
+                </div>
               </div>
-            </ScrollArea>
-          )}
+            ))}
+          </div>
         </PanelCard>
       </div>
 
       <PanelCard
-        title={copy("Hashtag Watchlist", "Danh sách theo dõi hashtag")}
+        title={copy("Audience Behavior Cues", "Gợi ý hành vi khán giả")}
         description={copy(
-          "Hashtags currently repeated across strongest trend signals.",
-          "Các hashtag đang lặp lại trong những tín hiệu xu hướng mạnh nhất.",
+          "Lightweight guidance for the next few posts, based on the mocked audience snapshot.",
+          "Gợi ý nhẹ cho vài bài tiếp theo, dựa trên snapshot khán giả mock.",
         )}
       >
-        <div className="flex flex-wrap gap-2">
-          {topHashtags.length > 0 ? (
-            topHashtags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="outline"
-                className="rounded-full border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px]"
-              >
-                {tag}
-              </Badge>
-            ))
-          ) : (
-            <InlineQueryState
-              state="empty"
-              message={copy(
-                "No hashtags detected from current trend data.",
-                "Chưa có hashtag được phát hiện từ dữ liệu trend hiện tại.",
-              )}
-            />
-          )}
+        <div className="grid gap-3 lg:grid-cols-3">
+          {audienceBehaviorCues.map((cue) => (
+            <div
+              key={cue.en}
+              className="rounded-2xl border border-border/65 bg-background/65 p-4"
+            >
+              <div className="mb-3 flex size-9 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
+                <Lightbulb className="size-4" />
+              </div>
+              <p className="text-sm leading-6 text-foreground">
+                {copy(cue.en, cue.vi)}
+              </p>
+            </div>
+          ))}
         </div>
-      </PanelCard>
-
-      <PanelCard
-        title={copy("Comment Signal Note", "Ghi chú tín hiệu bình luận")}
-        description={copy(
-          "Comment-level endpoints are no longer part of active docs. Use trend and publish outcomes as validated audience proxies.",
-          "Các endpoint mức bình luận không còn trong docs hiện hành. Hãy dùng kết quả trend và publish như proxy đã được xác thực cho tín hiệu khán giả.",
-        )}
-      >
-        <Alert className="border-border/65 bg-background/65">
-          <MessageCircle className="text-primary" />
-          <AlertTitle>
-            {copy("Why this changed", "Vì sao phần này thay đổi")}
-          </AlertTitle>
-          <AlertDescription className="mt-1">
-            {copy(
-              "Legacy TikTok/YouTube and comment lookup APIs are excluded to keep the frontend aligned with backend API documentation.",
-              "Các API TikTok/YouTube cũ và tra cứu comment đã được loại bỏ để đảm bảo frontend bám sát tài liệu API backend.",
-            )}
-          </AlertDescription>
-        </Alert>
       </PanelCard>
     </div>
   );
