@@ -1,10 +1,6 @@
-import type {
-  UserContentCategory,
-  UserContentFormat,
-  UserVoiceTone,
-} from "@/api/types";
+import type { UserVoiceTone } from "@/api/types";
 
-type LocalizedOption<T extends string> = {
+type LocalizedOption<T extends string | number> = {
   value: T;
   label: {
     en: string;
@@ -12,36 +8,56 @@ type LocalizedOption<T extends string> = {
   };
 };
 
-export const CONTENT_CATEGORY_OPTIONS: LocalizedOption<UserContentCategory>[] =
-  [
-    { value: "wellness", label: { en: "Wellness", vi: "Sức khỏe" } },
-    { value: "education", label: { en: "Education", vi: "Giáo dục" } },
-    { value: "finance", label: { en: "Finance", vi: "Tài chính" } },
-    { value: "lifestyle", label: { en: "Lifestyle", vi: "Phong cách sống" } },
-    { value: "technology", label: { en: "Technology", vi: "Công nghệ" } },
-    { value: "business", label: { en: "Business", vi: "Kinh doanh" } },
-  ];
-
-export const CONTENT_FORMAT_OPTIONS: LocalizedOption<UserContentFormat>[] = [
+export const CONTENT_GROUP_OPTIONS: LocalizedOption<string>[] = [
   {
-    value: "short_video",
+    value: "Mẹo vặt cuộc sống",
+    label: { en: "Daily Life Hacks", vi: "Mẹo vặt cuộc sống" },
+  },
+  {
+    value: "Lifehack gia đình",
+    label: { en: "Family Life Hacks", vi: "Lifehack gia đình" },
+  },
+  {
+    value: "Tổ chức nhà cửa",
+    label: { en: "Home Organization", vi: "Tổ chức nhà cửa" },
+  },
+  {
+    value: "Thói quen cá nhân",
+    label: { en: "Personal Habits", vi: "Thói quen cá nhân" },
+  },
+  {
+    value: "Câu chuyện giáo dục",
+    label: { en: "Educational Stories", vi: "Câu chuyện giáo dục" },
+  },
+  {
+    value: "Kỹ năng sống",
+    label: { en: "Life Skills", vi: "Kỹ năng sống" },
+  },
+];
+
+export const PRIORITY_FORMAT_OPTIONS: LocalizedOption<string>[] = [
+  {
+    value: "Bài post nhiều ảnh",
+    label: { en: "Carousel Post", vi: "Bài post nhiều ảnh" },
+  },
+  {
+    value: "Chuỗi bài viết",
+    label: { en: "Thread", vi: "Chuỗi bài viết" },
+  },
+  {
+    value: "Video ngắn",
     label: { en: "Short Video", vi: "Video ngắn" },
   },
   {
-    value: "long_video",
+    value: "Video dài",
     label: { en: "Long Video", vi: "Video dài" },
   },
   {
-    value: "carousel",
-    label: { en: "Carousel", vi: "Bài nhiều ảnh" },
-  },
-  {
-    value: "single_image",
+    value: "Ảnh đơn",
     label: { en: "Single Image", vi: "Ảnh đơn" },
   },
-  { value: "thread", label: { en: "Thread", vi: "Chuỗi bài viết" } },
   {
-    value: "live_stream",
+    value: "Phát trực tiếp",
     label: { en: "Live Stream", vi: "Phát trực tiếp" },
   },
 ];
@@ -73,6 +89,10 @@ export const LANGUAGE_OPTIONS: LocalizedOption<string>[] = [
 
 export const TIMEZONE_OPTIONS: LocalizedOption<string>[] = [
   {
+    value: "Asia/Saigon",
+    label: { en: "GMT+7 (Saigon)", vi: "GMT+7 (Sài Gòn)" },
+  },
+  {
     value: "Asia/Ho_Chi_Minh",
     label: { en: "GMT+7 (Ho Chi Minh)", vi: "GMT+7 (TP.HCM)" },
   },
@@ -90,17 +110,19 @@ export const TIMEZONE_OPTIONS: LocalizedOption<string>[] = [
   },
 ];
 
-export const POSTING_CADENCE_OPTIONS: LocalizedOption<string>[] = [
-  { value: "3 posts/week", label: { en: "3 posts/week", vi: "3 bài/tuần" } },
-  { value: "5 posts/week", label: { en: "5 posts/week", vi: "5 bài/tuần" } },
-  { value: "daily", label: { en: "Daily", vi: "Hằng ngày" } },
+export const WEEKLY_CONTENT_FREQUENCY_OPTIONS: LocalizedOption<number>[] = [
+  { value: 3, label: { en: "3 posts/week", vi: "3 bài/tuần" } },
+  { value: 4, label: { en: "4 posts/week", vi: "4 bài/tuần" } },
+  { value: 5, label: { en: "5 posts/week", vi: "5 bài/tuần" } },
+  { value: 6, label: { en: "6 posts/week", vi: "6 bài/tuần" } },
+  { value: 7, label: { en: "7 posts/week", vi: "7 bài/tuần" } },
   {
-    value: "campaign-based",
-    label: { en: "Campaign-based", vi: "Theo chiến dịch" },
+    value: 14,
+    label: { en: "2 posts/day", vi: "2 bài/ngày" },
   },
 ];
 
-export function localizeOptionLabel<T extends string>(
+export function localizeOptionLabel<T extends string | number>(
   option: LocalizedOption<T>,
   copy: (en: string, vi: string) => string,
 ) {

@@ -1,10 +1,6 @@
 import { useMemo, useState, type KeyboardEvent } from "react";
 
-import type {
-  UserContentCategory,
-  UserContentFormat,
-  UserProfileResponse,
-} from "@/api/types";
+import type { UserProfileResponse } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -13,17 +9,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useBilingual } from "@/hooks/use-bilingual";
 import {
-  CONTENT_CATEGORY_OPTIONS,
-  CONTENT_FORMAT_OPTIONS,
+  CONTENT_GROUP_OPTIONS,
   localizeOptionLabel,
+  PRIORITY_FORMAT_OPTIONS,
 } from "@/pages/profile/lib/profile-options";
 
 type UserProfile = UserProfileResponse["profile"];
 
 type ProfileContentDirectionTabProps = {
   profile: UserProfile;
-  onUpdateContentDirection: (
-    patch: Partial<UserProfile["content_direction"]>,
+  onUpdateContentPreferences: (
+    patch: Partial<UserProfile["content_preferences"]>,
   ) => void;
 };
 
@@ -32,14 +28,14 @@ const TOGGLE_ITEM_ACTIVE_CLASS =
 
 export function ProfileContentDirectionTab({
   profile,
-  onUpdateContentDirection,
+  onUpdateContentPreferences,
 }: ProfileContentDirectionTabProps) {
   const copy = useBilingual();
   const [keywordDraft, setKeywordDraft] = useState("");
 
   const keywordCount = useMemo(
-    () => profile.content_direction.target_keywords.length,
-    [profile.content_direction.target_keywords.length],
+    () => profile.content_preferences.keyword_hashtags.length,
+    [profile.content_preferences.keyword_hashtags.length],
   );
 
   const handleAddKeywords = () => {
@@ -54,12 +50,12 @@ export function ProfileContentDirectionTab({
 
     const nextKeywords = Array.from(
       new Set([
-        ...profile.content_direction.target_keywords,
+        ...profile.content_preferences.keyword_hashtags,
         ...incomingKeywords,
       ]),
     ).slice(0, 16);
 
-    onUpdateContentDirection({ target_keywords: nextKeywords });
+    onUpdateContentPreferences({ keyword_hashtags: nextKeywords });
     setKeywordDraft("");
   };
 
@@ -73,19 +69,19 @@ export function ProfileContentDirectionTab({
   return (
     <FieldGroup>
       <Field>
-        <FieldLabel>{copy("Content Categories", "Nhóm nội dung")}</FieldLabel>
+        <FieldLabel>{copy("Content Groups", "Nhóm nội dung")}</FieldLabel>
         <ToggleGroup
           type="multiple"
           variant="outline"
-          value={profile.content_direction.categories}
+          value={profile.content_preferences.content_groups}
           className="w-full flex-wrap justify-start gap-2"
           onValueChange={(value) =>
-            onUpdateContentDirection({
-              categories: value as UserContentCategory[],
+            onUpdateContentPreferences({
+              content_groups: value,
             })
           }
         >
-          {CONTENT_CATEGORY_OPTIONS.map((option) => (
+          {CONTENT_GROUP_OPTIONS.map((option) => (
             <ToggleGroupItem
               key={option.value}
               value={option.value}
@@ -98,21 +94,19 @@ export function ProfileContentDirectionTab({
       </Field>
 
       <Field>
-        <FieldLabel>
-          {copy("Preferred Formats", "Định dạng ưu tiên")}
-        </FieldLabel>
+        <FieldLabel>{copy("Priority Formats", "Định dạng ưu tiên")}</FieldLabel>
         <ToggleGroup
           type="multiple"
           variant="outline"
-          value={profile.content_direction.preferred_formats}
+          value={profile.content_preferences.priority_formats}
           className="w-full flex-wrap justify-start gap-2"
           onValueChange={(value) =>
-            onUpdateContentDirection({
-              preferred_formats: value as UserContentFormat[],
+            onUpdateContentPreferences({
+              priority_formats: value,
             })
           }
         >
-          {CONTENT_FORMAT_OPTIONS.map((option) => (
+          {PRIORITY_FORMAT_OPTIONS.map((option) => (
             <ToggleGroupItem
               key={option.value}
               value={option.value}
@@ -131,9 +125,9 @@ export function ProfileContentDirectionTab({
           </FieldLabel>
           <Input
             id="profile-primary-topic"
-            value={profile.content_direction.primary_topic}
+            value={profile.content_preferences.primary_topic}
             onChange={(event) =>
-              onUpdateContentDirection({ primary_topic: event.target.value })
+              onUpdateContentPreferences({ primary_topic: event.target.value })
             }
             placeholder={copy(
               "Ex: Practical wellness for office workers",
@@ -148,9 +142,11 @@ export function ProfileContentDirectionTab({
           </FieldLabel>
           <Input
             id="profile-audience-persona"
-            value={profile.content_direction.audience_persona}
+            value={profile.content_preferences.audience_persona}
             onChange={(event) =>
-              onUpdateContentDirection({ audience_persona: event.target.value })
+              onUpdateContentPreferences({
+                audience_persona: event.target.value,
+              })
             }
             placeholder={copy(
               "Ex: Busy founders who need concise playbooks",
@@ -161,15 +157,17 @@ export function ProfileContentDirectionTab({
       </div>
 
       <Field>
-        <FieldLabel htmlFor="profile-strategic-goal">
-          {copy("Strategic Goal", "Mục tiêu chiến lược")}
+        <FieldLabel htmlFor="profile-focus-content-goal">
+          {copy("Focus Content Goal", "Mục tiêu nội dung trọng tâm")}
         </FieldLabel>
         <Textarea
-          id="profile-strategic-goal"
+          id="profile-focus-content-goal"
           rows={3}
-          value={profile.content_direction.strategic_goal}
+          value={profile.content_preferences.focus_content_goal}
           onChange={(event) =>
-            onUpdateContentDirection({ strategic_goal: event.target.value })
+            onUpdateContentPreferences({
+              focus_content_goal: event.target.value,
+            })
           }
           placeholder={copy(
             "Describe what your content should achieve in the next 30-90 days.",
@@ -180,7 +178,7 @@ export function ProfileContentDirectionTab({
 
       <Field>
         <FieldLabel htmlFor="profile-keywords">
-          {copy("Target Keywords", "Từ khóa mục tiêu")}
+          {copy("Keyword Hashtags", "Hashtag từ khóa")}
         </FieldLabel>
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -201,7 +199,7 @@ export function ProfileContentDirectionTab({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {profile.content_direction.target_keywords.map((keyword) => (
+            {profile.content_preferences.keyword_hashtags.map((keyword) => (
               <Badge
                 key={keyword}
                 variant="outline"
@@ -212,9 +210,9 @@ export function ProfileContentDirectionTab({
                   type="button"
                   className="ml-2 text-muted-foreground transition hover:text-foreground"
                   onClick={() =>
-                    onUpdateContentDirection({
-                      target_keywords:
-                        profile.content_direction.target_keywords.filter(
+                    onUpdateContentPreferences({
+                      keyword_hashtags:
+                        profile.content_preferences.keyword_hashtags.filter(
                           (item) => item !== keyword,
                         ),
                     })
@@ -238,9 +236,9 @@ export function ProfileContentDirectionTab({
         <Textarea
           id="profile-content-notes"
           rows={3}
-          value={profile.content_direction.notes ?? ""}
+          value={profile.content_preferences.notes ?? ""}
           onChange={(event) =>
-            onUpdateContentDirection({ notes: event.target.value || null })
+            onUpdateContentPreferences({ notes: event.target.value || null })
           }
           placeholder={copy(
             "Any constraints, forbidden topics, or strategic reminders.",

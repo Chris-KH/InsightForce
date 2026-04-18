@@ -14,16 +14,16 @@ import {
   CONTENT_REVIEW_MODE_OPTIONS,
   LANGUAGE_OPTIONS,
   localizeOptionLabel,
-  POSTING_CADENCE_OPTIONS,
   TIMEZONE_OPTIONS,
   VOICE_TONE_OPTIONS,
+  WEEKLY_CONTENT_FREQUENCY_OPTIONS,
 } from "@/pages/profile/lib/profile-options";
 
 type UserProfile = UserProfileResponse["profile"];
 
 type ProfilePreferencesTabProps = {
   profile: UserProfile;
-  onUpdateSettings: (patch: Partial<UserProfile["settings"]>) => void;
+  onUpdateOptions: (patch: Partial<UserProfile["options"]>) => void;
 };
 
 const TOGGLE_ITEM_ACTIVE_CLASS =
@@ -31,7 +31,7 @@ const TOGGLE_ITEM_ACTIVE_CLASS =
 
 export function ProfilePreferencesTab({
   profile,
-  onUpdateSettings,
+  onUpdateOptions,
 }: ProfilePreferencesTabProps) {
   const copy = useBilingual();
 
@@ -41,8 +41,8 @@ export function ProfilePreferencesTab({
         <Field>
           <FieldLabel>{copy("Language", "Ngôn ngữ")}</FieldLabel>
           <Select
-            value={profile.settings.language}
-            onValueChange={(value) => onUpdateSettings({ language: value })}
+            value={profile.options.language}
+            onValueChange={(value) => onUpdateOptions({ language: value })}
           >
             <SelectTrigger className="w-full">
               <SelectValue
@@ -64,8 +64,8 @@ export function ProfilePreferencesTab({
         <Field>
           <FieldLabel>{copy("Timezone", "Múi giờ")}</FieldLabel>
           <Select
-            value={profile.settings.timezone}
-            onValueChange={(value) => onUpdateSettings({ timezone: value })}
+            value={profile.options.timezone}
+            onValueChange={(value) => onUpdateOptions({ timezone: value })}
           >
             <SelectTrigger className="w-full">
               <SelectValue
@@ -85,22 +85,29 @@ export function ProfilePreferencesTab({
         </Field>
 
         <Field>
-          <FieldLabel>{copy("Posting Cadence", "Tần suất đăng")}</FieldLabel>
+          <FieldLabel>
+            {copy("Weekly Content Frequency", "Tần suất nội dung theo tuần")}
+          </FieldLabel>
           <Select
-            value={profile.settings.posting_cadence}
+            value={profile.options.weekly_content_frequency.toString()}
             onValueChange={(value) =>
-              onUpdateSettings({ posting_cadence: value })
+              onUpdateOptions({
+                weekly_content_frequency: Number.parseInt(value, 10) || 1,
+              })
             }
           >
             <SelectTrigger className="w-full">
               <SelectValue
-                placeholder={copy("Select cadence", "Chọn tần suất")}
+                placeholder={copy("Select frequency", "Chọn tần suất")}
               />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {POSTING_CADENCE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                {WEEKLY_CONTENT_FREQUENCY_OPTIONS.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={option.value.toString()}
+                  >
                     {localizeOptionLabel(option, copy)}
                   </SelectItem>
                 ))}
@@ -112,10 +119,10 @@ export function ProfilePreferencesTab({
         <Field>
           <FieldLabel>{copy("Voice Tone", "Giọng điệu")}</FieldLabel>
           <Select
-            value={profile.settings.voice_tone}
+            value={profile.options.voice_tone}
             onValueChange={(value) =>
-              onUpdateSettings({
-                voice_tone: value as UserProfile["settings"]["voice_tone"],
+              onUpdateOptions({
+                voice_tone: value as UserProfile["options"]["voice_tone"],
               })
             }
           >
@@ -144,16 +151,16 @@ export function ProfilePreferencesTab({
         <ToggleGroup
           type="single"
           variant="outline"
-          value={profile.settings.content_review_mode}
+          value={profile.options.content_review_mode}
           className="w-full flex-wrap justify-start gap-2"
           onValueChange={(value) => {
             if (!value) {
               return;
             }
 
-            onUpdateSettings({
+            onUpdateOptions({
               content_review_mode:
-                value as UserProfile["settings"]["content_review_mode"],
+                value as UserProfile["options"]["content_review_mode"],
             });
           }}
         >

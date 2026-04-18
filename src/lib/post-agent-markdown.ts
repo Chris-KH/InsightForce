@@ -45,7 +45,7 @@ function collapseEmptyLines(value: string) {
 
 function stripWrappingQuotes(value: string) {
   const trimmed = value.trim();
-  return trimmed.replace(/^[\"'“”]+|[\"'“”]+$/g, "").trim();
+  return trimmed.replace(/^["'""]+|["'""]+$/g, "").trim();
 }
 
 export function parsePostAgentMarkdown(

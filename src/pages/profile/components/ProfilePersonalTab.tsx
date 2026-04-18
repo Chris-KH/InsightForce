@@ -78,14 +78,14 @@ export function ProfilePersonalTab({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="profile-phone">
+          <FieldLabel htmlFor="profile-phone-number">
             {copy("Phone Number", "Số điện thoại")}
           </FieldLabel>
           <Input
-            id="profile-phone"
-            value={profile.phone ?? ""}
+            id="profile-phone-number"
+            value={profile.phone_number ?? ""}
             onChange={(event) =>
-              onUpdate({ phone: event.target.value || null })
+              onUpdate({ phone_number: event.target.value || null })
             }
           />
         </Field>
@@ -118,13 +118,15 @@ export function ProfilePersonalTab({
       </div>
 
       <Field>
-        <FieldLabel htmlFor="profile-bio">
-          {copy("Bio", "Giới thiệu")}
+        <FieldLabel htmlFor="profile-about-me">
+          {copy("About Me", "Giới thiệu bản thân")}
         </FieldLabel>
         <Textarea
-          id="profile-bio"
-          value={profile.bio ?? ""}
-          onChange={(event) => onUpdate({ bio: event.target.value || null })}
+          id="profile-about-me"
+          value={profile.about_me ?? ""}
+          onChange={(event) =>
+            onUpdate({ about_me: event.target.value || null })
+          }
           rows={5}
           placeholder={copy(
             "Tell your audience who you help and what unique point of view you bring.",

@@ -44,13 +44,13 @@ function toUpdatePayload(profile: UserProfile): UserProfileUpdateRequest {
     display_name: profile.display_name,
     role: profile.role,
     department: profile.department,
-    phone: profile.phone,
+    phone_number: profile.phone_number,
     website: profile.website,
     location: profile.location,
-    bio: profile.bio,
+    about_me: profile.about_me,
     avatar_url: profile.avatar_url,
-    content_direction: profile.content_direction,
-    settings: profile.settings,
+    content_preferences: profile.content_preferences,
+    options: profile.options,
   };
 }
 
@@ -183,15 +183,15 @@ export function ProfilePage() {
     );
   };
 
-  const handleUpdateContentDirection = (
-    patch: Partial<UserProfile["content_direction"]>,
+  const handleUpdateContentPreferences = (
+    patch: Partial<UserProfile["content_preferences"]>,
   ) => {
     setDraftProfile((current) =>
       current
         ? {
             ...current,
-            content_direction: {
-              ...current.content_direction,
+            content_preferences: {
+              ...current.content_preferences,
               ...patch,
             },
           }
@@ -199,13 +199,13 @@ export function ProfilePage() {
     );
   };
 
-  const handleUpdateSettings = (patch: Partial<UserProfile["settings"]>) => {
+  const handleUpdateOptions = (patch: Partial<UserProfile["options"]>) => {
     setDraftProfile((current) =>
       current
         ? {
             ...current,
-            settings: {
-              ...current.settings,
+            options: {
+              ...current.options,
               ...patch,
             },
           }
@@ -391,14 +391,14 @@ export function ProfilePage() {
                 <TabsContent value="direction" className="pt-0">
                   <ProfileContentDirectionTab
                     profile={draftProfile}
-                    onUpdateContentDirection={handleUpdateContentDirection}
+                    onUpdateContentPreferences={handleUpdateContentPreferences}
                   />
                 </TabsContent>
 
                 <TabsContent value="preferences" className="pt-0">
                   <ProfilePreferencesTab
                     profile={draftProfile}
-                    onUpdateSettings={handleUpdateSettings}
+                    onUpdateOptions={handleUpdateOptions}
                   />
                 </TabsContent>
               </Tabs>

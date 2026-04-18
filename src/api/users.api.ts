@@ -11,7 +11,7 @@ import type {
 
 const USERS_BASE_PATH = "/api/v1/users";
 const USERS_STORAGE_KEY = "insightforce.mock.users-list.v1";
-const PROFILE_STORAGE_KEY_PREFIX = "insightforce.mock.user-profile";
+const PROFILE_STORAGE_KEY_PREFIX = "insightforce.mock.user-profile.v2";
 
 type RequestOptions = {
   signal?: AbortSignal;
@@ -133,6 +133,317 @@ function splitDisplayName(displayName: string | null | undefined) {
   };
 }
 
+type UserProfile = UserProfileResponse["profile"];
+
+const LEGACY_CATEGORY_TO_CONTENT_GROUP: Record<string, string> = {
+  wellness: "Thói quen cá nhân",
+  education: "Câu chuyện giáo dục",
+  finance: "Mẹo vặt cuộc sống",
+  lifestyle: "Lifehack gia đình",
+  technology: "Kỹ năng sống",
+  business: "Tổ chức nhà cửa",
+};
+
+const CONTENT_GROUP_TO_LEGACY_CATEGORY: Record<string, string> = {
+  "Thói quen cá nhân": "wellness",
+  "Câu chuyện giáo dục": "education",
+  "Mẹo vặt cuộc sống": "finance",
+  "Lifehack gia đình": "lifestyle",
+  "Kỹ năng sống": "technology",
+  "Tổ chức nhà cửa": "business",
+};
+
+const LEGACY_FORMAT_TO_PRIORITY_FORMAT: Record<string, string> = {
+  short_video: "Video ngắn",
+  long_video: "Video dài",
+  carousel: "Bài post nhiều ảnh",
+  single_image: "Ảnh đơn",
+  thread: "Chuỗi bài viết",
+  live_stream: "Phát trực tiếp",
+};
+
+const PRIORITY_FORMAT_TO_LEGACY_FORMAT: Record<string, string> = {
+  "Video ngắn": "short_video",
+  "Video dài": "long_video",
+  "Bài post nhiều ảnh": "carousel",
+  "Ảnh đơn": "single_image",
+  "Chuỗi bài viết": "thread",
+  "Phát trực tiếp": "live_stream",
+};
+
+const DEFAULT_LINKED_PLATFORMS = ["facebook", "instagram", "tiktok"];
+
+const DEFAULT_POST_TIMES: UserProfile["options"]["default_post_times"] = {
+  facebook: "20:00",
+  instagram: "21:00",
+  tiktok: "19:30",
+};
+
+const VOICE_TONES = new Set([
+  "mentor",
+  "expert",
+  "friendly",
+  "playful",
+  "data_driven",
+]);
+const REVIEW_MODES = new Set(["balanced", "strict", "fast"]);
+const VISIBILITY_MODES = new Set(["public", "private", "friends"]);
+
+function sanitizeNullableText(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function sanitizeStringArray(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [] as string[];
+  }
+
+  const seen = new Set<string>();
+  const items: string[] = [];
+
+  for (const entry of value) {
+    if (typeof entry !== "string") {
+      continue;
+    }
+
+    const trimmed = entry.trim();
+    if (!trimmed || seen.has(trimmed)) {
+      continue;
+    }
+
+    seen.add(trimmed);
+    items.push(trimmed);
+  }
+
+  return items;
+}
+
+function mapValues(values: string[], dictionary: Record<string, string>) {
+  return values.map((item) => dictionary[item] ?? item);
+}
+
+function toWeeklyFrequency(value: unknown, fallback = 5) {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.round(value);
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+
+  return fallback;
+}
+
+function normalizeDefaultPostTimes(value: unknown) {
+  if (!value || typeof value !== "object") {
+    return {
+      ...DEFAULT_POST_TIMES,
+    };
+  }
+
+  const raw = value as Record<string, unknown>;
+  const next: UserProfile["options"]["default_post_times"] = {
+    ...DEFAULT_POST_TIMES,
+  };
+
+  for (const [platform, time] of Object.entries(raw)) {
+    const normalizedTime = sanitizeNullableText(time);
+    if (!normalizedTime) {
+      continue;
+    }
+
+    next[platform] = normalizedTime;
+  }
+
+  return next;
+}
+
+function normalizeContentPreferences(profile: Partial<UserProfile>) {
+  const direct = profile.content_preferences;
+  const legacy = profile.content_direction;
+
+  const contentGroups = sanitizeStringArray(direct?.content_groups);
+  const fallbackGroups = mapValues(
+    sanitizeStringArray(legacy?.categories),
+    LEGACY_CATEGORY_TO_CONTENT_GROUP,
+  );
+
+  const priorityFormats = sanitizeStringArray(direct?.priority_formats);
+  const fallbackFormats = mapValues(
+    sanitizeStringArray(legacy?.preferred_formats),
+    LEGACY_FORMAT_TO_PRIORITY_FORMAT,
+  );
+
+  const keywordHashtags = sanitizeStringArray(direct?.keyword_hashtags);
+  const fallbackKeywords = sanitizeStringArray(legacy?.target_keywords);
+
+  return {
+    content_groups: contentGroups.length > 0 ? contentGroups : fallbackGroups,
+    priority_formats:
+      priorityFormats.length > 0 ? priorityFormats : fallbackFormats,
+    keyword_hashtags:
+      keywordHashtags.length > 0 ? keywordHashtags : fallbackKeywords,
+    audience_persona:
+      sanitizeNullableText(direct?.audience_persona) ??
+      sanitizeNullableText(legacy?.audience_persona) ??
+      "",
+    focus_content_goal:
+      sanitizeNullableText(direct?.focus_content_goal) ??
+      sanitizeNullableText(legacy?.strategic_goal) ??
+      "",
+    primary_topic:
+      sanitizeNullableText(direct?.primary_topic) ??
+      sanitizeNullableText(legacy?.primary_topic) ??
+      "",
+    notes:
+      sanitizeNullableText(direct?.notes) ??
+      sanitizeNullableText(legacy?.notes),
+  } satisfies UserProfile["content_preferences"];
+}
+
+function normalizeOptions(profile: Partial<UserProfile>) {
+  const direct = profile.options;
+  const legacy = profile.settings;
+
+  const defaultPostTimes = normalizeDefaultPostTimes(
+    direct?.default_post_times,
+  );
+  const linkedPlatforms = sanitizeStringArray(direct?.linked_platforms);
+
+  const timezone =
+    sanitizeNullableText(direct?.timezone) ??
+    sanitizeNullableText(legacy?.timezone) ??
+    "Asia/Saigon";
+
+  const voiceToneCandidate =
+    sanitizeNullableText(direct?.voice_tone) ??
+    sanitizeNullableText(legacy?.voice_tone) ??
+    "friendly";
+
+  const reviewModeCandidate =
+    sanitizeNullableText(direct?.content_review_mode) ??
+    sanitizeNullableText(legacy?.content_review_mode) ??
+    "balanced";
+
+  const visibilityCandidate =
+    sanitizeNullableText(direct?.default_visibility) ?? "public";
+
+  return {
+    timezone,
+    linked_platforms:
+      linkedPlatforms.length > 0
+        ? linkedPlatforms
+        : [...DEFAULT_LINKED_PLATFORMS],
+    default_visibility: VISIBILITY_MODES.has(visibilityCandidate)
+      ? (visibilityCandidate as UserProfile["options"]["default_visibility"])
+      : "public",
+    default_post_times: defaultPostTimes,
+    weekly_content_frequency: toWeeklyFrequency(
+      direct?.weekly_content_frequency ?? legacy?.posting_cadence,
+      5,
+    ),
+    language:
+      sanitizeNullableText(direct?.language) ??
+      sanitizeNullableText(legacy?.language) ??
+      "vi",
+    voice_tone: VOICE_TONES.has(voiceToneCandidate)
+      ? (voiceToneCandidate as UserProfile["options"]["voice_tone"])
+      : "friendly",
+    content_review_mode: REVIEW_MODES.has(reviewModeCandidate)
+      ? (reviewModeCandidate as UserProfile["options"]["content_review_mode"])
+      : "balanced",
+  } satisfies UserProfile["options"];
+}
+
+function toLegacyContentDirection(
+  preferences: UserProfile["content_preferences"],
+): NonNullable<UserProfile["content_direction"]> {
+  return {
+    categories: mapValues(
+      preferences.content_groups,
+      CONTENT_GROUP_TO_LEGACY_CATEGORY,
+    ) as NonNullable<UserProfile["content_direction"]>["categories"],
+    preferred_formats: mapValues(
+      preferences.priority_formats,
+      PRIORITY_FORMAT_TO_LEGACY_FORMAT,
+    ) as NonNullable<UserProfile["content_direction"]>["preferred_formats"],
+    primary_topic: preferences.primary_topic,
+    audience_persona: preferences.audience_persona,
+    strategic_goal: preferences.focus_content_goal,
+    target_keywords: preferences.keyword_hashtags,
+    notes: preferences.notes,
+  };
+}
+
+function toLegacySettings(
+  options: UserProfile["options"],
+): NonNullable<UserProfile["settings"]> {
+  return {
+    timezone: options.timezone,
+    language: options.language,
+    posting_cadence: `${options.weekly_content_frequency} posts/week`,
+    voice_tone: options.voice_tone,
+    content_review_mode: options.content_review_mode,
+  };
+}
+
+function normalizeProfile(profile: Partial<UserProfile>): UserProfile {
+  const fallbackName = splitDisplayName(
+    sanitizeNullableText(profile.display_name) ??
+      `${sanitizeNullableText(profile.first_name) ?? ""} ${sanitizeNullableText(profile.last_name) ?? ""}`,
+  );
+
+  const contentPreferences = normalizeContentPreferences(profile);
+  const options = normalizeOptions(profile);
+
+  const phoneNumber =
+    sanitizeNullableText(profile.phone_number) ??
+    sanitizeNullableText(profile.phone);
+
+  const aboutMe =
+    sanitizeNullableText(profile.about_me) ?? sanitizeNullableText(profile.bio);
+
+  return {
+    user_id: profile.user_id ?? "",
+    email: profile.email ?? "",
+    first_name:
+      sanitizeNullableText(profile.first_name) ?? fallbackName.firstName,
+    last_name: sanitizeNullableText(profile.last_name) ?? fallbackName.lastName,
+    display_name:
+      sanitizeNullableText(profile.display_name) ?? fallbackName.fullName,
+    role: sanitizeNullableText(profile.role) ?? "Content Creator",
+    department: sanitizeNullableText(profile.department),
+    phone_number: phoneNumber,
+    phone: phoneNumber,
+    website: sanitizeNullableText(profile.website),
+    location: sanitizeNullableText(profile.location),
+    about_me: aboutMe,
+    bio: aboutMe,
+    avatar_url: sanitizeNullableText(profile.avatar_url),
+    content_preferences: contentPreferences,
+    options,
+    content_direction: toLegacyContentDirection(contentPreferences),
+    settings: toLegacySettings(options),
+    updated_at:
+      sanitizeNullableText(profile.updated_at) ?? new Date().toISOString(),
+  };
+}
+
+function normalizeUserProfileResponse(response: UserProfileResponse) {
+  return {
+    ...response,
+    profile: normalizeProfile(response.profile),
+  } satisfies UserProfileResponse;
+}
+
 function ensureMockUserSummary(userId: string): UserSummaryResponse {
   const currentList = readMockUsersList();
   const existing = currentList.users.find((user) => user.id === userId);
@@ -194,8 +505,7 @@ function buildDefaultMockUserProfile(
   userSummary?: UserSummaryResponse,
 ): UserProfileResponse {
   const createdAt = new Date().toISOString();
-  const seedEmail = userSummary?.email ?? "creator@insightforce.local";
-  const nameParts = splitDisplayName(userSummary?.name ?? null);
+  const nameParts = splitDisplayName("Góc Nhỏ Thông Minh");
 
   const roleByPlan =
     userSummary?.plan === "enterprise"
@@ -204,48 +514,66 @@ function buildDefaultMockUserProfile(
         ? "Creator Strategist"
         : "Content Operator";
 
-  return {
+  return normalizeUserProfileResponse({
     source: "mock",
     profile: {
       user_id: userId,
-      email: seedEmail,
+      email: "lifehack.creator@example.com",
       first_name: nameParts.firstName,
       last_name: nameParts.lastName,
-      display_name: nameParts.fullName,
+      display_name: "Góc Nhỏ Thông Minh",
       role: roleByPlan,
       department: "Growth Studio",
-      phone: "+84 912 345 678",
+      phone_number: "+84 912 345 678",
       website: "https://insightforce.app",
       location: "Ho Chi Minh City, Vietnam",
-      bio: "Helping brands turn trend data into repeatable social content systems.",
+      about_me:
+        "Tôi xây dựng nội dung giúp người xem sống gọn gàng, thông minh và bình tĩnh hơn mỗi ngày. Phong cách của tôi là gần gũi, thực tế, có tính giáo dục nhưng không lên lớp. Tôi thích biến những vấn đề nhỏ trong đời sống thành các mẹo dễ làm, các câu chuyện ngắn có bài học, và những góc nhìn giúp người xem cải thiện thói quen sống.",
       avatar_url:
         "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&q=80",
-      content_direction: {
-        categories: ["wellness", "education"],
-        preferred_formats: ["short_video", "carousel", "thread"],
-        primary_topic: "Practical wellness for busy professionals",
+      content_preferences: {
+        content_groups: [
+          "Mẹo vặt cuộc sống",
+          "Lifehack gia đình",
+          "Tổ chức nhà cửa",
+          "Thói quen cá nhân",
+          "Câu chuyện giáo dục",
+          "Kỹ năng sống",
+        ],
+        priority_formats: ["Bài post nhiều ảnh", "Chuỗi bài viết"],
+        primary_topic: "Mẹo sống gọn gàng và thông minh mỗi ngày",
         audience_persona:
-          "Founders and working adults who want actionable health habits.",
-        strategic_goal:
-          "Build an expert brand and convert organic attention into booked consultations.",
-        target_keywords: [
-          "daily wellness",
-          "healthy routines",
-          "creator productivity",
+          "Người Việt từ 22-40 tuổi, bận rộn với công việc và gia đình, muốn học các mẹo đơn giản để sống ngăn nắp hơn, tiết kiệm thời gian hơn và cải thiện bản thân qua những câu chuyện dễ hiểu, thực tế.",
+        focus_content_goal:
+          "Xây dựng một kênh nội dung đáng tin cậy về mẹo vặt đời sống và giáo dục thói quen, giúp người xem lưu bài, chia sẻ cho bạn bè và quay lại mỗi ngày để học thêm một điều nhỏ nhưng hữu ích.",
+        keyword_hashtags: [
+          "meovatcuocsong",
+          "lifehack",
+          "songthongminh",
+          "thoiquentot",
+          "nhacuasachgon",
+          "ky nang song",
+          "meohaymoingay",
+          "cauchuyengiaoduc",
         ],
         notes:
-          "Prioritize educational value first, then add conversion CTA at the end.",
+          "Ưu tiên nội dung thực tế, áp dụng được ngay và luôn có điểm rút ra cuối bài.",
       },
-      settings: {
-        timezone: "Asia/Ho_Chi_Minh",
+      options: {
+        timezone: "Asia/Saigon",
+        linked_platforms: [...DEFAULT_LINKED_PLATFORMS],
+        default_visibility: "public",
+        default_post_times: {
+          ...DEFAULT_POST_TIMES,
+        },
+        weekly_content_frequency: 5,
         language: "vi",
-        posting_cadence: "5 posts/week",
-        voice_tone: "mentor",
+        voice_tone: "friendly",
         content_review_mode: "balanced",
       },
       updated_at: createdAt,
     },
-  };
+  });
 }
 
 function readMockProfile(
@@ -267,10 +595,10 @@ function readMockProfile(
       return buildDefaultMockUserProfile(userId, userSummary);
     }
 
-    return {
+    return normalizeUserProfileResponse({
       ...parsed,
       source: "mock",
-    };
+    });
   } catch {
     return buildDefaultMockUserProfile(userId, userSummary);
   }
@@ -389,13 +717,16 @@ export function getUser(userId: string, options: RequestOptions = {}) {
 export function getUserProfile(userId: string, options: RequestOptions = {}) {
   return withApiMockFallback(
     `users.profile.${userId}`,
-    () =>
-      httpClient.get<UserProfileResponse>(
+    async () => {
+      const response = await httpClient.get<UserProfileResponse>(
         `${USERS_BASE_PATH}/${encodeURIComponent(userId)}/profile`,
         {
           signal: options.signal,
         },
-      ),
+      );
+
+      return normalizeUserProfileResponse(response);
+    },
     () => {
       const userSummary = ensureMockUserSummary(userId);
       const profile = readMockProfile(userId, userSummary);
@@ -412,26 +743,37 @@ export function updateUserProfile(
 ) {
   return withApiMockFallback(
     `users.profile.update.${userId}`,
-    () =>
-      httpClient.put<UserProfileResponse>(
+    async () => {
+      const response = await httpClient.put<UserProfileResponse>(
         `${USERS_BASE_PATH}/${encodeURIComponent(userId)}/profile`,
         payload,
-      ),
+      );
+
+      return normalizeUserProfileResponse(response);
+    },
     () => {
       const current = readMockProfile(userId);
+      const mergedProfile = {
+        ...current.profile,
+        ...payload,
+        content_preferences: {
+          ...current.profile.content_preferences,
+          ...(payload.content_preferences ?? {}),
+        },
+        options: {
+          ...current.profile.options,
+          ...(payload.options ?? {}),
+          default_post_times: {
+            ...current.profile.options.default_post_times,
+            ...(payload.options?.default_post_times ?? {}),
+          },
+        },
+      } as Partial<UserProfile>;
+
       const next: UserProfileResponse = {
         source: "mock",
         profile: {
-          ...current.profile,
-          ...payload,
-          content_direction: {
-            ...current.profile.content_direction,
-            ...(payload.content_direction ?? {}),
-          },
-          settings: {
-            ...current.profile.settings,
-            ...(payload.settings ?? {}),
-          },
+          ...normalizeProfile(mergedProfile),
           updated_at: new Date().toISOString(),
         },
       };

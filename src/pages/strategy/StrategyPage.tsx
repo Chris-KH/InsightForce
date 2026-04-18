@@ -10,7 +10,7 @@ import { useLocale } from "@/hooks/use-locale";
 import { getQueryErrorMessage } from "@/lib/query-error";
 import { cn } from "@/lib/utils";
 
-import { StrategyActionHubPanel } from "./components/StrategyActionHubPanel";
+import { ActionHub } from "./components/ActionHub";
 import { StrategyScoutComposerPanel } from "./components/StrategyScoutComposerPanel";
 import { StrategyTrendDiscoveryPanel } from "./components/StrategyTrendDiscoveryPanel";
 import { useStrategyWorkspaceState } from "./hooks/useStrategyWorkspaceState";
@@ -34,14 +34,12 @@ function StrategyPageContent({ locale }: StrategyPageContentProps) {
     sessionSuggestions,
     trendTopics,
     selectedTopic,
-    actionFeedback,
     firstError,
     isGeneralRefreshFetching,
     setPromptInput,
     submitPrompt,
     runSuggestion,
     selectKeyword,
-    runAction,
     refreshGeneralTrends,
   } = useStrategyWorkspaceState(copy, locale);
 
@@ -134,20 +132,7 @@ function StrategyPageContent({ locale }: StrategyPageContentProps) {
         />
 
         <div className="xl:sticky xl:top-24 xl:h-fit">
-          <StrategyActionHubPanel
-            copy={copy}
-            selectedTopic={selectedTopic}
-            actionFeedback={actionFeedback}
-            onGenerateScript={() => {
-              runAction("script");
-            }}
-            onSendToEditor={() => {
-              runAction("editor");
-            }}
-            onSaveBacklog={() => {
-              runAction("backlog");
-            }}
-          />
+          <ActionHub copy={copy} selectedTopic={selectedTopic} />
         </div>
       </section>
     </motion.div>

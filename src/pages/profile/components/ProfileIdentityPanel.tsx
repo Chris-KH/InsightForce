@@ -118,7 +118,7 @@ export function ProfileIdentityPanel({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {profile.content_direction.categories.map((category) => (
+          {profile.content_preferences.content_groups.map((category) => (
             <Badge
               key={category}
               variant="outline"

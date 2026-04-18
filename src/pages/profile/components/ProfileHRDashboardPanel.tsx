@@ -41,9 +41,9 @@ function computeCompletionRatio(profile: UserProfile) {
     profile.display_name,
     profile.role,
     profile.department,
-    profile.phone,
+    profile.phone_number,
     profile.location,
-    profile.bio,
+    profile.about_me,
     profile.avatar_url,
   ];
 
@@ -53,12 +53,12 @@ function computeCompletionRatio(profile: UserProfile) {
 
 function computeDirectionReadiness(profile: UserProfile) {
   const scoreItems = [
-    profile.content_direction.categories.length >= 2,
-    profile.content_direction.preferred_formats.length >= 2,
-    profile.content_direction.target_keywords.length >= 5,
-    profile.content_direction.primary_topic.trim().length > 4,
-    profile.content_direction.audience_persona.trim().length > 8,
-    profile.content_direction.strategic_goal.trim().length > 20,
+    profile.content_preferences.content_groups.length >= 2,
+    profile.content_preferences.priority_formats.length >= 2,
+    profile.content_preferences.keyword_hashtags.length >= 5,
+    profile.content_preferences.primary_topic.trim().length > 4,
+    profile.content_preferences.audience_persona.trim().length > 8,
+    profile.content_preferences.focus_content_goal.trim().length > 20,
   ];
 
   const completed = scoreItems.filter(Boolean).length;
@@ -107,7 +107,7 @@ export function ProfileHRDashboardPanel({
   const metrics = useMemo<DashboardMetric[]>(() => {
     const completionScore = computeCompletionRatio(profile);
     const directionScore = computeDirectionReadiness(profile);
-    const keywordCount = profile.content_direction.target_keywords.length;
+    const keywordCount = profile.content_preferences.keyword_hashtags.length;
     const daysFromLastUpdate = Math.max(
       0,
       Math.floor(

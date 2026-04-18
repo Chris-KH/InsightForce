@@ -23,8 +23,6 @@ import type {
 
 const TREND_SESSION_STORAGE_KEY_PREFIX = "insightforce.trend.session.v3";
 
-type StrategyActionKey = "script" | "editor" | "backlog";
-
 type StrategyWorkspaceState = {
   promptInput: string;
   isTrendAnalyzePending: boolean;
@@ -32,14 +30,12 @@ type StrategyWorkspaceState = {
   sessionSuggestions: string[];
   trendTopics: TrendTopic[];
   selectedTopic?: TrendTopic;
-  actionFeedback: string | null;
   firstError: unknown;
   isGeneralRefreshFetching: boolean;
   setPromptInput: (value: string) => void;
   submitPrompt: () => Promise<void>;
   runSuggestion: (suggestion: string) => Promise<void>;
   selectKeyword: (keyword: string) => void;
-  runAction: (actionKey: StrategyActionKey) => void;
   refreshGeneralTrends: () => Promise<void>;
 };
 
@@ -70,7 +66,6 @@ export function useStrategyWorkspaceState(
     initialSessionState.suggestions,
   );
   const [selectedKeyword, setSelectedKeyword] = useState<string | undefined>();
-  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
   const generalTrendQuery = useTrendGeneralQuery({ limit: 8, enabled: false });
   const trendHistoryQuery = useTrendHistoryQuery({ limit: 16 });
@@ -196,7 +191,6 @@ export function useStrategyWorkspaceState(
       return;
     }
 
-    setActionFeedback(null);
     setPromptInput(normalizedPrompt);
 
     let nextPrompts: string[] = [];
@@ -234,39 +228,6 @@ export function useStrategyWorkspaceState(
     await runTrendScout(promptInput);
   };
 
-  const runAction = (actionKey: StrategyActionKey) => {
-    if (!selectedTopic) {
-      return;
-    }
-
-    if (actionKey === "script") {
-      setActionFeedback(
-        copy(
-          `Video script draft started for ${selectedTopic.keyword}.`,
-          `Đã bắt đầu tạo kịch bản video cho ${selectedTopic.keyword}.`,
-        ),
-      );
-      return;
-    }
-
-    if (actionKey === "editor") {
-      setActionFeedback(
-        copy(
-          `${selectedTopic.keyword} was sent to your editor queue.`,
-          `${selectedTopic.keyword} đã được gửi đến hàng đợi biên tập.`,
-        ),
-      );
-      return;
-    }
-
-    setActionFeedback(
-      copy(
-        `${selectedTopic.keyword} saved to backlog.`,
-        `${selectedTopic.keyword} đã được lưu vào backlog.`,
-      ),
-    );
-  };
-
   return {
     promptInput,
     isTrendAnalyzePending,
@@ -274,14 +235,12 @@ export function useStrategyWorkspaceState(
     sessionSuggestions,
     trendTopics,
     selectedTopic,
-    actionFeedback,
     firstError: generalTrendQuery.error ?? trendHistoryQuery.error,
     isGeneralRefreshFetching: generalTrendQuery.isFetching,
     setPromptInput,
     submitPrompt,
     runSuggestion: runTrendScout,
     selectKeyword: setSelectedKeyword,
-    runAction,
     refreshGeneralTrends: async () => {
       await generalTrendQuery.refetch();
     },

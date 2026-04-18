@@ -819,6 +819,34 @@ export type UserProfileSettings = {
   content_review_mode: "balanced" | "strict" | "fast";
 };
 
+export type UserProfileContentPreferences = {
+  content_groups: string[];
+  priority_formats: string[];
+  keyword_hashtags: string[];
+  audience_persona: string;
+  focus_content_goal: string;
+  primary_topic: string;
+  notes?: string | null;
+};
+
+export type UserProfileDefaultPostTimes = {
+  facebook?: string;
+  instagram?: string;
+  tiktok?: string;
+  [platform: string]: string | undefined;
+};
+
+export type UserProfileOptions = {
+  timezone: string;
+  linked_platforms: string[];
+  default_visibility: "public" | "private" | "friends";
+  default_post_times: UserProfileDefaultPostTimes;
+  weekly_content_frequency: number;
+  language: string;
+  voice_tone: UserVoiceTone;
+  content_review_mode: "balanced" | "strict" | "fast";
+};
+
 export type UserProfileResponse = {
   source?: "api" | "mock";
   profile: {
@@ -829,13 +857,17 @@ export type UserProfileResponse = {
     display_name: string;
     role: string;
     department?: string | null;
+    phone_number?: string | null;
     phone?: string | null;
     website?: string | null;
     location?: string | null;
+    about_me?: string | null;
     bio?: string | null;
     avatar_url?: string | null;
-    content_direction: UserProfileContentDirection;
-    settings: UserProfileSettings;
+    content_preferences: UserProfileContentPreferences;
+    options: UserProfileOptions;
+    content_direction?: UserProfileContentDirection;
+    settings?: UserProfileSettings;
     updated_at: string;
   };
 };
@@ -846,11 +878,15 @@ export type UserProfileUpdateRequest = {
   display_name?: string;
   role?: string;
   department?: string | null;
+  phone_number?: string | null;
   phone?: string | null;
   website?: string | null;
   location?: string | null;
+  about_me?: string | null;
   bio?: string | null;
   avatar_url?: string | null;
+  content_preferences?: Partial<UserProfileContentPreferences>;
   content_direction?: Partial<UserProfileContentDirection>;
+  options?: Partial<UserProfileOptions>;
   settings?: Partial<UserProfileSettings>;
 };
