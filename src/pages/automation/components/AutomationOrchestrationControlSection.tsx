@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Loader2, PlayCircle } from "lucide-react";
+import { Loader2, PlayCircle, RotateCcw } from "lucide-react";
 
+import { clearAiAutopilotConversation } from "@/app/slices/ai-autopilot-chat.slice";
 import {
+  resetAutomationWorkspace,
   runAutomationOrchestration,
   setAutomationPrompt,
   setAutomationSaveFiles,
@@ -100,6 +102,15 @@ export function AutomationOrchestrationControlSection() {
         userId: userId.trim() || undefined,
       }),
     );
+  };
+
+  const handleResetAutomation = () => {
+    if (isOrchestrationPending) {
+      return;
+    }
+
+    dispatch(resetAutomationWorkspace());
+    dispatch(clearAiAutopilotConversation());
   };
 
   return (
@@ -212,6 +223,17 @@ export function AutomationOrchestrationControlSection() {
                 {isOrchestrationPending
                   ? copy("Running...", "Đang chạy...")
                   : copy("Run Automation", "Chạy tự động hóa")}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleResetAutomation}
+                disabled={isOrchestrationPending}
+              >
+                <RotateCcw data-icon="inline-start" />
+                {copy("Reset run", "Reset phiên chạy")}
               </Button>
 
               {orchestrationTask.errorMessage ? (

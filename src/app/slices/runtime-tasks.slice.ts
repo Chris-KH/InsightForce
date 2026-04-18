@@ -180,6 +180,12 @@ export const runtimeTasksSlice = createSlice({
         state.automation.orchestration.status = "idle";
       }
     },
+    resetAutomationWorkspace(state) {
+      state.automation = {
+        form: { ...runtimeTasksInitialState.automation.form },
+        orchestration: initialAsyncTaskState<OrchestratorResponse>(),
+      };
+    },
     clearStrategyTrendError(state) {
       state.strategy.trendAnalyze.errorMessage = null;
       if (state.strategy.trendAnalyze.status === "failed") {
@@ -261,6 +267,7 @@ export const runtimeTasksSlice = createSlice({
 export const {
   clearAutomationError,
   clearStrategyTrendError,
+  resetAutomationWorkspace,
   resetStrategyTrendTask,
   setAutomationPrompt,
   setAutomationSaveFiles,
