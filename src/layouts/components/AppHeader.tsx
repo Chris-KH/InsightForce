@@ -47,10 +47,7 @@ export function AppHeader() {
       <div className="relative flex w-full items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 md:hidden">
           <MobileSidebarSheet />
-          <Link
-            to="/app/dashboard"
-            className="font-heading text-xl font-bold text-primary"
-          >
+          <Link to="/" className="font-heading text-xl font-bold text-primary">
             Insight<span className="text-chart-1">Forge</span>
           </Link>
         </div>

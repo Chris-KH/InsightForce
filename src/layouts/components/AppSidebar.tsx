@@ -25,7 +25,7 @@ export function AppSidebar() {
       <div className="relative flex h-full flex-col">
         <div className="border-b border-border/60 px-5 py-5">
           <Link
-            to="/app/dashboard"
+            to="/"
             className="font-heading text-[1.8rem] leading-none font-bold text-primary"
           >
             Insight<span className="text-chart-1">Forge</span>
