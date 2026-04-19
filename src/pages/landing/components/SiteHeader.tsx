@@ -108,14 +108,14 @@ export function SiteHeader() {
                 {copy("Sign in", "Đăng nhập")}
               </Button>
             </NavLink>
-            <NavLink to="/register">
+            <NavLink to="/app/dashboard">
               <Button className="rounded-full px-6">
                 {copy("Start creating", "Bắt đầu tạo")}
               </Button>
             </NavLink>
           </div>
 
-          <button
+          <Button
             type="button"
             className="rounded-md p-2 md:hidden"
             aria-label={copy("Toggle mobile menu", "Mở menu trên điện thoại")}
@@ -126,7 +126,7 @@ export function SiteHeader() {
             ) : (
               <Menu className="size-6" />
             )}
-          </button>
+          </Button>
         </motion.div>
       </nav>
 
@@ -180,7 +180,7 @@ export function SiteHeader() {
               </Button>
             </NavLink>
             <NavLink
-              to="/register"
+              to="/app/dashboard"
               className="flex-1"
               onClick={() => setIsMobileMenuOpen(false)}
             >
