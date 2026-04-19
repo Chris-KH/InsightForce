@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBilingual } from "@/hooks/use-bilingual";
 import { getQueryErrorMessage } from "@/lib/query-error";
-import { AutomationHintTooltip } from "@/pages/automation/components/AutomationHintTooltip";
 import { AutomationLatestOrchestrationOutput } from "@/pages/automation/components/AutomationLatestOrchestrationOutput";
 import { AutomationOrchestrationControlSection } from "@/pages/automation/components/AutomationOrchestrationControlSection";
 import {
@@ -130,16 +129,6 @@ export function AutomationPage() {
               "Orchestration tạo đầu ra xu hướng/nội dung. Publishing chuyển đầu ra đó thành bài đăng sẵn sàng cho từng nền tảng.",
             )}
           </p>
-          <AutomationHintTooltip
-            label={copy(
-              "Layout adapts by priority: High (full row), Medium (half row), Low (one-third row).",
-              "Bố cục tự co giãn theo ưu tiên: High (toàn hàng), Medium (nửa hàng), Low (một phần ba hàng).",
-            )}
-            hint={copy(
-              "Keep mission-critical actions in High cards, supporting analytics in Medium cards, and optional context in Low cards for faster scanning.",
-              "Đặt tác vụ quan trọng ở thẻ High, analytics hỗ trợ ở thẻ Medium, và thông tin phụ ở thẻ Low để quét thông tin nhanh hơn.",
-            )}
-          />
         </div>
 
         <Tabs
